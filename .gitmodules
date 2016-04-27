@@ -1,9 +1,18 @@
-[submodule "actwa-core"]
+[submodule "aw-core"]
 	path = aw-core
 	url = https://github.com/ActivityWatch/aw-core.git
-[submodule "actwa-client"]
+[submodule "aw-client"]
 	path = aw-client
 	url = https://github.com/ActivityWatch/aw-client.git
-[submodule "actwa-server"]
+[submodule "aw-server"]
 	path = aw-server
 	url = https://github.com/ActivityWatch/aw-server.git
+[submodule "aw-watcher-afk"]
+	path = aw-watcher-afk
+	url = https://github.com/ActivityWatch/aw-watcher-afk.git
+[submodule "aw-watcher-x11"]
+	path = aw-watcher-x11
+	url = https://github.com/ActivityWatch/aw-watcher-x11.git
+[submodule "aw-watcher-firefox"]
+	path = aw-watcher-firefox
+	url = https://github.com/ActivityWatch/aw-watcher-firefox.git
