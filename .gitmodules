@@ -16,3 +16,9 @@
 [submodule "aw-watcher-firefox"]
 	path = aw-watcher-firefox
 	url = https://github.com/ActivityWatch/aw-watcher-firefox.git
+[submodule "aw-webui"]
+	path = aw-webui
+	url = https://github.com/ActivityWatch/aw-webui.git
+[submodule "aw-client-js"]
+	path = aw-client-js
+	url = https://github.com/ActivityWatch/aw-client-js.git

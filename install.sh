@@ -1,9 +1,10 @@
 #!/bin/bash
 
-FOLDERS="aw-core aw-client aw-server aw-watcher-afk aw-watcher-x11"
+git submodule update --init --recursive
 
-for folder in $FOLDERS; do
-    cd $folder
+FOLDERS="aw-core aw-client aw-server aw-watcher-afk aw-watcher-x11"
+for FOLDER in $FOLDERS; do
+    cd $FOLDER
     sudo python3 setup.py develop
     cd ..
 done
