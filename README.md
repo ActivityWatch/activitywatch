@@ -1,6 +1,9 @@
-aw-bundle
+ActivityWatch
 =========
 
-A bundle of the most common modules, for easier packaging and installation.
+This repo is a bundle of the core components and official modules of ActivityWatch.
 
-**NOTE:** Currently only tags of this are expected to work, use at your own risk.
+It's primary use is as a meta-package providing all the components in one repo for easier packaging and installation.
+
+**NOTE:** While we aim to make every commit here have full compatibility between modules, we can't leave any guarantees. In the future we hope to supply stable releases but at this stage it would be premature.
+
