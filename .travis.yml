@@ -7,7 +7,7 @@ python:
  - "nightly" # currently points to 3.6-dev
 
 install:
- - "./install.sh --user"
+ - "./install.sh --noroot"
 
 script:
  - true

@@ -8,15 +8,16 @@ function fatal_error() {
 }
 
 function install_package() {
-    if [[ $USER_INSTALL ]]; then
-        python3 setup.py develop --user || fatal_error
+    echo "Installing $(pwd)"
+    if [[ $NOROOT_INSTALL ]]; then
+        python3 setup.py develop || fatal_error
     else
         sudo python3 setup.py develop || fatal_error
     fi
 }
 
-if [[ $1 == '--user' ]]; then
-    USER_INSTALL=true
+if [[ $1 == '--noroot' ]]; then
+    NOROOT_INSTALL=true
     echo "Installing without root"
 fi
 
