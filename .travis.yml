@@ -1,0 +1,13 @@
+
+language: python
+python:
+# - "3.3"
+# - "3.4"
+ - "3.5"
+ - "nightly" # currently points to 3.6-dev
+
+install:
+ - ./install.sh
+
+script:
+ - true
