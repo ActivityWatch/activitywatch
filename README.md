@@ -1,6 +1,8 @@
 ActivityWatch
 =============
 
+***For details, check out the website at [activitywatch.github.io](http://activitywatch.github.io)!***
+
 This repo is a bundle of the core components and official modules of ActivityWatch.
 
 It's primary use is as a meta-package providing all the components in one repo for easier packaging and installation.
