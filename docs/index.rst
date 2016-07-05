@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ActivityWatch's documentation!
-=========================================
+Welcome to the ActivityWatch documentation!
+===========================================
 
 Contents:
 
@@ -13,7 +13,9 @@ Contents:
 
    intro
    getting-started
+   user-interface
    development
+   modules
    api
 
 
