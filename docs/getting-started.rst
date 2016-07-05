@@ -3,6 +3,8 @@ Getting started
 
 Short introductory text should go here.
 
+Content from aw-server/README.md should be moved here.
+
 Installation
 ------------
 
