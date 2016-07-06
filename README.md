@@ -1,9 +1,7 @@
 ActivityWatch
 =============
 
-**Website:** [activitywatch.github.io](http://activitywatch.github.io) 
-
-**Documentation:** [activitywatch.readthedocs.io](http://activitywatch.readthedocs.io) 
+**[Website](http://activitywatch.github.io)** || **[Documentation](http://activitywatch.readthedocs.io)**
 
 This repo is a bundle of the core components and official modules of ActivityWatch, it is also where releases of the full suite are published.
 
