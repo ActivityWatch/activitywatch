@@ -12,7 +12,7 @@ while getopts "a" opt; do
             for FOLDER in $FOLDERS; do
                 pushd $FOLDER
                 git checkout master
-                git pull
+                git pull origin master
                 popd
             done
 			;;
