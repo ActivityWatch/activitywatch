@@ -22,3 +22,6 @@
 [submodule "aw-client-js"]
 	path = aw-client-js
 	url = https://github.com/ActivityWatch/aw-client-js.git
+[submodule "aw-watcher-macos"]
+	path = aw-watcher-macos
+	url = https://github.com/ActivityWatch/aw-watcher-macos.git
