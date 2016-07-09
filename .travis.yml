@@ -10,6 +10,4 @@ install:
  - "./install.sh --noroot"
 
 script:
- - "python3 -c 'import aw.core'"
- - "python3 -c 'import aw.client'"
- - "python3 -c 'import aw.server'"
+ - "./integration_tests.sh"
