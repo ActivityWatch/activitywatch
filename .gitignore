@@ -1,7 +1,7 @@
+build
+dist
+
 # Old repo
 activity-watch
-
-# Watchers not part of metapackage, yet
-/*watcher
 
 .idea
