@@ -13,7 +13,7 @@ matrix:
    - python: "nightly"
 
 before_install:
- - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./setup_venv_osx.sh; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./setup_venv_osx.sh; source venv/bin/activate; fi
  - "pip install pyinstaller"
 
 install:
