@@ -28,6 +28,14 @@ done
 
 echo
 echo "-------------------------------------"
+echo "Zipping executables..."
+cd dist;
+zip "activitywatch-$(uname | tr '[:upper:]' '[:lower:]').zip" aw-*;
+cd ..;
+echo "-------------------------------------"
+
+echo
+echo "-------------------------------------"
 echo "Contents of ./dist"
 ls -l dist
 echo "-------------------------------------"
