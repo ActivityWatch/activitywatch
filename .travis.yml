@@ -2,13 +2,18 @@
 language: python
 matrix:
   include:
-   - python: "3.5"
-   - python: "nightly"
+   - os: linux
+     python: 3.5
+   - os: osx
+     language: generic
+   - os: linux
+     python: nightly
   allow_failures:
     # Doesn't currently work with pyinstaller
    - python: "nightly"
 
 before_install:
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./setup_venv_osx.sh; source venv/bin/activate; fi
  - "pip install pyinstaller"
 
 install:

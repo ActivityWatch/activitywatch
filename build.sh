@@ -4,7 +4,7 @@
 # NOTE: Highly WIP!
 #
 
-PYINSTALL_TARGETS=$(find -maxdepth 2 | egrep 'aw-.*/.*\.spec')
+PYINSTALL_TARGETS=$(find . -maxdepth 2 | egrep 'aw-.*/.*\.spec')
 
 function build_fail {
     echo "Failed to build $1"
