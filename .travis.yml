@@ -1,13 +1,19 @@
 
 language: python
-python:
-# - "3.3"
-# - "3.4"
- - "3.5"
- - "nightly" # currently points to 3.6-dev
+matrix:
+  include:
+   - python: "3.5"
+   - python: "nightly"
+  allow_failures:
+    # Doesn't currently work with pyinstaller
+   - python: "nightly"
+
+before_install:
+ - "pip install pyinstaller"
 
 install:
  - "./install.sh --noroot"
 
 script:
  - "./integration_tests.sh"
+ - "./build.sh"
