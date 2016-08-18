@@ -8,9 +8,10 @@ while getopts "a" opt; do
     case $opt in
         a)
             # Pull bleeding edge from submodules
-            FOLDERS="aw-*"
-            for FOLDER in $FOLDERS; do
-                pushd $FOLDER
+            dirname="$(dirname $0)/.."
+            folders=$(ls "$dirname" | grep "aw-*")
+            for folder in $folders; do
+                pushd $folder
                 git checkout master
                 git pull origin master
                 popd
