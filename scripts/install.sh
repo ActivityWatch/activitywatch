@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 #git submodule update --init --recursive
 
 function fatal_error() {
@@ -22,6 +24,7 @@ if [[ $1 == '--noroot' ]]; then
 fi
 
 FOLDERS="aw-core aw-client aw-server aw-watcher-afk aw-watcher-x11"
+cd "$DIR/.."
 for FOLDER in $FOLDERS; do
     cd $FOLDER
     install_package
