@@ -25,3 +25,6 @@
 [submodule "aw-watcher-macos"]
 	path = aw-watcher-macos
 	url = https://github.com/ActivityWatch/aw-watcher-macos.git
+[submodule "aw-qt"]
+	path = aw-qt
+	url = https://github.com/ActivityWatch/aw-qt.git
