@@ -10,9 +10,6 @@
 [submodule "aw-watcher-afk"]
 	path = aw-watcher-afk
 	url = https://github.com/ActivityWatch/aw-watcher-afk.git
-[submodule "aw-watcher-x11"]
-	path = aw-watcher-x11
-	url = https://github.com/ActivityWatch/aw-watcher-x11.git
 [submodule "aw-watcher-firefox"]
 	path = aw-watcher-firefox
 	url = https://github.com/ActivityWatch/aw-watcher-firefox.git
@@ -22,9 +19,6 @@
 [submodule "aw-client-js"]
 	path = aw-client-js
 	url = https://github.com/ActivityWatch/aw-client-js.git
-[submodule "aw-watcher-macos"]
-	path = aw-watcher-macos
-	url = https://github.com/ActivityWatch/aw-watcher-macos.git
 [submodule "aw-qt"]
 	path = aw-qt
 	url = https://github.com/ActivityWatch/aw-qt.git
