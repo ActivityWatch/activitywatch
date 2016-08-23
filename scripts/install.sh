@@ -23,7 +23,8 @@ if [[ $1 == '--noroot' ]]; then
     echo "Installing without root"
 fi
 
-FOLDERS="aw-core aw-client aw-server aw-watcher-afk aw-watcher-x11"
+# TODO: Detect folders, don't require a definition of them
+FOLDERS="aw-core aw-client aw-server aw-watcher-afk aw-watcher-window"
 cd "$DIR/.."
 for FOLDER in $FOLDERS; do
     cd $FOLDER
