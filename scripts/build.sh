@@ -30,7 +30,11 @@ echo
 echo "-------------------------------------"
 echo "Zipping executables..."
 cd dist;
-zip "activitywatch-$(uname | tr '[:upper:]' '[:lower:]').zip" aw-*;
+platform=$(uname | tr '[:upper:]' '[:lower:]')
+if [[ "$platform" == "darwin" ]]; then
+    platform="macos";
+fi
+zip "activitywatch-${platform}.zip" aw-*;
 cd ..;
 echo "-------------------------------------"
 
