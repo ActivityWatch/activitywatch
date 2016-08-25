@@ -3,6 +3,8 @@ matrix:
   include:
    - os: linux
      python: 3.5
+     env:
+       - TRAVIS_NODE_VERSION="4"
      deploy:
        provider: releases
        skip_cleanup: true
@@ -13,6 +15,8 @@ matrix:
          tags: true
    - os: osx
      language: generic
+     env:
+       - TRAVIS_NODE_VERSION="4"
      deploy:
        provider: releases
        skip_cleanup: true
@@ -25,9 +29,6 @@ matrix:
      python: nightly
   allow_failures:
    - python: nightly
-
-env:
-  - TRAVIS_NODE_VERSION="4"
 
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
