@@ -15,13 +15,6 @@ mkdir dist
 mkdir dist/activitywatch
 
 #
-# Use NVM
-#
-
-nvm install node
-nvm use node
-
-#
 # Build Web UI
 #
 
