@@ -20,6 +20,7 @@ mkdir dist/activitywatch
 #
 
 cd aw-webui
+npm install || build_fail
 npm run build || build_fail
 cd ..
 cp -r aw-webui/dist aw-server/aw_server/static || build_fail
