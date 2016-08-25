@@ -29,7 +29,7 @@ cp -r aw-webui/dist aw-server/aw_server/static || build_fail
 #
 
 cd aw-qt
-./build.sh
+./build.sh || build_fail
 cd ..
 
 #
