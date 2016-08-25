@@ -22,7 +22,7 @@ cd aw-webui
 npm install || build_fail
 npm run build || build_fail
 cd ..
-cp -r aw-webui/dist aw-server/aw_server/static || build_fail
+cp -r aw-webui/dist/* aw-server/aw_server/static/ || build_fail
 
 #
 # Build aw-qt's resources.py with pyrcc
