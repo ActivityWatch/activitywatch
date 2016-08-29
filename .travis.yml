@@ -35,7 +35,10 @@ before_install:
      then ./scripts/setup_venv_osx.sh;
      source venv/bin/activate;
    fi
- - pip install pyqt5
+ - pip install --upgrade pip
+ - python --version
+ - pip --version
+ - pip install PyQt5
  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
  - pip install pyinstaller
 
