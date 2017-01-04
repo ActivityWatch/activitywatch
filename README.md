@@ -14,9 +14,10 @@ ActivityWatch is about recording what you do, so you can become aware of what yo
 You can read more on our [website](https://activitywatch.github.io/about/).
 
 #### Server
-The *aw-server* project is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webapp* project (which provides the frontend part of the webapp).
 
-The webapp includes basic data visualization (WIP), data browsing and export, and has a lot planned for it.
+The *aw-server* project is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
+
+The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
 
 ***TODO:*** Add screenshots of the webapp.
 
@@ -24,8 +25,10 @@ The webapp includes basic data visualization (WIP), data browsing and export, an
 
  - *aw-watcher-afk* - can be used to log the presence/absence of user activity from keyboard and mouse input
  - *aw-watcher-window* - can be used to log the currently active application and it's window title
- - *aw-core* - core library, provides no runnable modules
 
+#### Libraries
+
+ - *aw-core* - core library, provides no runnable modules
 
 ## About this repository
 
