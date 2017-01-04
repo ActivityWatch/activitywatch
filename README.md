@@ -8,7 +8,7 @@ ActivityWatch
 
 ActivityWatch is about recording what you do, so you can become aware of what you do, and choose to do better. All in a secure way where you control the data.
 
-## About
+# About
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
 
@@ -18,7 +18,7 @@ We've worked towards this goal by creating a application for safe storage of the
 
 You can read more on our [website](https://activitywatch.github.io/about/).
 
-#### Server
+## Server
 
 The *aw-server* project is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
 
@@ -26,16 +26,17 @@ The webapp includes basic data visualization (WIP), data browsing and export, an
 
 ***TODO:*** Add screenshots of the webapp.
 
-#### Watchers
+### Watchers
 
  - *aw-watcher-afk* - can be used to log the presence/absence of user activity from keyboard and mouse input
  - *aw-watcher-window* - can be used to log the currently active application and it's window title
+ - *aw-watcher-web* - (WIP) can be used to increase the logging detail when browsing the web by collecting the URLs and titles of tabs (your web history with superpowers)
 
-#### Libraries
+### Libraries
 
  - *aw-core* - core library, provides no runnable modules
 
-## About this repository
+# About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch. it Is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
 
@@ -43,3 +44,6 @@ It's primary use is as a meta-package providing all the components in one repo; 
 
 This is also the repo where issues about ActivityWatch *in general* should go, such as requests and discussion regarding new features.
 
+# Contributing
+
+We currently don't have much of a good contributors guide (we're working on it), feel free to browse the documentation (also in a early state). You should also send me an email at: [erik@bjareho.lt](mailto:erik@bjareho.lt).
