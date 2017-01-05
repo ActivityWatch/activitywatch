@@ -29,6 +29,7 @@ matrix:
      python: nightly
   allow_failures:
    - python: nightly
+   - os: osx
 
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
