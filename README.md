@@ -12,7 +12,7 @@ ActivityWatch
 | [GitHub](https://github.com/ActivityWatch/activitywatch/)
 | [Twitter](https://twitter.com/ActivityWatchIt)
 
-ActivityWatch ***records what you do***, so that you can ***become aware of what you do***, and choose to do better. All in a secure way where ***you control the data***.
+ActivityWatch ***records what you do*** so that you can ***become aware of what you do*** and choose to do better. All in a secure way where ***you control the data***.
 
 
 # About
