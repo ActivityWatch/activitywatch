@@ -14,15 +14,6 @@ ActivityWatch
 
 ActivityWatch ***records what you do***, so that you can ***become aware of what you do***, and choose to do better. All in a secure way where ***you control the data***.
 
-# Screenshots
-
-<img src="http://activitywatch.net/screenshot.png" width="22%">
-<!--
-  <img src="http://activitywatch.net/screenshot.png" width="22%">
-  <img src="http://activitywatch.net/screenshot.png" width="22%">
-  <img src="http://activitywatch.net/screenshot.png" width="22%">
--->
-
 
 # About
 
@@ -34,29 +25,35 @@ We've worked towards this goal by creating a application for safe storage of the
 
 You can read more on our [website](https://activitywatch.github.io/about/).
 
-## Server
+## Screenshots
 
-The *aw-server* project is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
-
-The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
-
-### Watchers
-
- - *aw-watcher-afk* - can be used to log the presence/absence of user activity from keyboard and mouse input
- - *aw-watcher-window* - can be used to log the currently active application and it's window title
- - *aw-watcher-web* - (WIP) can be used to increase the logging detail when browsing the web by collecting the URLs and titles of tabs (your web history with superpowers)
-
-### Libraries
-
- - *aw-core* - core library, provides no runnable modules
+<img src="http://activitywatch.net/screenshot.png" width="22%">
+<!--
+  <img src="http://activitywatch.net/screenshot.png" width="22%">
+  <img src="http://activitywatch.net/screenshot.png" width="22%">
+  <img src="http://activitywatch.net/screenshot.png" width="22%">
+-->
 
 # About this repository
 
-This repo is a bundle of the core components and official modules of ActivityWatch. it Is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
+This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
 
-It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation.
+## Server
 
-This is also the repo where issues about ActivityWatch *in general* should go, such as requests and discussion regarding new features.
+`aw-server` is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
+
+The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
+
+## Watchers
+
+ - `aw-watcher-afk` - can be used to log the presence/absence of user activity from keyboard and mouse input
+ - `aw-watcher-window` - can be used to log the currently active application and it's window title
+ - `aw-watcher-web` - (WIP) can be used to increase the logging detail when browsing the web by collecting the URLs and titles of tabs (your web history with superpowers)
+
+## Libraries
+
+ - `aw-core` - core library, provides no runnable modules
+ - `aw-client` - client library, useful when writing watchers
 
 # Contributing
 
