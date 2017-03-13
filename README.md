@@ -6,7 +6,17 @@ ActivityWatch
 [![Documentation](https://readthedocs.org/projects/activitywatch/badge/?version=latest)](http://activitywatch.readthedocs.io)
 
 
-ActivityWatch is about recording what you do, so you can become aware of what you do, and choose to do better. All in a secure way where you control the data.
+ActivityWatch **records what you do**, so you can **become aware of what you do**, and choose to do better. All in a secure way where **you control the data**.
+
+# Screenshots
+
+<img src="http://activitywatch.net/screenshot.png" width="22%">
+<!--
+  <img src="http://activitywatch.net/screenshot.png" width="22%">
+  <img src="http://activitywatch.net/screenshot.png" width="22%">
+  <img src="http://activitywatch.net/screenshot.png" width="22%">
+-->
+
 
 # About
 
@@ -23,8 +33,6 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 The *aw-server* project is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
 
 The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
-
-***TODO:*** Add screenshots of the webapp.
 
 ### Watchers
 
