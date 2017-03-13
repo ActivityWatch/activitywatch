@@ -5,8 +5,14 @@ ActivityWatch
 [![Build Status](https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master)](https://travis-ci.org/ActivityWatch/activitywatch)
 [![Documentation](https://readthedocs.org/projects/activitywatch/badge/?version=latest)](http://activitywatch.readthedocs.io)
 
+[Releases](https://github.com/ActivityWatch/activitywatch/releases)
+| [Documentation](http://activitywatch.readthedocs.io)
+| [Issue tracker](https://github.com/ActivityWatch/activitywatch-user-issues/issues)
+| [Website](http://activitywatch.net/)
+| [GitHub](https://github.com/ActivityWatch/activitywatch/)
+| [Twitter](https://twitter.com/ActivityWatchIt)
 
-ActivityWatch **records what you do**, so you can **become aware of what you do**, and choose to do better. All in a secure way where **you control the data**.
+ActivityWatch ***records what you do***, so that you can ***become aware of what you do***, and choose to do better. All in a secure way where ***you control the data***.
 
 # Screenshots
 
