@@ -19,7 +19,14 @@ ActivityWatch ***records what you do*** so that you can ***become aware of what 
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
 
-We've worked towards this goal by creating a application for safe storage of the data on the users local machine and created a set of watchers which watch for data to record such as keyboard and mouse activity, window titles, open tab URLs. It is up to you as user to collect as much as you want, or as little as you want.
+We've worked towards this goal by creating a application for safe storage of the data on the users local machine and as well as a set of watchers which record data such as:
+
+ - Currently active application and the title of its window
+ - Currently active browser tab and it's title and URL
+ - Keyboard and mouse activity, to detect if you are afk or not
+</small>
+ 
+It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
 
 **Note:** ActivityWatch is under development. There is still work to be done so we provide it with no guarantees with the hope that others may wish to help and give their feedback!
 
