@@ -6,7 +6,10 @@
 Welcome to the ActivityWatch documentation!
 ===========================================
 
-Contents:
+.. note::
+    ActivityWatch is currently under development and
+    should not be considered stable software, yet.
+
 
 .. _user-docs:
 .. toctree::
