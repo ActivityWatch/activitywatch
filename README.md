@@ -41,6 +41,43 @@ You can read more on our [website](https://activitywatch.github.io/about/).
   <img src="http://activitywatch.net/screenshot.png" width="22%">
 -->
 
+## Is this yet another time tracker?
+
+Yes, but we found that most time trackers lack in some important features. Common dealbreakers:
+
+ - Open Source
+ - Syncronization
+ - High data resolution (storage of raw data)
+ - Plugins (simplicity to collect more data)
+
+### Feature comparison
+
+
+<!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
+
+|               | User owns data | Web UI  | Sync | Open Source | Platforms                                                  |
+| ------------- | -------------- | ------- | ---- | ----------- | ---------------------------------------------------------- |
+| ActivityWatch | Yes            | Yes     | ~~Decentralized~~ (Planned)  | Yes         | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP) |
+| Selfspy       | Yes            | No?     | No   | Yes         | Windows, macOS, Linux                                      |
+| ulogme        | Yes            | [Yes](http://karpathy.github.io/2014/08/03/quantifying-productivity/) | No | Yes         | macOS, Linux                                               |
+| RescueTime    | No             | Yes    | Centralized  | No          | Windows, macOS, Linux, Android, iOS                        |
+| WakaTime      | No             | Yes    | Centralized  | Client  | Most popular text editors      |
+
+**Tracking**
+
+|               | Application | Window Title | AFK  | Browser Extensions | Editor Plugins |
+| ------------- | ----------- | ------------ | ---- | ------------------ | -------------- |
+| ActivityWatch | Yes         | Yes          | Yes  | In Beta            | Possible       |
+| Selfspy       | Yes         | Yes          | Yes? | No?                | No?            |
+| ulogme        | Yes         | Yes          | Yes? | No?                | No?            |
+| RescueTime    | Yes         | Yes          | Yes  | Yes                | No             |
+| WakaTime      | No          | No           | Yes  | No                 | Yes, many      |
+
+
+## Installation & Usage
+
+We're not there yet for end-users, if you are a developer you may figure it out on your own until we get our shit together.
+
 # About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
