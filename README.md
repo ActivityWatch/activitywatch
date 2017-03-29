@@ -55,13 +55,13 @@ Yes, but we found that most time trackers lack in some important features. Commo
 
 <!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
 
-|               | User owns data | Web UI  | Sync | Open Source | Platforms                                                  |
-| ------------- | -------------- | ------- | ---- | ----------- | ---------------------------------------------------------- |
-| ActivityWatch | Yes            | Yes     | ~~Decentralized~~ (Planned)  | Yes         | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP) |
-| Selfspy       | Yes            | No?     | No   | Yes         | Windows, macOS, Linux                                      |
-| ulogme        | Yes            | [Yes](http://karpathy.github.io/2014/08/03/quantifying-productivity/) | No | Yes         | macOS, Linux                                               |
-| RescueTime    | No             | Yes    | Centralized  | No          | Windows, macOS, Linux, Android, iOS                        |
-| WakaTime      | No             | Yes    | Centralized  | Client  | Most popular text editors      |
+|               | User owns data     | Web UI             | Sync | Open Source | Platforms                                                  |
+| ------------- | ------------------ | ------------------ | ---- | ----------- | ---------------------------------------------------------- |
+| ActivityWatch | :white_check_mark: | Yes                | ~~Decentralized~~ (Planned)  | Yes         | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP) |
+| Selfspy       | :white_check_mark: | No?                | No   | Yes         | Windows, macOS, Linux                                      |
+| ulogme        | :white_check_mark: | [Yes](http://karpathy.github.io/2014/08/03/quantifying-productivity/)           | No | Yes         | macOS, Linux                                               |
+| RescueTime    | :x:                | Yes              | Centralized  | No          | Windows, macOS, Linux, Android, iOS                        |
+| WakaTime      | :x:                | Yes              | Centralized  | Client  | Most popular text editors      |
 
 **Tracking**
 
