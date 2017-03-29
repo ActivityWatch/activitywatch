@@ -55,23 +55,23 @@ Yes, but we found that most time trackers lack in some important features. Commo
 
 <!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
 
-|               | User owns data     | Web UI             | Sync | Open Source | Platforms                                                  |
-| ------------- | ------------------ | ------------------ | ---- | ----------- | ---------------------------------------------------------- |
-| ActivityWatch | :white_check_mark: | Yes                | ~~Decentralized~~ (Planned)  | Yes         | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP) |
-| Selfspy       | :white_check_mark: | No?                | No   | Yes         | Windows, macOS, Linux                                      |
-| ulogme        | :white_check_mark: | [Yes](http://karpathy.github.io/2014/08/03/quantifying-productivity/)           | No | Yes         | macOS, Linux                                               |
-| RescueTime    | :x:                | Yes              | Centralized  | No          | Windows, macOS, Linux, Android, iOS                        |
-| WakaTime      | :x:                | Yes              | Centralized  | Client  | Most popular text editors      |
+|               | User owns data     | Web UI             | Sync                         | Open Source        | Platforms                                                  |
+| ------------- | ------------------ | ------------------ | ---------------------------- | ------------------ | ---------------------------------------------------------- |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (Planned)  | :white_check_mark: | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP)         |
+| Selfspy       | :white_check_mark: | :x:                | :x:                          | :white_check_mark: | Windows, macOS, Linux                                      |
+| ulogme        | :white_check_mark: | :white_check_mark:?| :x:                          | :white_check_mark: | macOS, Linux                                               |
+| RescueTime    | :x:                | :white_check_mark: | Centralized                  | :x:                | Windows, macOS, Linux, Android, iOS                        |
+| WakaTime      | :x:                | :white_check_mark: | Centralized                  | Client             | Most popular text editors                                  |
 
 **Tracking**
 
-|               | Application | Window Title | AFK  | Browser Extensions | Editor Plugins |
-| ------------- | ----------- | ------------ | ---- | ------------------ | -------------- |
-| ActivityWatch | Yes         | Yes          | Yes  | In Beta            | Possible       |
-| Selfspy       | Yes         | Yes          | Yes? | No?                | No?            |
-| ulogme        | Yes         | Yes          | Yes? | No?                | No?            |
-| RescueTime    | Yes         | Yes          | Yes  | Yes                | No             |
-| WakaTime      | No          | No           | Yes  | No                 | Yes, many      |
+|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           |
+| ------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------------ |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:?               | :white_check_mark:?      |
+| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:?               | :x:?                     |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      |
+| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many |
 
 
 ## Installation & Usage
