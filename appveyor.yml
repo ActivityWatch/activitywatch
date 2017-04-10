@@ -68,11 +68,9 @@ install:
   # - "%CMD_IN_ENV% pip install -r dev-requirements.txt"
 
   # Lets start with seeing if aw-server will build
-  - "cd aw-server"
-  - "%CMD_IN_ENV% python setup.py install"
-
-  # TODO: Add the rest of the installs here
-  # - "%CMD_IN_ENV% python setup.py install"
+  # TODO: Install stuff here
+  #- "cd aw-server"
+  #- "%CMD_IN_ENV% python setup.py install"
 
 build_script:
   # Build the compiled extension
