@@ -59,7 +59,7 @@ install:
   - "pip install --disable-pip-version-check --user --upgrade pip"
 
   # Install tools used in development
-  - "pip install --user --upgrade nose"
+  - "pip install --user --upgrade pytest pytest-cov"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
@@ -71,13 +71,20 @@ install:
   - "cd aw-server"
   - "%CMD_IN_ENV% python setup.py install"
 
+  # TODO: Add the rest of the installs here
+  # - "%CMD_IN_ENV% python setup.py install"
+
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% python setup.py build"
+  # TODO: Run actual build_script here
+  - ECHO "Not working yet"
+  #- "%CMD_IN_ENV% python setup.py build"
 
 test_script:
   # Run the project tests
-  - "%CMD_IN_ENV% python setup.py nosetests"
+  # TODO: Run actual build_script here
+  - ECHO "Not working yet"
+  #- "%CMD_IN_ENV% python -m pytest"
 
 #after_test:
   # If tests are successful, create binary packages for the project.

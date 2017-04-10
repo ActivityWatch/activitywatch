@@ -41,6 +41,43 @@ You can read more on our [website](https://activitywatch.github.io/about/).
   <img src="http://activitywatch.net/screenshot.png" width="22%">
 -->
 
+## Is this yet another time tracker?
+
+Yes, but we found that most time trackers lack in some important features. Common dealbreakers:
+
+ - Open Source
+ - Syncronization
+ - High data resolution (storage of raw data)
+ - Plugins (simplicity to collect more data)
+
+### Feature comparison
+
+
+<!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
+
+|               | User owns data     | Web UI             | Sync                         | Open Source        | Platforms                                                  |
+| ------------- | ------------------ | ------------------ | ---------------------------- | ------------------ | ---------------------------------------------------------- |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (Planned)  | :white_check_mark: | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP)         |
+| Selfspy       | :white_check_mark: | :x:                | :x:                          | :white_check_mark: | Windows, macOS, Linux                                      |
+| ulogme        | :white_check_mark: | :white_check_mark:?| :x:                          | :white_check_mark: | macOS, Linux                                               |
+| RescueTime    | :x:                | :white_check_mark: | Centralized                  | :x:                | Windows, macOS, Linux, Android, iOS                        |
+| WakaTime      | :x:                | :white_check_mark: | Centralized                  | Client             | Most popular text editors                                  |
+
+**Tracking**
+
+|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           |
+| ------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------------ |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:?               | :white_check_mark:?      |
+| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:?               | :x:?                     |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      |
+| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many |
+
+
+## Installation & Usage
+
+We're not there yet for end-users, if you are a developer you may figure it out on your own until we get our shit together.
+
 # About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).

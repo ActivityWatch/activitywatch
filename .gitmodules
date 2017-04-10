@@ -10,9 +10,6 @@
 [submodule "aw-watcher-afk"]
 	path = aw-watcher-afk
 	url = https://github.com/ActivityWatch/aw-watcher-afk.git
-[submodule "aw-watcher-firefox"]
-	path = aw-watcher-firefox
-	url = https://github.com/ActivityWatch/aw-watcher-firefox.git
 [submodule "aw-webui"]
 	path = aw-webui
 	url = https://github.com/ActivityWatch/aw-webui.git
@@ -25,3 +22,6 @@
 [submodule "aw-watcher-window"]
 	path = aw-watcher-window
 	url = https://github.com/ActivityWatch/aw-watcher-window.git
+[submodule "aw-watcher-web"]
+	path = aw-watcher-web
+	url = https://github.com/ActivityWatch/aw-watcher-web.git
