@@ -37,7 +37,12 @@ if [[ "$platform" == "darwin" ]]; then
 elif [[ $platform == "cygwin"* ]]; then
     platform="windows"
 fi
-zip -r "activitywatch-${platform}.zip" activitywatch;
+
+if [[ $platform == "windows"* ]]; then
+    7z a "activitywatch-${platform}.zip" activitywatch;
+else
+    zip -r "activitywatch-${platform}.zip" activitywatch;
+fi
 cd ..;
 echo "-------------------------------------"
 
