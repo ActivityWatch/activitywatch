@@ -72,7 +72,7 @@ install:
 
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
-  - "%CMD_IN_ENV% pip install --upgrade pyqt5 pypiwin32"
+  - "%CMD_IN_ENV% pip install --upgrade pyqt5"
 
   # Packaging dependencies
   - "%CMD_IN_ENV% pip install --upgrade pyinstaller"
