@@ -1,20 +1,15 @@
 #!/bin/bash
 
+set -e
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-#git submodule update --init --recursive
-
-function fatal_error() {
-    echo "Something went wrong, aborting"
-    exit 1
-}
 
 function install_package() {
     echo "Installing $(pwd)"
     if [[ $NOROOT_INSTALL ]]; then
-        python3 setup.py develop || fatal_error
+        env python setup.py develop --user
     else
-        sudo python3 setup.py develop || fatal_error
+        sudo env python setup.py develop --user
     fi
 }
 

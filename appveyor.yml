@@ -48,7 +48,16 @@ install:
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
+  # pyrcc5.exe can be found here:
+  #   C:\Users\erb\AppData\Roaming\Python\Python35\Scripts\pyrcc5.exe
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Use cygwin stuff for make, bash, etc.
+  - "SET PATH=C:\cygwin\bin;%PATH%"
+
+  # Install node and npm
+  - "https://nodejs.org/dist/v6.10.2/node-v6.10.2-x64.msi"
+  - "SET PATH=C:\Program Files\nodejs\;%PATH%"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
@@ -74,8 +83,8 @@ install:
 
 build_script:
   # Build the compiled extension
-  # TODO: Run actual build_script here
-  - ECHO "Not working yet"
+  - "bash ./scripts/build.sh"
+  - "bash ./scripts/install.sh"
   #- "%CMD_IN_ENV% python setup.py build"
 
 test_script:
@@ -84,12 +93,13 @@ test_script:
   - ECHO "Not working yet"
   #- "%CMD_IN_ENV% python -m pytest"
 
-#after_test:
+after_test:
   # If tests are successful, create binary packages for the project.
   #- "%CMD_IN_ENV% python setup.py bdist_wheel"
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   #- ps: "ls dist"
+  - "bash ./scripts/package.sh"
 
 #artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
