@@ -57,7 +57,7 @@ install:
 
   # Install node and npm
   - "https://nodejs.org/dist/v6.10.2/node-v6.10.2-x64.msi"
-  - "SET PATH=C:\\Program Files\\nodejs\;%PATH%"
+  - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
