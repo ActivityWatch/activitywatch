@@ -90,7 +90,7 @@ install:
 build_script:
   # Build the compiled extension
   - "bash ./scripts/build.sh"
-  - "bash ./scripts/install.sh"
+  - "bash ./scripts/install.sh --user"
   #- "%CMD_IN_ENV% python setup.py build"
 
 test_script:

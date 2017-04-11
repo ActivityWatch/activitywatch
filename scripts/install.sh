@@ -3,19 +3,16 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SETUP_ARGS=""
 
 function install_package() {
     echo "Installing $(pwd)"
-    if [[ $NOROOT_INSTALL ]]; then
-        env python setup.py develop --user
-    else
-        sudo env python setup.py develop --user
-    fi
+    env python setup.py develop $SETUP_ARGS
 }
 
-if [[ $1 == '--noroot' ]]; then
-    NOROOT_INSTALL=true
-    echo "Installing without root"
+if [[ $1 == '--user' ]]; then
+    SETUP_ARGS="$SETUP_ARGS --user"
+    echo "Installing as user"
 fi
 
 cd "$DIR/.."
