@@ -67,8 +67,14 @@ install:
   # about it being out of date.
   - "pip install --disable-pip-version-check --user --upgrade pip"
 
-  # Install tools used in development
-  - "pip install --user --upgrade pytest pytest-cov pyinstaller"
+  # Testing dependencies
+  - "pip install --user --upgrade pytest pytest-cov"
+
+  # Build dependencies
+  - "pip install --user --upgrade pyqt5"
+
+  # Packaging dependencies
+  - "pip install --user --upgrade pyinstaller"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
