@@ -1,7 +1,7 @@
-function main () {
-    If ( $PYTHON_ARCH -eq "64" ) {
+function main ($arch) {
+    If ( $arch -eq "64" ) {
         $url="https://github.com/ActivityWatch/wheels/raw/master/pyHook-1.5.1-cp35-cp35m-win_amd64.whl"
-    } ElseIf ( $PYTHON_ARCH -eq "32" ) {
+    } ElseIf ( $arch -eq "32" ) {
         $url="https://github.com/ActivityWatch/wheels/raw/master/pyHook-1.5.1-cp35-cp35m-win32.whl"
     } Else {
         Write-Output "Invalid architecture"
@@ -10,4 +10,4 @@ function main () {
     pip install --user $url
 }
 
-main
+main $env:PYTHON_ARCH
