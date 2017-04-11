@@ -53,11 +53,11 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Use cygwin stuff for make, bash, etc.
-  - "SET PATH=C:\cygwin\bin;%PATH%"
+  - "SET PATH=C:\\cygwin\\bin;%PATH%"
 
   # Install node and npm
   - "https://nodejs.org/dist/v6.10.2/node-v6.10.2-x64.msi"
-  - "SET PATH=C:\Program Files\nodejs\;%PATH%"
+  - "SET PATH=C:\\Program Files\\nodejs\;%PATH%"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
@@ -68,7 +68,7 @@ install:
   - "pip install --disable-pip-version-check --user --upgrade pip"
 
   # Install tools used in development
-  - "pip install --user --upgrade pytest pytest-cov"
+  - "pip install --user --upgrade pytest pytest-cov pyinstaller"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
