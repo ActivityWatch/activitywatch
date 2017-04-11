@@ -3,7 +3,7 @@
 set -e
 
 # Clean
-rm -r dist/
+rm -r dist/ || true
 mkdir dist
 mkdir dist/activitywatch
 
