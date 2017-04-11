@@ -68,14 +68,14 @@ install:
   - "%CMD_IN_ENV% pip install --disable-pip-version-check --user --upgrade pip"
 
   # Testing dependencies
-  - "%CMD_IN_ENV% pip install --user --upgrade pytest pytest-cov"
+  - "%CMD_IN_ENV% pip install --upgrade pytest pytest-cov"
 
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
   - "%CMD_IN_ENV% pip install --upgrade pyqt5"
 
   # Packaging dependencies
-  - "%CMD_IN_ENV% pip install --user --upgrade pyinstaller"
+  - "%CMD_IN_ENV% pip install --upgrade pyinstaller"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,

@@ -5,9 +5,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SETUP_ARGS=""
 
+which python
+python -V
+
 function install_package() {
     echo "Installing $(pwd)"
-    env python setup.py develop $SETUP_ARGS
+    python setup.py develop $SETUP_ARGS
 }
 
 if [[ $1 == '--user' ]]; then
