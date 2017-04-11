@@ -5,17 +5,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SETUP_ARGS=""
 
-echo $PATH
-which python
-python -V
-
 function install_package() {
     echo "Installing $(pwd)"
-#    if [[ $platform == "cygwin"* ]]; then
-        python setup.py develop $SETUP_ARGS
-#    else
-#        python3 setup.py develop $SETUP_ARGS
-#    fi
+    python setup.py develop $SETUP_ARGS
 }
 
 if [[ $1 == '--user' ]]; then
