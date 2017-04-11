@@ -60,22 +60,22 @@ install:
   - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
 
   # Check that we have the expected version and architecture for Python
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  - "%CMD_IN_ENV% python --version"
+  - "%CMD_IN_ENV% python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "%CMD_IN_ENV% pip install --disable-pip-version-check --user --upgrade pip"
 
   # Testing dependencies
-  - "pip install --user --upgrade pytest pytest-cov"
+  - "%CMD_IN_ENV% pip install --user --upgrade pytest pytest-cov"
 
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
-  - "pip install --upgrade pyqt5"
+  - "%CMD_IN_ENV% pip install --upgrade pyqt5"
 
   # Packaging dependencies
-  - "pip install --user --upgrade pyinstaller"
+  - "%CMD_IN_ENV% pip install --user --upgrade pyinstaller"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
@@ -90,8 +90,8 @@ install:
 
 build_script:
   # Build the compiled extension
-  - "bash ./scripts/build.sh"
-  - "bash ./scripts/install.sh --user"
+  - "%CMD_IN_ENV% bash ./scripts/build.sh"
+  - "%CMD_IN_ENV% bash ./scripts/install.sh --user"
   #- "%CMD_IN_ENV% python setup.py build"
 
 test_script:
@@ -106,7 +106,7 @@ after_test:
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   #- ps: "ls dist"
-  - "bash ./scripts/package.sh"
+  - "%CMD_IN_ENV% bash ./scripts/package.sh"
 
 #artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
