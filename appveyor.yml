@@ -45,15 +45,15 @@ install:
   # not already installed.
   - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\install_python.ps1 }
 
+  # Use cygwin stuff for make, bash, etc.
+  - "SET PATH=C:\\cygwin\\bin;%PATH%"
+
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   # pyrcc5.exe can be found here:
   #   C:\Users\erb\AppData\Roaming\Python\Python35\Scripts\pyrcc5.exe
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-
-  # Use cygwin stuff for make, bash, etc.
-  - "SET PATH=C:\\cygwin\\bin;%PATH%"
 
   # Install node and npm
   - ps: "./scripts/install_node.ps1"
