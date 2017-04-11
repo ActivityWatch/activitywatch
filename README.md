@@ -2,7 +2,8 @@ ActivityWatch
 =============
 
 
-[![Build Status](https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master)](https://travis-ci.org/ActivityWatch/activitywatch)
+[![Build Status Travis](https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master)](https://travis-ci.org/ActivityWatch/activitywatch)
+[![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true)](https://ci.appveyor.com/project/ErikBjare/activitywatch)
 [![Documentation](https://readthedocs.org/projects/activitywatch/badge/?version=latest)](http://activitywatch.readthedocs.io)
 
 [Releases](https://github.com/ActivityWatch/activitywatch/releases)
