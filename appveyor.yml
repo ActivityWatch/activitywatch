@@ -71,7 +71,8 @@ install:
   - "pip install --user --upgrade pytest pytest-cov"
 
   # Build dependencies
-  - "pip install --user --upgrade pyqt5"
+  # Don't install as user, since that puts the pyrcc5 script in a user-specific place
+  - "pip install --upgrade pyqt5"
 
   # Packaging dependencies
   - "pip install --user --upgrade pyinstaller"
