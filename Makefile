@@ -21,15 +21,15 @@ build:
 	make test
 
 install:
-	bash ./scripts/install.sh
+	bash scripts/install.sh
 
 test:
 	pip install pytest
 	pytest aw-core/tests
-	bash ./scripts/integration_tests.sh
+	bash scripts/integration_tests.sh
 
 package:
-	bash ./scripts/package.sh
+	bash scripts/package.sh
 
 clean:
 	rm -r build dist
