@@ -45,9 +45,9 @@ before_install:
  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 
 install:
- - "./scripts/build.sh"
- - "./scripts/install.sh --noroot"
+ - "make build"
+ - "make install"
 
 script:
- - "./scripts/integration_tests.sh"
- - "./scripts/package.sh"
+ - "make test"
+ - "make package"

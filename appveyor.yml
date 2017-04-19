@@ -45,6 +45,9 @@ install:
   # not already installed.
   - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\install_python.ps1 }
 
+  # Required in order to get `make` to work
+  - "copy C:\\MinGW\\bin\\mingw32-make.exe C:\\MinGW\\bin\\make.exe"
+
   # Use cygwin stuff for make, bash, etc.
   - "SET PATH=C:\\cygwin\\bin;%PATH%"
 
@@ -91,15 +94,13 @@ install:
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% bash ./scripts/build.sh"
-  - "%CMD_IN_ENV% bash ./scripts/install.sh --user"
+  - "%CMD_IN_ENV% make build"
+  - "%CMD_IN_ENV% make install"
   #- "%CMD_IN_ENV% python setup.py build"
 
 test_script:
   # Run the project tests
-  # TODO: Run actual build_script here
-  - ECHO "Not working yet"
-  #- "%CMD_IN_ENV% python -m pytest"
+  - "%CMD_IN_ENV% make test"
 
 after_test:
   # If tests are successful, create binary packages for the project.
