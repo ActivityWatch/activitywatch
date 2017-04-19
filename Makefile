@@ -21,7 +21,8 @@ build:
 	make test
 
 install:
-	bash scripts/install.sh
+# Installation is already happening in the `make build` step currently.
+#	bash scripts/install.sh
 
 test:
 	pip install pytest
