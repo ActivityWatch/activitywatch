@@ -70,6 +70,7 @@ install:
 
   # Check that we have the expected version and architecture for Python
   - "%CMD_IN_ENV% python --version"
+  - "%CMD_IN_ENV% python3 --version"
   - "%CMD_IN_ENV% python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
