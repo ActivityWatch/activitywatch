@@ -52,7 +52,13 @@ install:
   - "SET PATH=C:\\MinGW\\bin;%PATH%"
 
   # Use cygwin stuff for make, bash, etc.
+  # NOTE: Don't, better to use MinGW tooling
   #- "SET PATH=C:\\cygwin\\bin;%PATH%"
+
+  # Use select tools from cygwin
+  - "mkdir C:\\MinGW\\bin-selected"
+  - "SET PATH=C:\\cygwin\\bin-selected;%PATH%"
+  - "copy C:\\cygwin\\bin\\find C:\\cygwin\\bin-selected"
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart

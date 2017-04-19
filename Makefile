@@ -27,10 +27,11 @@ install:
 test:
 	pip install pytest
 	pytest aw-core/tests
-	bash scripts/integration_tests.sh
+	# TODO: Move "integration tests" to aw-client
+	./scripts/integration_tests.sh
 
 package:
-	bash scripts/package.sh
+	./scripts/package.sh
 
 clean:
 	rm -r build dist
