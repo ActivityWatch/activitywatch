@@ -1,9 +1,7 @@
-# This is an example PKGBUILD file. Use this as a start to creating your own,
-# and remove these comments. For more information, see 'man PKGBUILD'.
-# NOTE: Please fill out the license field for your package! If it is unknown,
-# then please put 'unknown'.
-
 # Maintainer: Erik Bjäreholt <erik.bjareholt@gmail.com>
+#
+# https://wiki.archlinux.org/index.php/Python_package_guidelines
+
 pkgname=activitywatch
 pkgver='0.6.0a12'
 pkgrel=1
@@ -13,7 +11,7 @@ arch=('i686' 'x86_64')
 url="https://github.com/ActivityWatch/activitywatch"
 license=('MPL2')
 groups=()
-depends=('python>=3.5.1')
+depends=('python>=3.5.1' 'extras/python-pyqt5')
 makedepends=('python>=3.5.1' 'python-setuptools')
 checkdepends=()
 optdepends=()
