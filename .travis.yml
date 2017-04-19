@@ -5,6 +5,8 @@ matrix:
      python: 3.5
      env:
        - TRAVIS_NODE_VERSION="6"
+     services:
+       - mongodb
      deploy:
        provider: releases
        skip_cleanup: true
@@ -17,6 +19,8 @@ matrix:
      language: generic
      env:
        - TRAVIS_NODE_VERSION="4"
+     services:
+       - mongodb
      deploy:
        provider: releases
        skip_cleanup: true
@@ -27,6 +31,10 @@ matrix:
          tags: true
    - os: linux
      python: nightly
+     services:
+       - mongodb
+     env:
+       - TRAVIS_NODE_VERSION="6"
   allow_failures:
    - python: nightly
    - os: osx

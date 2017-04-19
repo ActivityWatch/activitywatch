@@ -48,11 +48,14 @@ install:
   # Required in order to get `make` to work
   - "copy C:\\MinGW\\bin\\mingw32-make.exe C:\\MinGW\\bin\\make.exe"
 
+  # Use MinGW
+  - "SET PATH=C:\\MinGW\\bin;%PATH%"
+
   # Use cygwin stuff for make, bash, etc.
   #- "SET PATH=C:\\cygwin\\bin;%PATH%"
 
   # Echo the path variable, one path per line
-  - ps "$env:path.split(\";\")"
+  - ps: "$env:path.split(\";\")"
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
