@@ -121,7 +121,7 @@ after_test:
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   #- ps: "ls dist"
-  - "%CMD_IN_ENV% bash ./scripts/package.sh"
+  - "%CMD_IN_ENV% make package"
 
 #artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
