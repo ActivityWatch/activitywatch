@@ -79,7 +79,7 @@ Yes, but we found that most time trackers lack in some important features. Commo
 
 **We're not there yet for end-users**, however if you are a developer you may try the following:
 
-```
+```sh
 # Ensure you have Python 3.5 or later installed
 python3 -V
 
