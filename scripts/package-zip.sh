@@ -8,6 +8,8 @@ cd dist;
 platform=$(uname | tr '[:upper:]' '[:lower:]')
 if [[ "$platform" == "darwin" ]]; then
     platform="macos";
+elif [[ $platform == "msys"* ]]; then
+    platform="windows"
 elif [[ $platform == "cygwin"* ]]; then
     echo "ERROR: cygwin is not a valid platform"
     exit 1
