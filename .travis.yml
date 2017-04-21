@@ -73,4 +73,6 @@ install:
 
 script:
  - "make test"
+
+after_script:
  - "make package"
