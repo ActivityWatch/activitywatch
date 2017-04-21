@@ -16,7 +16,7 @@ ActivityWatch
 ActivityWatch ***records what you do*** so that you can ***become aware of what you do*** and choose to do better. All in a secure way where ***you control the data***.
 
 
-# About
+## About
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
 
@@ -33,7 +33,7 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 You can read more on our [website](https://activitywatch.github.io/about/).
 
-## Screenshots
+### Screenshots
 
 <img src="http://activitywatch.net/screenshot.png" width="22%">
 <!--
@@ -42,7 +42,7 @@ You can read more on our [website](https://activitywatch.github.io/about/).
   <img src="http://activitywatch.net/screenshot.png" width="22%">
 -->
 
-## Is this yet another time tracker?
+### Is this yet another time tracker?
 
 Yes, but we found that most time trackers lack in some important features. Common dealbreakers:
 
@@ -51,7 +51,7 @@ Yes, but we found that most time trackers lack in some important features. Commo
  - High data resolution (storage of raw data)
  - Plugins (simplicity to collect more data)
 
-### Feature comparison
+#### Feature comparison
 
 
 <!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
@@ -75,7 +75,7 @@ Yes, but we found that most time trackers lack in some important features. Commo
 | WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many |
 
 
-## Installation & Usage
+### Installation & Usage
 
 **We're not there yet for end-users**, however if you are a developer you may try the following:
 
@@ -107,27 +107,27 @@ aw-watcher-window
 
 If anything doesn't work, let us know!
 
-# About this repository
+## About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
 
-## Server
+### Server
 
 `aw-server` is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
 
 The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
 
-## Watchers
+### Watchers
 
  - `aw-watcher-afk` - can be used to log the presence/absence of user activity from keyboard and mouse input
  - `aw-watcher-window` - can be used to log the currently active application and it's window title
  - `aw-watcher-web` - (WIP) can be used to increase the logging detail when browsing the web by collecting the URLs and titles of tabs (your web history with superpowers)
 
-## Libraries
+### Libraries
 
  - `aw-core` - core library, provides no runnable modules
  - `aw-client` - client library, useful when writing watchers
 
-# Contributing
+## Contributing
 
 We currently don't have much of a good contributors guide (we're working on it), feel free to browse the documentation (also in a early state). You should also send me an email at: [erik@bjareho.lt](mailto:erik@bjareho.lt).
