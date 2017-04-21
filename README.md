@@ -77,7 +77,35 @@ Yes, but we found that most time trackers lack in some important features. Commo
 
 ## Installation & Usage
 
-We're not there yet for end-users, if you are a developer you may figure it out on your own until we get our shit together.
+**We're not there yet for end-users**, however if you are a developer you may try the following:
+
+```
+# Ensure you have Python 3.5 or later installed
+python3 -V
+
+# Now you probably want to set up a virtualenv so we don't install everything system-wide.
+sudo pip3 install virtualenv  # Assuming you don't already have it, you might want to use your systems package manager instead.
+virtualenv venv --python=python3 --clear
+# Now you need to activate the virtualenv
+# For bash/zsh users: source ./venv/bin/activate
+# For fish users:     source ./venv/bin/activate.fish
+
+# Now we build and install everything into the virtualenv.
+make build
+
+# Now you should be able to start ActivityWatch
+# Either use the trayicon manager:
+aw-qt
+# Or run each module seperately:
+aw-server
+aw-watcher-afk
+aw-watcher-window
+
+# Now everything should be running!
+# You can see your data at http://localhost:5600/
+```
+
+If anything doesn't work, let us know!
 
 # About this repository
 
