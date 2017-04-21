@@ -25,6 +25,7 @@ install:
 
 test:
 	make --directory=aw-core test
+	make --directory=aw-qt test
 	# TODO: Move "integration tests" to aw-client
 	./scripts/integration_tests.sh
 
