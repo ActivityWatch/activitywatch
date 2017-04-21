@@ -12,12 +12,10 @@ build:
 	make --directory=aw-webui build
 	cp -r aw-webui/dist/* aw-server/aw_server/static/
 #
+	make --directory=aw-server build
 	make --directory=aw-watcher-afk build
 	make --directory=aw-watcher-window build
-	make --directory=aw-server build
 	make --directory=aw-qt build
-#
-	make test
 
 install:
 	make --directory=aw-qt install
@@ -26,8 +24,7 @@ install:
 #	bash scripts/install.sh
 
 test:
-	pip install pytest
-	pytest aw-core/tests
+	make --directory=aw-core test
 	# TODO: Move "integration tests" to aw-client
 	./scripts/integration_tests.sh
 
