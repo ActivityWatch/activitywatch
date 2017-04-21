@@ -13,6 +13,8 @@ elif [[ $platform == "cygwin"* ]]; then
     exit 1
 fi
 
+echo "Platform is: $platform"
+
 if [[ $platform == "windows"* ]]; then
     7z a "activitywatch-${platform}.zip" activitywatch;
 else
