@@ -5,7 +5,7 @@ serverpid=$!
 
 sleep 2
 
-nosetests aw-server
+pytest aw-server
 tests_exitcode=$?
 
 kill $serverpid

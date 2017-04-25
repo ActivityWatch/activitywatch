@@ -45,23 +45,39 @@ install:
   # not already installed.
   - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\install_python.ps1 }
 
+  # Required in order to get `make` to work
+  - "copy C:\\MinGW\\bin\\mingw32-make.exe C:\\MinGW\\bin\\make.exe"
+
+  # Use MinGW
+  - "SET PATH=C:\\MinGW\\bin;%PATH%"
+
   # Use cygwin stuff for make, bash, etc.
-  - "SET PATH=C:\\cygwin\\bin;%PATH%"
+  # NOTE: Don't, better to use MinGW tooling
+  #- "SET PATH=C:\\cygwin\\bin;%PATH%"
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   # pyrcc5.exe can be found here:
   #   C:\Users\erb\AppData\Roaming\Python\Python35\Scripts\pyrcc5.exe
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "SET PATH=%PYTHON%;%PATH%"
+  - "SET PATH=%PYTHON%\\Scripts;%PATH%"
 
-  # Install node and npm
-  - ps: "./scripts/install_node.ps1"
-  - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
+  # For debugging: Echo the path variable, one path per line
+  - ps: "$env:path.split(\";\")"
+  - ECHO "%PYTHON%"
 
   # Check that we have the expected version and architecture for Python
   - "%CMD_IN_ENV% python --version"
   - "%CMD_IN_ENV% python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # Add the python3 executable
+  - "copy %PYTHON%\\python.exe %PYTHON%\\python3.exe"
+  - "%CMD_IN_ENV% python3 --version"
+
+  # Install node and npm
+  - ps: "./scripts/install_node.ps1"
+  - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
@@ -91,15 +107,13 @@ install:
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% bash ./scripts/build.sh"
-  - "%CMD_IN_ENV% bash ./scripts/install.sh --user"
+  - "%CMD_IN_ENV% make build"
+  - "%CMD_IN_ENV% make install"
   #- "%CMD_IN_ENV% python setup.py build"
 
 test_script:
   # Run the project tests
-  # TODO: Run actual build_script here
-  - ECHO "Not working yet"
-  #- "%CMD_IN_ENV% python -m pytest"
+  - "%CMD_IN_ENV% make test"
 
 after_test:
   # If tests are successful, create binary packages for the project.
@@ -107,7 +121,7 @@ after_test:
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   #- ps: "ls dist"
-  - "%CMD_IN_ENV% bash ./scripts/package.sh"
+  - "%CMD_IN_ENV% make package"
 
 #artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
