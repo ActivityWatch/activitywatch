@@ -13,7 +13,7 @@ function install_with_pkg() {
 }
 
 install_with_pkg
-pip3 install --upgrade pip virtualenv;
+pip3 install --upgrade virtualenv;
 virtualenv venv -p python3;
 
 # Now run `source venv/bin/activate` in the shell where the virtualenv should be used

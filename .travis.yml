@@ -62,9 +62,7 @@ before_install:
  - pip install --upgrade pip
  - python --version
  - pip --version
- - pip install PyQt5
- - pip install pyinstaller
- - pip install --upgrade nose
+ - pip install --upgrade pytest pyinstaller
  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 
 install:
