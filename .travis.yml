@@ -4,7 +4,23 @@ matrix:
    - os: linux
      python: 3.5
      env:
-       - TRAVIS_NODE_VERSION="4"
+       - TRAVIS_NODE_VERSION="6"
+     services:
+       - mongodb
+     deploy:
+       provider: releases
+       skip_cleanup: true
+       file: dist/activitywatch-linux.zip
+       api_key:
+         secure: PSkaHT7bhmCBFutBhfIyHd/j784e0bgzVrahA9+IrEZQqHmJzGvkytf4mQ+EWz0lYDX/Jko7aIFfuCQ8yoVNnnwCu8SwTKXcwrkwuJrymupIK+Xxau6C4rMBLK81mphZs8t2YjJK720EquZ54Tt5Y79Dh2tk9ZxdgqWgVLVhhZziD2/I5BfpsqRgCFqZc4UKAOAf5jpe1lgCOz4zkLP3vgQUyIJgkc9A1BT01f5v860hAlH8HchBAlIMklzPJt3ps9ch8dLRtCC3ZQRWIQpNGjw10P4BO3DqjF4ASeo0ZtbLGIFZeWnnAbQxRIztPUqiYnTQckvHcHYAKG8cyO8SBKQj1au5FRTCHbafpOOzLDWkXx+fqaYakxmPlW6YGp+zaiDQsmNCIdCWWsFU8+gUgZL8Owf4eYc2LI4LW7SI/RC7HjllqNP8WVbZSbQRcvQrK9ZN6fiOixTLni2cXyKy6SxVaDd/+iji8YwPW8JrOawTsXIoZRDE6vq41Y47tO/MU9yLm8RkRkApBGgsc+5RJCEEiDyghJ3op+rWIavcMmSZQ3TBo5e00XyPBd7dGkxoLk9WUSuaZgTmi7FSfDDxWW9TiE7tP2ruIV4fcAlOOkM5ll3K6XIo61JM0JAuAKsg7g32lOnr2DEGDk8XlV3QqIEzwjXLjdVrk3ALabp8HjI=
+       on:
+         tags: true
+   - os: linux
+     python: 3.6
+     env:
+       - TRAVIS_NODE_VERSION="6"
+     services:
+       - mongodb
      deploy:
        provider: releases
        skip_cleanup: true
@@ -17,6 +33,8 @@ matrix:
      language: generic
      env:
        - TRAVIS_NODE_VERSION="4"
+     services:
+       - mongodb
      deploy:
        provider: releases
        skip_cleanup: true
@@ -27,9 +45,13 @@ matrix:
          tags: true
    - os: linux
      python: nightly
+     services:
+       - mongodb
+     env:
+       - TRAVIS_NODE_VERSION="6"
   allow_failures:
+   - python: 3.6
    - python: nightly
-   - os: osx
 
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
@@ -39,14 +61,13 @@ before_install:
  - pip install --upgrade pip
  - python --version
  - pip --version
- - pip install PyQt5
- - pip install pyinstaller
- - pip install --upgrade nose
+ - pip install --upgrade pytest pyinstaller
  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 
 install:
- - "./scripts/install.sh --noroot"
+ - "make build"
+ - "make install"
 
 script:
- - "./scripts/integration_tests.sh"
- - "./scripts/build.sh"
+ - "make test"
+ - "make package"

@@ -1,0 +1,70 @@
+# Maintainer: Erik Bjäreholt <erik.bjareholt@gmail.com>
+#
+# https://wiki.archlinux.org/index.php/Python_package_guidelines
+
+pkgname=activitywatch
+pkgver='0.6.0a12'
+pkgrel=1
+epoch=
+pkgdesc="Log what you do on your computer. Simple, extensible, no third parties."
+arch=('i686' 'x86_64')
+url="https://github.com/ActivityWatch/activitywatch"
+license=('MPL2')
+groups=()
+depends=('python>=3.5.1' 'extras/python-pyqt5')
+makedepends=('python>=3.5.1' 'python-setuptools')
+checkdepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=("${pkgname}::git+https://github.com/ActivityWatch/activitywatch.git#tag=v$pkgver")
+noextract=()
+md5sums=()
+validpgpkeys=()
+md5sums=('SKIP')
+
+prepare() {
+    cd $pkgname
+    git submodule update --init --recursive
+
+	#cd "$pkgname-$pkgver"
+	#patch -p1 -i "$srcdir/$pkgname-$pkgver.patch"
+}
+
+build() {
+    cd $pkgname
+
+    # Build aw-webui for inclusion in aw-server
+    cd aw-webui
+    npm install
+    npm run build
+    cd ..
+    cp -r aw-webui/dist/* aw-server/aw_server/static/
+
+    # Pre-build stuff in aw-qt
+    cd aw-qt
+    ./build.sh
+    cd ..
+}
+
+check() {
+	#cd "$pkgname-$pkgver"
+	#make -k check
+    true
+}
+
+package() {
+    cd $pkgname
+
+    FOLDERS="aw-core aw-client aw-server aw-watcher-afk aw-watcher-window aw-qt"
+    for FOLDER in $FOLDERS; do
+        cd $FOLDER
+        python setup.py install --root="$pkgdir" --prefix=/usr --optimize=1
+        cd ..
+    done
+}
