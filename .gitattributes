@@ -1,0 +1,2 @@
+# See https://github.com/github/linguist for details
+scripts/install_python.ps1 linguist-vendored
