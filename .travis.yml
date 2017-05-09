@@ -55,7 +55,7 @@ matrix:
 
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
-     then ./scripts/setup_venv_osx.sh;
+     then ./scripts/ci/setup_venv_osx.sh;
      source venv/bin/activate;
    fi
  - pip install --upgrade pip

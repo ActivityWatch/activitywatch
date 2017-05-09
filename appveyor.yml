@@ -7,7 +7,7 @@ environment:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
-    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\scripts\\run_with_env.cmd"
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\scripts\\ci\\run_with_env.cmd"
 
   matrix:
     # Pre-installed Python versions, which Appveyor may upgrade to
@@ -43,7 +43,7 @@ install:
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
-  - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\install_python.ps1 }
+  - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\ci\install_python.ps1 }
 
   # Required in order to get `make` to work
   - "copy C:\\MinGW\\bin\\mingw32-make.exe C:\\MinGW\\bin\\make.exe"
@@ -76,7 +76,7 @@ install:
   - "%CMD_IN_ENV% python3 --version"
 
   # Install node and npm
-  - ps: "./scripts/install_node.ps1"
+  - ps: "./scripts/ci/install_node.ps1"
   - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
@@ -89,7 +89,7 @@ install:
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
   - "%CMD_IN_ENV% pip install --upgrade pyqt5"
-  - "%CMD_IN_ENV% powershell scripts\\install_pyhook.ps1"
+  - "%CMD_IN_ENV% powershell scripts\\ci\\install_pyhook.ps1"
 
   # Packaging dependencies
   - "%CMD_IN_ENV% pip install --upgrade pyinstaller"
