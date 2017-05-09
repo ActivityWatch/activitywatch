@@ -84,7 +84,7 @@ install:
   - "%CMD_IN_ENV% pip install --disable-pip-version-check --user --upgrade pip"
 
   # Testing dependencies
-  - "%CMD_IN_ENV% pip install --upgrade pytest pytest-cov mypy"
+  - "%CMD_IN_ENV% pip install --upgrade pytest pytest-cov mypy==0.510"
 
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
