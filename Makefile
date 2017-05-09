@@ -44,7 +44,7 @@ package:
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
 #
-	bash scripts/package-zip.sh
+	bash scripts/package/package-zip.sh
 
 clean:
 	rm -r build dist
