@@ -48,30 +48,19 @@ class Contribstats:
 
     def gather(self):
         self.repos = {}
-        self.my_stats = []
         for r in self.o.iter_repos():
             if r.fork:
                 print("Skipping {}, was a fork".format(r.name))
                 continue
 
-            self.repos[r.name] = {}
-
             print("Collecting from {}".format(r.name))
+            self.repos[r.name] = {}
             for c in r.iter_contributor_statistics():
                 self.repos[r.name][c.author.login] = sum_weeks(c.alt_weeks)
-
-                if self.username in repr(c.author):
-                    self.my_stats.append((r.name, c.total))
 
         self.print_ratelimit()
 
     def print(self):
-        print("Repos contributed to: ", len(self.my_stats))
-        print("Total commits:", sum([total for repo, total in self.my_stats]))
-
-        self.my_stats = sorted(self.my_stats, key=operator.itemgetter(1), reverse=True)
-        pprint(self.my_stats)
-
         pprint(self.repos)
 
 
