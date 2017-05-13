@@ -47,12 +47,17 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 
 ### Is this yet another time tracker?
 
-Yes, but we found that most time trackers lack in some important features. Common dealbreakers:
+Yes, but we found that most time trackers lack in one or more important features. 
+
+Common dealbreakers:
 
  - Open Source
  - Syncronization
+ - Ease of use (most others tend to only target programmers)
  - High data resolution (storage of raw data)
  - Plugins (simplicity to collect more data)
+
+We aim to address all of these and we're well on our way, see the table below.
 
 #### Feature comparison
 
@@ -60,7 +65,7 @@ Yes, but we found that most time trackers lack in some important features. Commo
 <!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
 
 |               | User owns data     | GUI                | Sync                     | Open Source        | Platforms                                 |
-| ------------- | ------------------ | ------------------ | ------------------------ | ------------------ | ----------------------------------------- |
+| ------------- |:------------------:|:------------------:|:------------------------:|:------------------:| ----------------------------------------- |
 | ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (WIP)  | :white_check_mark: | macOS, Linux, Windows, ~~Android~~ (WIP)  |
 | Selfspy       | :white_check_mark: | :x:                | :x:                      | :white_check_mark: | macOS, Linux, Windows                     |
 | ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :white_check_mark: | macOS, Linux                              |
@@ -70,10 +75,10 @@ Yes, but we found that most time trackers lack in some important features. Commo
 **Tracking**
 
 |               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           |
-| ------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------------ |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:| ------------------------ |
 | ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:?               | :white_check_mark:?      |
-| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:?               | :x:?                     |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      |
+| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      |
 | WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many |
 
