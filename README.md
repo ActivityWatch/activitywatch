@@ -36,6 +36,8 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 
 ### Screenshots
 
+<!-- TODO: We could probably stylize these (nice borders, scaled down) -->
+
 <img src="http://activitywatch.net/screenshot.png" width="22%">
 <!--
   <img src="http://activitywatch.net/screenshot.png" width="22%">
@@ -57,13 +59,13 @@ Yes, but we found that most time trackers lack in some important features. Commo
 
 <!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
 
-|               | User owns data     | GUI             | Sync                     | Open Source        | Platforms                                         |
-| ------------- | ------------------ | ------------------ | ------------------------ | ------------------ | ------------------------------------------------- |
-| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (WIP)  | :white_check_mark: | macOS, Linux, Windows (Beta), ~~Android~~ (WIP)   |
-| Selfspy       | :white_check_mark: | :x:                | :x:                      | :white_check_mark: | Windows, macOS, Linux                             |
-| ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :white_check_mark: | macOS, Linux                                      |
-| RescueTime    | :x:                | :white_check_mark: | Centralized              | :x:                | Windows, macOS, Linux, Android, iOS               |
-| WakaTime      | :x:                | :white_check_mark: | Centralized              | Client             | Most popular text editors                         |
+|               | User owns data     | GUI                | Sync                     | Open Source        | Platforms                                 |
+| ------------- | ------------------ | ------------------ | ------------------------ | ------------------ | ----------------------------------------- |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (WIP)  | :white_check_mark: | macOS, Linux, Windows, ~~Android~~ (WIP)  |
+| Selfspy       | :white_check_mark: | :x:                | :x:                      | :white_check_mark: | macOS, Linux, Windows                     |
+| ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :white_check_mark: | macOS, Linux                              |
+| RescueTime    | :x:                | :white_check_mark: | Centralized              | :x:                | macOS, Linux, Windows, Android, iOS       |
+| WakaTime      | :x:                | :white_check_mark: | Centralized              | Client             | Most popular text editors                 |
 
 **Tracking**
 
