@@ -57,13 +57,13 @@ Yes, but we found that most time trackers lack in some important features. Commo
 
 <!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
 
-|               | User owns data     | Web UI             | Sync                         | Open Source        | Platforms                                                  |
-| ------------- | ------------------ | ------------------ | ---------------------------- | ------------------ | ---------------------------------------------------------- |
-| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (Planned)  | :white_check_mark: | macOS, Linux, ~~Windows~~ (WIP), ~~Android~~ (WIP)         |
-| Selfspy       | :white_check_mark: | :x:                | :x:                          | :white_check_mark: | Windows, macOS, Linux                                      |
-| ulogme        | :white_check_mark: | :white_check_mark:?| :x:                          | :white_check_mark: | macOS, Linux                                               |
-| RescueTime    | :x:                | :white_check_mark: | Centralized                  | :x:                | Windows, macOS, Linux, Android, iOS                        |
-| WakaTime      | :x:                | :white_check_mark: | Centralized                  | Client             | Most popular text editors                                  |
+|               | User owns data     | GUI             | Sync                     | Open Source        | Platforms                                         |
+| ------------- | ------------------ | ------------------ | ------------------------ | ------------------ | ------------------------------------------------- |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (WIP)  | :white_check_mark: | macOS, Linux, Windows (Beta), ~~Android~~ (WIP)   |
+| Selfspy       | :white_check_mark: | :x:                | :x:                      | :white_check_mark: | Windows, macOS, Linux                             |
+| ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :white_check_mark: | macOS, Linux                                      |
+| RescueTime    | :x:                | :white_check_mark: | Centralized              | :x:                | Windows, macOS, Linux, Android, iOS               |
+| WakaTime      | :x:                | :white_check_mark: | Centralized              | Client             | Most popular text editors                         |
 
 **Tracking**
 
