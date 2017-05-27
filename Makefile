@@ -21,13 +21,16 @@ install:
 	make --directory=aw-qt install
 # Installation is already happening in the `make build` step currently.
 # We might want to change this.
-#	bash scripts/install.sh
+# We should also add some option to install as user (pip3 install --user) or editable (pip3 install --editable)
+
+uninstall:
+	./scripts/uninstall.sh
 
 test:
 	make --directory=aw-core test
 	make --directory=aw-qt test
 	# TODO: Move "integration tests" to aw-client
-	./scripts/integration_tests.sh
+	./scripts/tests/integration_tests.sh
 
 package:
 	mkdir -p dist/activitywatch
@@ -44,7 +47,7 @@ package:
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
 #
-	bash scripts/package-zip.sh
+	bash scripts/package/package-zip.sh
 
 clean:
 	rm -r build dist
