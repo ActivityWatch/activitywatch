@@ -63,10 +63,11 @@ install:
   - "SET PATH=%PYTHON%;%PATH%"
   - "SET PATH=%PYTHON%\\Scripts;%PATH%"
 
-  # Create overrides
+  # Create bin overrides dir and add it to path
   - ps: "mkdir C:/bin-override/"
   - "SET PATH=C:\\bin-override\\;%PATH%"
-  # Created due to issue #51 (mypy issues on Appveyor)
+
+  # FIXME: Created due to issue #51 (mypy issues on Appveyor)
   - "copy .\\scripts\\nop.bat C:\\bin-override\\mypy.bat"
 
   # For debugging: Echo the path variable, one path per line
@@ -88,6 +89,9 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "%CMD_IN_ENV% pip install --disable-pip-version-check --user --upgrade pip"
+
+  # FIXME: Testing a workaround to bug #52
+  - "%CMD_IN_ENV% pip install requests==2.14.1"
 
   # Testing dependencies
   - "%CMD_IN_ENV% pip install --upgrade pytest pytest-cov mypy==0.510"
