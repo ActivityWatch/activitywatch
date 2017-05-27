@@ -133,9 +133,10 @@ after_test:
   #- ps: "ls dist"
   - "%CMD_IN_ENV% make package"
 
-#artifacts:
+artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
-  #- path: dist\*
+  - path: dist\*.zip
+  #- name:
 
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
