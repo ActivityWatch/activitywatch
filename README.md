@@ -49,20 +49,26 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 
 Yes, but we found that most time trackers lack in one or more important features. 
 
-Common dealbreakers:
+**Common dealbreakers:**
 
- - Open Source
- - Syncronization
- - Ease of use (most others tend to only target programmers)
- - High data resolution (storage of raw data)
- - Plugins (simplicity to collect more data)
+ - Not open source
+ - The user does not own the data (common with non-open source options)
+ - Lack of syncronization (and when available: it's centralized)
+ - Difficult to setup/use (most open source options tend to target programmers)
+ - Low data resolution (does not store raw data)
+ - Hard or impossible to extend (collecting more data is not as simple as it could be)
 
-We aim to address all of these and we're well on our way, see the table below.
+**To sum it up:**
+
+ - Closed source solutions suffer from privacy issues and limited features.
+ - Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack syncronization.
+
+We have a plan to address all of these and we're well on our way. See the table below for our progress.
 
 #### Feature comparison
 
 
-<!-- TODO: Replace Platform names with icons, yes/no with checkbox icons,   -->
+<!-- TODO: Replace Platform names with icons  -->
 
 |               | User owns data     | GUI                | Sync                     | Open Source        | Platforms                                 |
 | ------------- |:------------------:|:------------------:|:------------------------:|:------------------:| ----------------------------------------- |
@@ -75,7 +81,7 @@ We aim to address all of these and we're well on our way, see the table below.
 **Tracking**
 
 |               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:| ------------------------ |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:------------------------:|
 | ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 |
 | Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      |
 | ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     |
