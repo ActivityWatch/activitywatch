@@ -63,6 +63,12 @@ install:
   - "SET PATH=%PYTHON%;%PATH%"
   - "SET PATH=%PYTHON%\\Scripts;%PATH%"
 
+  # Create overrides
+  - ps: "mkdir C:/bin-override/"
+  - "SET PATH=C:\\bin-override\\;%PATH%"
+  # Created due to issue #51 (mypy issues on Appveyor)
+  - "copy .\\scripts\\nop.bat C:\\bin-override\\mypy.bat"
+
   # For debugging: Echo the path variable, one path per line
   - ps: "$env:path.split(\";\")"
   - ECHO "%PYTHON%"
