@@ -68,7 +68,7 @@ install:
   - "SET PATH=C:\\bin-override\\;%PATH%"
 
   # FIXME: Created due to issue #51 (mypy issues on Appveyor)
-  - "copy .\\scripts\\nop.bat C:\\bin-override\\mypy.bat"
+  - "copy .\\scripts\\nop.sh C:\\bin-override\\mypy"
 
   # For debugging: Echo the path variable, one path per line
   - ps: "$env:path.split(\";\")"
