@@ -21,7 +21,10 @@ install:
 	make --directory=aw-qt install
 # Installation is already happening in the `make build` step currently.
 # We might want to change this.
-#	bash scripts/install.sh
+# We should also add some option to install as user (pip3 install --user) or editable (pip3 install --editable)
+
+uninstall:
+	./scripts/uninstall.sh
 
 test:
 	make --directory=aw-core test
