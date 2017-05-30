@@ -18,9 +18,9 @@ environment:
       PYTHON_VERSION: "3.5.x" # currently 3.5.2
       PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x" # currently 3.5.2
-      PYTHON_ARCH: "64"
+   #- PYTHON: "C:\\Python35-x64"
+   #  PYTHON_VERSION: "3.5.x" # currently 3.5.2
+   #  PYTHON_ARCH: "64"
 
 install:
   # Clone submodules
@@ -137,6 +137,19 @@ artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
   - path: dist\*.zip
   #- name:
+
+deploy:
+  # release: myproduct-v$(appveyor_build_version)  # optional
+  description: ''  # required to be non-null by the GitHub releases API
+  provider: GitHub
+  auth_token:
+    secure: fI8Ar/HiYNXcmeXQct/yzkKeEF4MHdYgP5/XL7uHKNs4lhPyUmT6GSltcLwkqk45
+  artifact: /.*\.zip/
+  draft: true
+  prerelease: true
+  on:
+    appveyor_repo_tag: true        # deploy on tag push only
+    # branch: master                 # release from master branch only
 
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
