@@ -8,11 +8,11 @@ cd dist;
 
 function get_platform() {
     _platform=$(uname | tr '[:upper:]' '[:lower:]')
-    if [[ "$platform" == "darwin" ]]; then
+    if [[ $_platform == "darwin" ]]; then
         _platform="macos";
-    elif [[ $platform == "msys"* ]]; then
+    elif [[ $_platform == "msys"* ]]; then
         _platform="windows";
-    elif [[ $platform == "cygwin"* ]]; then
+    elif [[ $_platform == "cygwin"* ]]; then
         echo "ERROR: cygwin is not a valid platform";
         exit 1;
     fi
