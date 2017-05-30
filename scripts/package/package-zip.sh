@@ -7,6 +7,12 @@ echo "Zipping executables..."
 cd dist;
 
 function get_platform() {
+    # Will return "linux" for GNU/Linux
+    #   I'd just like to interject for a moment...
+    #   https://wiki.installgentoo.com/index.php/Interjection
+    # Will return "macos" for macOS/OS X
+    # Will return "windows" for Windows/MinGW/msys
+
     _platform=$(uname | tr '[:upper:]' '[:lower:]')
     if [[ $_platform == "darwin" ]]; then
         _platform="macos";
@@ -16,6 +22,7 @@ function get_platform() {
         echo "ERROR: cygwin is not a valid platform";
         exit 1;
     fi
+
     echo $_platform;
 }
 
@@ -27,18 +34,44 @@ function get_version() {
     else
         _version=$(git rev-parse --short HEAD)
     fi
+
     echo $_version;
+}
+
+function get_arch() {
+    _platform=$(get_platform)
+    if [[ $_platform == "linux" || $_platform == "macos" ]]; then
+        _arch="$(uname -m)"
+    elif [[ $PYTHON_ARCH ]]; then
+        # $PYTHON_ARCH is set on appveyor
+        if [[ $PYTHON_ARCH == "64" ]]; then
+            _arch="x86_64"
+        elif [[ $PYTHON_ARCH == "32" ]]; then
+            _arch="x86"
+        else
+            echo "invalid arch"
+            exit 1
+        fi
+    else
+        _arch="unknown_arch"
+    fi
+
+    echo $_arch;
 }
 
 platform=$(get_platform)
 version=$(get_version)
+arch=$(get_arch)
 
-echo "Platform: $platform, version: $version"
+echo "Platform: $platform, arch: $arch, version: $version"
+
+zipname="activitywatch-${platform}-${arch}-${version}.zip"
+echo "Name of package will be: $zip"
 
 if [[ $platform == "windows"* ]]; then
-    7z a "activitywatch-${platform}-${version}.zip" activitywatch;
+    7z a $zipname activitywatch;
 else
-    zip -r "activitywatch-${platform}-${version}.zip" activitywatch;
+    zip -r $zipname activitywatch;
 fi
 cd ..;
 echo "-------------------------------------"
