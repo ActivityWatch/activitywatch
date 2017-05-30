@@ -70,4 +70,5 @@ install:
 
 script:
  - "make test"
+ - "make test-integration"
  - "make package"
