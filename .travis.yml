@@ -26,6 +26,7 @@ matrix:
          tags: true
    - os: osx
      language: generic
+     python: null
      deploy:
        provider: releases
        skip_cleanup: true
