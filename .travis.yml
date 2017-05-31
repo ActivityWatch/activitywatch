@@ -1,4 +1,5 @@
 os: linux
+dist: trusty
 language: python
 python:
    # These jobs are only used in testing, no packaging done and are currently allowed failures
