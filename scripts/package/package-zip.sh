@@ -27,8 +27,8 @@ function get_platform() {
 }
 
 function get_version() {
-    if [[ $TRAVIS_VERSION ]]; then
-        _version=$TRAVIS_VERSION;
+    if [[ $TRAVIS_TAG ]]; then
+        _version=$TRAVIS_TAG;
     elif [[ $APPVEYOR_REPO_TAG_NAME ]]; then
         _version=$APPVEYOR_REPO_TAG_NAME;
     else
