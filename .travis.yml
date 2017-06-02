@@ -39,7 +39,7 @@ matrix:
        on:
          tags: true
   allow_failures:
-   - python: 3.6
+  #- python: 3.6
    - python: nightly
 
 before_install:
@@ -60,4 +60,6 @@ install:
 script:
  - "make test"
  - "make test-integration"
- - "make package"
+ - if [[ "$(python -V | grep -o '3\.[0-9]')" == "3.5" ]]; then
+     make package;
+   fi
