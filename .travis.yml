@@ -42,6 +42,11 @@ matrix:
   #- python: 3.6
    - python: nightly
 
+addons:
+  artifacts:
+    paths:
+     - $(ls dist/activitywatch-*.zip | tr "\n" ":")
+
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
      then ./scripts/ci/setup_venv_osx.sh;
