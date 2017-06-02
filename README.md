@@ -99,7 +99,7 @@ python3 -V
 
 # Now you probably want to set up a virtualenv so we don't install everything system-wide.
 sudo pip3 install virtualenv  # Assuming you don't already have it, you might want to use your systems package manager instead.
-virtualenv venv --python=python3 --clear
+python3 -m venv venv
 # Now you need to activate the virtualenv
 # For bash/zsh users: source ./venv/bin/activate
 # For fish users:     source ./venv/bin/activate.fish
