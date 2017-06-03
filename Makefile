@@ -4,12 +4,6 @@
 
 .PHONY: build install test clean
 
-ifeq ($(OS),Windows_NT)
-    DETECTED_OS := Windows
-else
-    DETECTED_OS := $(shell uname -s)
-endif
-
 # TODO: Currently no way to do a `setup.py develop`/`pip install --editable`
 build:
 	make --directory=aw-core build
@@ -54,12 +48,7 @@ package:
 	make --directory=aw-server package
 	cp -r aw-server/dist/aw-server/* dist/activitywatch
 #
-	# TODO: Move this conditional into aw-qt
-	@if [ "$(DETECTED_OS)" = "Windows" ]; then\
-		make --directory=aw-qt package-appveyor;\
-	else\
-		make --directory=aw-qt package;\
-	fi
+	make --directory=aw-qt package;
 	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
 #
 	bash scripts/package/package-zip.sh
