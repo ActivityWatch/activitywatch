@@ -40,8 +40,13 @@ matrix:
        on:
          tags: true
   allow_failures:
-   - python: 3.6
+  #- python: 3.6
    - python: nightly
+
+addons:
+  artifacts:
+    paths:
+     - $(ls dist/activitywatch-*.zip | tr "\n" ":")
 
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
@@ -61,4 +66,6 @@ install:
 script:
  - "make test"
  - "make test-integration"
- - "make package"
+ - if [[ "$(python -V | grep -o '3\.[0-9]')" == "3.5" ]]; then
+     make package;
+   fi
