@@ -58,7 +58,7 @@ package:
 	@if [ "$(DETECTED_OS)" = "Windows" ]; then\
 		make --directory=aw-qt package-appveyor;\
 	else\
-		make --directory=aw-qt package\
+		make --directory=aw-qt package;\
 	fi
 	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
 #
