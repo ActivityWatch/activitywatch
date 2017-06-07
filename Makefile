@@ -48,7 +48,7 @@ package:
 	make --directory=aw-server package
 	cp -r aw-server/dist/aw-server/* dist/activitywatch
 #
-	make --directory=aw-qt package
+	make --directory=aw-qt package;
 	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
 #
 	bash scripts/package/package-zip.sh
