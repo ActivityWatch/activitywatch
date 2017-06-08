@@ -18,27 +18,47 @@ matrix:
    - os: linux
      python: 3.5
      deploy:
-       provider: releases
-       skip_cleanup: true
-       file_glob: true
-       file: dist/activitywatch-*.zip
-       api_key:
-         secure: PSkaHT7bhmCBFutBhfIyHd/j784e0bgzVrahA9+IrEZQqHmJzGvkytf4mQ+EWz0lYDX/Jko7aIFfuCQ8yoVNnnwCu8SwTKXcwrkwuJrymupIK+Xxau6C4rMBLK81mphZs8t2YjJK720EquZ54Tt5Y79Dh2tk9ZxdgqWgVLVhhZziD2/I5BfpsqRgCFqZc4UKAOAf5jpe1lgCOz4zkLP3vgQUyIJgkc9A1BT01f5v860hAlH8HchBAlIMklzPJt3ps9ch8dLRtCC3ZQRWIQpNGjw10P4BO3DqjF4ASeo0ZtbLGIFZeWnnAbQxRIztPUqiYnTQckvHcHYAKG8cyO8SBKQj1au5FRTCHbafpOOzLDWkXx+fqaYakxmPlW6YGp+zaiDQsmNCIdCWWsFU8+gUgZL8Owf4eYc2LI4LW7SI/RC7HjllqNP8WVbZSbQRcvQrK9ZN6fiOixTLni2cXyKy6SxVaDd/+iji8YwPW8JrOawTsXIoZRDE6vq41Y47tO/MU9yLm8RkRkApBGgsc+5RJCEEiDyghJ3op+rWIavcMmSZQ3TBo5e00XyPBd7dGkxoLk9WUSuaZgTmi7FSfDDxWW9TiE7tP2ruIV4fcAlOOkM5ll3K6XIo61JM0JAuAKsg7g32lOnr2DEGDk8XlV3QqIEzwjXLjdVrk3ALabp8HjI=
-       on:
-         tags: true
+      - provider: releases
+        skip_cleanup: true
+        file_glob: true
+        file: dist/activitywatch-*.zip
+        api_key:
+          secure: PSkaHT7bhmCBFutBhfIyHd/j784e0bgzVrahA9+IrEZQqHmJzGvkytf4mQ+EWz0lYDX/Jko7aIFfuCQ8yoVNnnwCu8SwTKXcwrkwuJrymupIK+Xxau6C4rMBLK81mphZs8t2YjJK720EquZ54Tt5Y79Dh2tk9ZxdgqWgVLVhhZziD2/I5BfpsqRgCFqZc4UKAOAf5jpe1lgCOz4zkLP3vgQUyIJgkc9A1BT01f5v860hAlH8HchBAlIMklzPJt3ps9ch8dLRtCC3ZQRWIQpNGjw10P4BO3DqjF4ASeo0ZtbLGIFZeWnnAbQxRIztPUqiYnTQckvHcHYAKG8cyO8SBKQj1au5FRTCHbafpOOzLDWkXx+fqaYakxmPlW6YGp+zaiDQsmNCIdCWWsFU8+gUgZL8Owf4eYc2LI4LW7SI/RC7HjllqNP8WVbZSbQRcvQrK9ZN6fiOixTLni2cXyKy6SxVaDd/+iji8YwPW8JrOawTsXIoZRDE6vq41Y47tO/MU9yLm8RkRkApBGgsc+5RJCEEiDyghJ3op+rWIavcMmSZQ3TBo5e00XyPBd7dGkxoLk9WUSuaZgTmi7FSfDDxWW9TiE7tP2ruIV4fcAlOOkM5ll3K6XIo61JM0JAuAKsg7g32lOnr2DEGDk8XlV3QqIEzwjXLjdVrk3ALabp8HjI=
+        on:
+          tags: true
+      - provider: s3
+        skip_cleanup: true
+        access_key_id: AKIAIISX5RJFA4X23TTA
+        secret_access_key:
+          secure: RMrCpX6HsOlRwU3DW8kycQZKvlMy12jGZ2PY6mtyjRAy4S8ddq1FA42KlHnvCRxqwjBp7WBbINoczAiNUfoT62oa8/csSTO2WkD2XxRfIEjrY/NSBrz4lQBnQ9RENez4DBr0HsLSUwWt1ySN1O7cs+RC2Cz/i9+5qpMzU1gQgZYYBB77p4GR/S6HHDIbMO7c9IjhOHQp3p7d4evyvZ9+Oq1uncgKdzl5Qnl/xov6w8F6Yi0Tpe1q1l5UftpQmq6k1PgKQPTIv61r2mWCEAW77LeJaQvJeKY/UfXPecWHS6SriFQqraAtbSokD7juYwiddQ2niJ3q2zLTQBTt5paA+0lYe9Vwv0wQqAThUCnpBfPGTmowTeyW1zkoPLLEGPiRzVlwO6cV5jaModn54Jp210k301SuxS8CG9QbGOLJPplsLWx/+SX225aggpUqYd6YLkqrb/ikPfmrUeaM25ctVz7QoMzM8VuurcVgkNLQKbZvHutVNM056vuZqTKBNUsHwS0CPYwL9R0+z0Kz+7Pm9XS0jtnDl7fUcBUD7EVgimweAodEDrjbweDbvZN+0kiGcSjlARwhIQ1X3zUPqb/R1SfXZOk1/Koe48UScnpWZEFItga1ftF+OfGX7mitzN5FcX7SfBUzSuu0C8zouYRct+zfmfnBbGkOy3igVaGg7oY=
+        bucket: activitywatch-builds
+        local-dir: dist
+        acl: public_read
+        on:
+          repo: ActivityWatch/activitywatch
      # This is the job that will be used when building packages for macOS
    - os: osx
      language: generic
      python: null
      deploy:
-       provider: releases
-       skip_cleanup: true
-       file_glob: true
-       file: dist/activitywatch-*.zip
-       api_key:
-         secure: PSkaHT7bhmCBFutBhfIyHd/j784e0bgzVrahA9+IrEZQqHmJzGvkytf4mQ+EWz0lYDX/Jko7aIFfuCQ8yoVNnnwCu8SwTKXcwrkwuJrymupIK+Xxau6C4rMBLK81mphZs8t2YjJK720EquZ54Tt5Y79Dh2tk9ZxdgqWgVLVhhZziD2/I5BfpsqRgCFqZc4UKAOAf5jpe1lgCOz4zkLP3vgQUyIJgkc9A1BT01f5v860hAlH8HchBAlIMklzPJt3ps9ch8dLRtCC3ZQRWIQpNGjw10P4BO3DqjF4ASeo0ZtbLGIFZeWnnAbQxRIztPUqiYnTQckvHcHYAKG8cyO8SBKQj1au5FRTCHbafpOOzLDWkXx+fqaYakxmPlW6YGp+zaiDQsmNCIdCWWsFU8+gUgZL8Owf4eYc2LI4LW7SI/RC7HjllqNP8WVbZSbQRcvQrK9ZN6fiOixTLni2cXyKy6SxVaDd/+iji8YwPW8JrOawTsXIoZRDE6vq41Y47tO/MU9yLm8RkRkApBGgsc+5RJCEEiDyghJ3op+rWIavcMmSZQ3TBo5e00XyPBd7dGkxoLk9WUSuaZgTmi7FSfDDxWW9TiE7tP2ruIV4fcAlOOkM5ll3K6XIo61JM0JAuAKsg7g32lOnr2DEGDk8XlV3QqIEzwjXLjdVrk3ALabp8HjI=
-       on:
-         tags: true
+      - provider: releases
+        skip_cleanup: true
+        file_glob: true
+        file: dist/activitywatch-*.zip
+        api_key:
+          secure: PSkaHT7bhmCBFutBhfIyHd/j784e0bgzVrahA9+IrEZQqHmJzGvkytf4mQ+EWz0lYDX/Jko7aIFfuCQ8yoVNnnwCu8SwTKXcwrkwuJrymupIK+Xxau6C4rMBLK81mphZs8t2YjJK720EquZ54Tt5Y79Dh2tk9ZxdgqWgVLVhhZziD2/I5BfpsqRgCFqZc4UKAOAf5jpe1lgCOz4zkLP3vgQUyIJgkc9A1BT01f5v860hAlH8HchBAlIMklzPJt3ps9ch8dLRtCC3ZQRWIQpNGjw10P4BO3DqjF4ASeo0ZtbLGIFZeWnnAbQxRIztPUqiYnTQckvHcHYAKG8cyO8SBKQj1au5FRTCHbafpOOzLDWkXx+fqaYakxmPlW6YGp+zaiDQsmNCIdCWWsFU8+gUgZL8Owf4eYc2LI4LW7SI/RC7HjllqNP8WVbZSbQRcvQrK9ZN6fiOixTLni2cXyKy6SxVaDd/+iji8YwPW8JrOawTsXIoZRDE6vq41Y47tO/MU9yLm8RkRkApBGgsc+5RJCEEiDyghJ3op+rWIavcMmSZQ3TBo5e00XyPBd7dGkxoLk9WUSuaZgTmi7FSfDDxWW9TiE7tP2ruIV4fcAlOOkM5ll3K6XIo61JM0JAuAKsg7g32lOnr2DEGDk8XlV3QqIEzwjXLjdVrk3ALabp8HjI=
+        on:
+          tags: true
+      - provider: s3
+        skip_cleanup: true
+        access_key_id: AKIAIISX5RJFA4X23TTA
+        secret_access_key:
+          secure: RMrCpX6HsOlRwU3DW8kycQZKvlMy12jGZ2PY6mtyjRAy4S8ddq1FA42KlHnvCRxqwjBp7WBbINoczAiNUfoT62oa8/csSTO2WkD2XxRfIEjrY/NSBrz4lQBnQ9RENez4DBr0HsLSUwWt1ySN1O7cs+RC2Cz/i9+5qpMzU1gQgZYYBB77p4GR/S6HHDIbMO7c9IjhOHQp3p7d4evyvZ9+Oq1uncgKdzl5Qnl/xov6w8F6Yi0Tpe1q1l5UftpQmq6k1PgKQPTIv61r2mWCEAW77LeJaQvJeKY/UfXPecWHS6SriFQqraAtbSokD7juYwiddQ2niJ3q2zLTQBTt5paA+0lYe9Vwv0wQqAThUCnpBfPGTmowTeyW1zkoPLLEGPiRzVlwO6cV5jaModn54Jp210k301SuxS8CG9QbGOLJPplsLWx/+SX225aggpUqYd6YLkqrb/ikPfmrUeaM25ctVz7QoMzM8VuurcVgkNLQKbZvHutVNM056vuZqTKBNUsHwS0CPYwL9R0+z0Kz+7Pm9XS0jtnDl7fUcBUD7EVgimweAodEDrjbweDbvZN+0kiGcSjlARwhIQ1X3zUPqb/R1SfXZOk1/Koe48UScnpWZEFItga1ftF+OfGX7mitzN5FcX7SfBUzSuu0C8zouYRct+zfmfnBbGkOy3igVaGg7oY=
+        bucket: activitywatch-builds
+        local-dir: dist
+        acl: public_read
+        on:
+          repo: ActivityWatch/activitywatch
   allow_failures:
   #- python: 3.6
    - python: nightly
@@ -65,13 +85,7 @@ script:
      make package;
    fi
 
-deploy:
-  provider: s3
-  access_key_id: AKIAIISX5RJFA4X23TTA
-  secret_access_key:
-    secure: RMrCpX6HsOlRwU3DW8kycQZKvlMy12jGZ2PY6mtyjRAy4S8ddq1FA42KlHnvCRxqwjBp7WBbINoczAiNUfoT62oa8/csSTO2WkD2XxRfIEjrY/NSBrz4lQBnQ9RENez4DBr0HsLSUwWt1ySN1O7cs+RC2Cz/i9+5qpMzU1gQgZYYBB77p4GR/S6HHDIbMO7c9IjhOHQp3p7d4evyvZ9+Oq1uncgKdzl5Qnl/xov6w8F6Yi0Tpe1q1l5UftpQmq6k1PgKQPTIv61r2mWCEAW77LeJaQvJeKY/UfXPecWHS6SriFQqraAtbSokD7juYwiddQ2niJ3q2zLTQBTt5paA+0lYe9Vwv0wQqAThUCnpBfPGTmowTeyW1zkoPLLEGPiRzVlwO6cV5jaModn54Jp210k301SuxS8CG9QbGOLJPplsLWx/+SX225aggpUqYd6YLkqrb/ikPfmrUeaM25ctVz7QoMzM8VuurcVgkNLQKbZvHutVNM056vuZqTKBNUsHwS0CPYwL9R0+z0Kz+7Pm9XS0jtnDl7fUcBUD7EVgimweAodEDrjbweDbvZN+0kiGcSjlARwhIQ1X3zUPqb/R1SfXZOk1/Koe48UScnpWZEFItga1ftF+OfGX7mitzN5FcX7SfBUzSuu0C8zouYRct+zfmfnBbGkOy3igVaGg7oY=
-  bucket: activitywatch-builds
-  local-dir: dist
-  acl: public_read
-  on:
-    repo: ActivityWatch/activitywatch
+before_deploy:
+   # Remove the folder from which the zip was created
+ - find -type f | grep -v "activitywatch[^/]*\.zip" | xargs --no-run-if-empty rm -r
+
