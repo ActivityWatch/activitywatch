@@ -1,0 +1,5 @@
+mypy
+pytest
+pytest-cov
+pyinstaller
+psutil

@@ -36,13 +36,12 @@ before_install:
      source venv/bin/activate;
 
      brew install findutils;
-     alias find=gfind;
-     alias xargs=gxargs;
+     export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
    fi
  - pip install --upgrade pip
  - python --version
  - pip --version
- - pip install --upgrade pytest pytest-cov mypy pyinstaller
+ - pip install --upgrade -r scripts/dev-requirements.txt
  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 
 install:
@@ -58,7 +57,7 @@ script:
 
 before_deploy:
    # Remove the folder from which the zip was created
- - find -type f | grep -v "activitywatch[^/]*\.zip" | xargs --no-run-if-empty rm -r
+ - find dist/ -type f | grep -v "activitywatch[^/]*\.zip" | xargs --no-run-if-empty rm -r
 
 deploy:
  - provider: releases
