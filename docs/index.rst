@@ -27,7 +27,7 @@ Welcome to the ActivityWatch documentation!
    :caption: Feature documentation
 
    user-interface
-   pausing-watching
+   pausing-logging
    filtering-data
 
 

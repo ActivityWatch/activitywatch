@@ -4,12 +4,18 @@ ActivityWatch
 
 [![Build Status Travis](https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master)](https://travis-ci.org/ActivityWatch/activitywatch)
 [![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true)](https://ci.appveyor.com/project/ErikBjare/activitywatch)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/873/badge)](https://bestpractices.coreinfrastructure.org/projects/873)
+[![Total downloads (GitHub Releases)](https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg)](https://github.com/ActivityWatch/activitywatch/releases)
 [![Documentation](https://readthedocs.org/projects/activitywatch/badge/?version=latest)](http://activitywatch.readthedocs.io)
+
+<!--
+# TODO: Best practices badge that we should work towards, see issue #42.
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/873/badge)](https://bestpractices.coreinfrastructure.org/projects/873)
+-->
+
 
 [Releases](https://github.com/ActivityWatch/activitywatch/releases)
 | [Documentation](http://activitywatch.readthedocs.io)
-| [Issue tracker](https://github.com/ActivityWatch/activitywatch-user-issues/issues)
+| [Issue tracker](https://github.com/ActivityWatch/activitywatch/issues)
 | [Website](http://activitywatch.net/)
 | [GitHub](https://github.com/ActivityWatch/activitywatch/)
 | [Twitter](https://twitter.com/ActivityWatchIt)
@@ -99,7 +105,7 @@ python3 -V
 
 # Now you probably want to set up a virtualenv so we don't install everything system-wide.
 sudo pip3 install virtualenv  # Assuming you don't already have it, you might want to use your systems package manager instead.
-virtualenv venv --python=python3 --clear
+python3 -m venv venv
 # Now you need to activate the virtualenv
 # For bash/zsh users: source ./venv/bin/activate
 # For fish users:     source ./venv/bin/activate.fish
