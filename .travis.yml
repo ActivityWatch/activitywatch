@@ -19,12 +19,14 @@ matrix:
      python: 3.5
      env:
       - DEPLOY=true
+      - TRAVIS_NODE_VERSION="6"
      # This is the job that will be used when building packages for macOS
    - os: osx
      language: generic
      python: null
      env:
       - DEPLOY=true
+      - TRAVIS_NODE_VERSION="6"
   allow_failures:
    - python: nightly
 
