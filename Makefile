@@ -2,7 +2,7 @@
 #  - virtualenv --python=python3 venv
 #  - source ./venv/bin/activate
 
-.PHONY: build install test clean
+.PHONY: build install test clean docs
 
 # TODO: Currently no way to do a `setup.py develop`/`pip install --editable`
 build:
@@ -52,6 +52,12 @@ package:
 	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
 #
 	bash scripts/package/package-zip.sh
+
+docs:
+	make --directory=docs html
+
+docs-deps:
+	pip3 install --user -r docs/requirements.txt
 
 clean:
 	rm -r build dist
