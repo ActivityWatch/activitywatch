@@ -124,7 +124,7 @@ build_script:
 test_script:
   # Run the project tests
   - "%CMD_IN_ENV% make test"
-  - "%CMD_IN_ENV% make test-integration"
+  - '%CMD_IN_ENV% runas /user:Administrator "make test-integration"'
 
 after_test:
   # If tests are successful, create binary packages for the project.
