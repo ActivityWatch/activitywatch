@@ -36,8 +36,7 @@ before_install:
      source venv/bin/activate;
 
      brew install findutils;
-     alias find=gfind;
-     alias xargs=gxargs;
+     export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
    fi
  - pip install --upgrade pip
  - python --version
