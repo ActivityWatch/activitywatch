@@ -3,21 +3,16 @@ from time import sleep
 from contextlib import contextmanager
 import tempfile
 import platform
-import psutil
 
 import pytest
 
 
-def _windows_kill_process(pid, including_parent=True):
-    # Found here: https://stackoverflow.com/a/4229404/965332
-    parent = psutil.Process(pid)
-    children = parent.children(recursive=True)
-    for child in children:
-        child.kill()
-    gone, still_alive = psutil.wait_procs(children, timeout=5)
-    if including_parent:
-        parent.kill()
-        parent.wait(5)
+def _windows_kill_process(pid):
+    import ctypes
+    PROCESS_TERMINATE = 1
+    handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
+    ctypes.windll.kernel32.TerminateProcess(handle, -1)
+    ctypes.windll.kernel32.CloseHandle(handle)
 
 
 @pytest.fixture(scope="session")
