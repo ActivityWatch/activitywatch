@@ -57,7 +57,7 @@ script:
 
 before_deploy:
    # Remove the folder from which the zip was created
- - find -type f | grep -v "activitywatch[^/]*\.zip" | xargs --no-run-if-empty rm -r
+ - find dist/ -type f | grep -v "activitywatch[^/]*\.zip" | xargs --no-run-if-empty rm -r
 
 deploy:
  - provider: releases
