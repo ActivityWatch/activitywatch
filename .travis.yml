@@ -32,6 +32,10 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];
      then ./scripts/ci/setup_venv_osx.sh;
      source venv/bin/activate;
+
+     brew install findutils;
+     alias find=gfind;
+     alias xargs=gxargs;
    fi
  - pip install --upgrade pip
  - python --version
