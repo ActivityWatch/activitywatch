@@ -1,10 +1,23 @@
 import subprocess
 from time import sleep
-import sys
 from contextlib import contextmanager
 import tempfile
+import platform
+import psutil
 
 import pytest
+
+
+def _windows_kill_process(pid, including_parent=True):
+    # Found here: https://stackoverflow.com/a/4229404/965332
+    parent = psutil.Process(pid)
+    children = parent.children(recursive=True)
+    for child in children:
+        child.kill()
+    gone, still_alive = psutil.wait_procs(children, timeout=5)
+    if including_parent:
+        parent.kill()
+        parent.wait(5)
 
 
 @pytest.fixture(scope="session")
@@ -12,17 +25,18 @@ def server_process():
     logfile_stdout = tempfile.NamedTemporaryFile(delete=False)
     logfile_stderr = tempfile.NamedTemporaryFile(delete=False)
 
-    # logfile_stdout.close()
-    # logfile_stderr.close()
-
     @contextmanager
     def _cm_server_process():
         server_proc = subprocess.Popen(["aw-server", "--testing"], stdout=logfile_stdout, stderr=logfile_stderr)
         sleep(2)  # Startup time
         yield server_proc
         sleep(2)  # Cleanup time, could probably be removed once tests are synchronous
-        server_proc.kill()
-        server_proc.wait()
+        if platform.system() == "Windows":
+            # On Windows, for whatever reason, server_proc.kill() doesn't do the job.
+            _windows_kill_process(server_proc.pid)
+        else:
+            server_proc.kill()
+        server_proc.wait(5)
         server_proc.communicate()
 
     with _cm_server_process() as server_proc:
@@ -33,17 +47,23 @@ def server_process():
     with open(logfile_stdout.name, "r+b") as f:
         stdout = f.read()
         if stdout:
-            pytest.fail("Server shouldn't write anything to stdout")
+            pytest.fail("Server shouldn't write anything to stdout, wrote: {}".format(stdout))
 
     with open(logfile_stderr.name, "r+b") as f:
         stderr = str(f.read(), "utf8")
         if not stderr:
             pytest.fail("No output to stderr from server")
 
-        # print("STDERR from server:\n" + stderr)
+        # Will show in case pytest fails
+        print(stderr)
+
         for s in error_indicators:
             if s in stderr:
                 pytest.fail("Found ERROR indicator in stderr from server: {}".format(s))
+
+    # NOTE: returncode was -9 for whatever reason
+    # if server_proc.returncode != 0:
+    #     pytest.fail("Exit code was non-zero ({})".format(server_proc.returncode))
 
 
 # TODO: Use the fixture in the tests instead of this thing here

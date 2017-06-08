@@ -94,7 +94,7 @@ install:
   - "%CMD_IN_ENV% pip install requests==2.14.1"
 
   # Testing dependencies
-  - "%CMD_IN_ENV% pip install --upgrade pytest pytest-cov mypy==0.510"
+  - "%CMD_IN_ENV% pip install --upgrade pytest pytest-cov mypy==0.510 psutil"
 
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
