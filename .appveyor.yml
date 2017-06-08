@@ -124,7 +124,9 @@ build_script:
 test_script:
   # Run the project tests
   - "%CMD_IN_ENV% make test"
-  - "%CMD_IN_ENV% make test-integration"
+  # Freezes in appveyor for whatever reason
+  # See: https://github.com/ActivityWatch/activitywatch/pull/56
+  #- "%CMD_IN_ENV% make test-integration"
 
 after_test:
   # If tests are successful, create binary packages for the project.
