@@ -23,9 +23,9 @@ def server_process():
     @contextmanager
     def _cm_server_process():
         server_proc = subprocess.Popen(["aw-server", "--testing"], stdout=logfile_stdout, stderr=logfile_stderr)
-        sleep(2)  # Startup time
+        sleep(5)  # Startup time
         yield server_proc
-        sleep(2)  # Cleanup time, could probably be removed once tests are synchronous
+
         if platform.system() == "Windows":
             # On Windows, for whatever reason, server_proc.kill() doesn't do the job.
             _windows_kill_process(server_proc.pid)
