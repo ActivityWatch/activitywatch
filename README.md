@@ -100,13 +100,13 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 **Tracking**
 
-|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:------------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      |
-| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      |
-| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many |
+|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           | Extensible            |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:------------------------:|:---------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 | :white_check_mark:    |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      | :x:?                  |
+| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     | :x:?                  |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      | :x:                   |
+| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many | Only for text editors |
 
 
 ### Installation & Usage
