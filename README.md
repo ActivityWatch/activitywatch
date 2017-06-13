@@ -30,7 +30,11 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/873/badge)](https://bestpractices.coreinfrastructure.org/projects/873)
 -->
 
-ActivityWatch ***records what you do*** so that you can ***become aware of what you do*** and choose to do better. All in a secure way where ***you control the data***.
+<p align="center">
+  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>. 
+  <br>
+  All in a secure way where <i>you control the data</i>.
+</p>
 
 
 ## About
