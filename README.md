@@ -73,15 +73,15 @@ Yes, but we found that most time trackers lack in one or more important features
 
  - Not open source
  - The user does not own the data (common with non-open source options)
- - Lack of syncronization (and when available: it's centralized)
+ - Lack of synchronization (and when available: it's centralized and the sync server knows everything)
  - Difficult to setup/use (most open source options tend to target programmers)
- - Low data resolution (does not store raw data)
+ - Low data resolution (low level of detail, does not store raw data, long intevals between entries)
  - Hard or impossible to extend (collecting more data is not as simple as it could be)
 
 **To sum it up:**
 
  - Closed source solutions suffer from privacy issues and limited features.
- - Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack syncronization.
+ - Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack synchronization.
 
 We have a plan to address all of these and we're well on our way. See the table below for our progress.
 
