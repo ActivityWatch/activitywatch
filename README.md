@@ -1,26 +1,40 @@
-ActivityWatch
-=============
+<img title="ActivityWatch" src="docs/banner.png" align="center">
 
+<p align="center">
+  <b>
+    <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
+    | <a href="http://activitywatch.readthedocs.io">Documentation</a>
+    | <a href="http://activitywatch.net/">Website</a>
+    | <a href="https://github.com/ActivityWatch/activitywatch/">GitHub</a>
+    | <a href="https://twitter.com/ActivityWatchIt">Twitter</a>
+  </b>
 
-[![Build Status Travis](https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master)](https://travis-ci.org/ActivityWatch/activitywatch)
-[![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true)](https://ci.appveyor.com/project/ErikBjare/activitywatch)
-[![Total downloads (GitHub Releases)](https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg)](https://github.com/ActivityWatch/activitywatch/releases)
-[![Documentation](https://readthedocs.org/projects/activitywatch/badge/?version=latest)](http://activitywatch.readthedocs.io)
+  <br>
+
+  <a href="https://travis-ci.org/ActivityWatch/activitywatch">
+    <img title="Build Status Travis" src="https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master" />
+  </a>
+  <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
+    <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
+  </a>
+  <a href="https://github.com/ActivityWatch/activitywatch/releases">
+    <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
+  </a>
+  <a href="http://activitywatch.readthedocs.io">
+    <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
+  </a>
+</p>
 
 <!--
 # TODO: Best practices badge that we should work towards, see issue #42.
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/873/badge)](https://bestpractices.coreinfrastructure.org/projects/873)
 -->
 
-
-[Releases](https://github.com/ActivityWatch/activitywatch/releases)
-| [Documentation](http://activitywatch.readthedocs.io)
-| [Issue tracker](https://github.com/ActivityWatch/activitywatch/issues)
-| [Website](http://activitywatch.net/)
-| [GitHub](https://github.com/ActivityWatch/activitywatch/)
-| [Twitter](https://twitter.com/ActivityWatchIt)
-
-ActivityWatch ***records what you do*** so that you can ***become aware of what you do*** and choose to do better. All in a secure way where ***you control the data***.
+<p align="center">
+  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>. 
+  <br>
+  All in a secure way where <i>you control the data</i>.
+</p>
 
 
 ## About
@@ -59,15 +73,15 @@ Yes, but we found that most time trackers lack in one or more important features
 
  - Not open source
  - The user does not own the data (common with non-open source options)
- - Lack of syncronization (and when available: it's centralized)
+ - Lack of synchronization (and when available: it's centralized and the sync server knows everything)
  - Difficult to setup/use (most open source options tend to target programmers)
- - Low data resolution (does not store raw data)
+ - Low data resolution (low level of detail, does not store raw data, long intevals between entries)
  - Hard or impossible to extend (collecting more data is not as simple as it could be)
 
 **To sum it up:**
 
  - Closed source solutions suffer from privacy issues and limited features.
- - Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack syncronization.
+ - Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack synchronization.
 
 We have a plan to address all of these and we're well on our way. See the table below for our progress.
 
@@ -86,13 +100,13 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 **Tracking**
 
-|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:------------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      |
-| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      |
-| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many |
+|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           | Extensible            |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:------------------------:|:---------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 | :white_check_mark:    |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      | :x:?                  |
+| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     | :x:?                  |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      | :x:                   |
+| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many | Only for text editors |
 
 
 ### Installation & Usage
