@@ -3,10 +3,17 @@
 <p align="center">
   <b>
     <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
-    | <a href="http://activitywatch.readthedocs.io">Documentation</a>
     | <a href="http://activitywatch.net/">Website</a>
+    | <a href="http://activitywatch.readthedocs.io">Documentation</a>
     | <a href="https://github.com/ActivityWatch/activitywatch/">GitHub</a>
     | <a href="https://twitter.com/ActivityWatchIt">Twitter</a>
+  </b>
+
+  <br>
+
+  <b>
+    <a href="http://activitywatch.net/contributors/">Contributor statistics</a>
+    | <a href="http://activitywatch.net/dev/overview/">Module statuses</a>
   </b>
 
   <br>
