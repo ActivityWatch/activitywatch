@@ -20,22 +20,21 @@ def server_process():
     logfile_stdout = tempfile.NamedTemporaryFile(delete=False)
     logfile_stderr = tempfile.NamedTemporaryFile(delete=False)
 
-    @contextmanager
-    def _cm_server_process():
-        server_proc = subprocess.Popen(["aw-server", "--testing"], stdout=logfile_stdout, stderr=logfile_stderr)
-        sleep(2)  # Startup time
-        yield server_proc
-        sleep(2)  # Cleanup time, could probably be removed once tests are synchronous
-        if platform.system() == "Windows":
-            # On Windows, for whatever reason, server_proc.kill() doesn't do the job.
-            _windows_kill_process(server_proc.pid)
-        else:
-            server_proc.kill()
-        server_proc.wait(5)
-        server_proc.communicate()
+    server_proc = subprocess.Popen(["aw-server", "--testing"], stdout=logfile_stdout, stderr=logfile_stderr)
 
-    with _cm_server_process() as server_proc:
-        yield server_proc
+    # Wait for server to start up properly
+    # TODO: Ping the server until it's alive to remove this sleep
+    sleep(5)
+
+    yield server_proc
+
+    if platform.system() == "Windows":
+        # On Windows, for whatever reason, server_proc.kill() doesn't do the job.
+        _windows_kill_process(server_proc.pid)
+    else:
+        server_proc.kill()
+    server_proc.wait(5)
+    server_proc.communicate()
 
     error_indicators = ["ERROR"]
 

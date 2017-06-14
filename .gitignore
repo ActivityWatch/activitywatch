@@ -1,8 +1,12 @@
 build
 dist
 __pycache__
+.*cache
 
 # Old repo
 activity-watch
 
 .idea
+venv*
+old
+other
