@@ -90,9 +90,6 @@ install:
   # about it being out of date.
   - "%CMD_IN_ENV% pip install --disable-pip-version-check --user --upgrade pip"
 
-  # FIXME: Testing a workaround to bug #52
-  - "%CMD_IN_ENV% pip install requests==2.14.1"
-
   # Testing dependencies
   - "%CMD_IN_ENV% pip install --upgrade -r scripts\\dev-requirements.txt"
 
