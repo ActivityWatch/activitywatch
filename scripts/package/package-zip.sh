@@ -51,7 +51,7 @@ arch=$(get_arch)
 
 echo "Platform: $platform, arch: $arch, version: $version"
 
-zipname="activitywatch-${platform}-${arch}-${version}.zip"
+zipname="activitywatch-${version}-${platform}-${arch}.zip"
 echo "Name of package will be: $zipname"
 
 if [[ $platform == "windows"* ]]; then
