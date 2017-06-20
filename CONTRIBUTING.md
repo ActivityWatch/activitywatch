@@ -5,10 +5,23 @@ How to Contribute
 
 **Note:** This is a work in progress, there is a lot we could do better so file a PR if you think we've missed something!
 
-# How to help
 
- - Start working on one of the [`help wanted` issues](https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
- - This list is a work in progress...
+## Getting started
+
+There are many ways to contribute to ActivityWatch:
+
+ - Help with testing by being an early user and reporting bugs.
+ - Help with one of the issues labeled [`help wanted`](https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22), these are especially suited for new contributors.
+ - Help write documentation.
+ - Help build the ecosystem.
+   - Examples: New watchers, tools to analyze data, tools to import data from other sources, etc.
+ - Help fix bugs.
+   - See the issues in this repo.
+ - Help implement new features.
+   - Want to start working on a new feature? Find the appropriate subrepo, if any, and see if there is anything that needs doing.
+
+Most of the above will get you up on our [contributor stats page](http://activitywatch.net/contributors/) as thanks!
+
 
 ## Filing an issue
 
@@ -26,4 +39,6 @@ There are a few things you might consider when filing your issue:
      - Windows: `C:\Users\<USERNAME>\AppData\Local\activitywatch\activitywatch\Logs`
 
 
-**Thanks for helping make ActivityWatch better!**
+## Questions?
+
+If you have any questions, open an issue or email one of the maintainers at: [erik@bjareho.lt](mailto:erik@bjareho.lt).

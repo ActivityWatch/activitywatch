@@ -171,4 +171,4 @@ The webapp includes basic data visualization (WIP), data browsing and export, an
 
 ## Contributing
 
-We currently don't have much of a good contributors guide (we're working on it), feel free to browse the documentation (also in a early state). You should also send me an email at: [erik@bjareho.lt](mailto:erik@bjareho.lt).
+Want to help? Great! Check out the [CONTRIBUTING.md file](./CONTRIBUTING.md)!
