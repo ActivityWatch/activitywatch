@@ -1,0 +1,12 @@
+# Requirements for ReadTheDocs
+
+# aw-core
+appdirs
+
+# aw-client
+requests
+
+# aw-server
+flask
+flask-restplus
+
