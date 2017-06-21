@@ -1,5 +1,5 @@
-API
-===
+REST API
+========
 
 ActivityWatch uses a REST API for all communication between aw-server and clients.
 Most applications should never use HTTP directly but should instead use the client libraries available.
@@ -9,7 +9,9 @@ If no such library yet exists for a given language, this document is meant to pr
     The API is currently under development, and is subject to change.
     It will be documented in better detail when first version has been frozen.
 
-.. note:: Part of the documentation might be outdated, please use the API browser available in your aw-server instance instead.
+.. note::
+    Part of the documentation might be outdated, you can get up-to-date API documentation
+    in the API browser available from the web UI of your aw-server instance.
 
 
 API Security
