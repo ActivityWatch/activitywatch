@@ -43,6 +43,7 @@
   All in a secure way where <i>you control the data</i>.
 </p>
 
+<!-- WIP
 <details>
  <summary>Table of contents</summary>
  <ol>
@@ -64,6 +65,7 @@
     <li> Contributing
   </ol>
 </details>
+-->
 
 ## About
 
