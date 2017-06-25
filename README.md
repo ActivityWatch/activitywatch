@@ -43,6 +43,8 @@
   All in a secure way where <i>you control the data</i>.
 </p>
 
+*Do you want to receive email updates on major announcements? **[Signup for the newsletter](http://eepurl.com/cTU0bP)**!*
+
 <!-- WIP
 <details>
  <summary>Table of contents</summary>
