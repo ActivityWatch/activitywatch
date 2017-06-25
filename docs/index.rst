@@ -31,7 +31,9 @@ Welcome to the ActivityWatch documentation!
    :caption: Developer documentation
 
    api-reference
+   installing-from-source
    development
+   writing-watchers
    modules
    rest
 

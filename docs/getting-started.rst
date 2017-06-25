@@ -15,6 +15,8 @@ First, grab the `latest release from GitHub <https://github.com/ActivityWatch/ac
 
 To install from a zip-file, simply unextract it into an appropriate directory.
 
+If you want to install from source, see `Installing from source`_.
+
 Usage
 =====
 

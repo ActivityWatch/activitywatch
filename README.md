@@ -43,6 +43,27 @@
   All in a secure way where <i>you control the data</i>.
 </p>
 
+<details>
+ <summary>Table of contents</summary>
+ <ol>
+    <li> About
+    <ol>
+        <li> Screenshots
+        <li> Is this yet another time tracker?
+        <ol>
+            <li> Feature comparison
+        </ol>
+        <li> Installation & Usage
+    </ol>
+    <li> About this repository
+    <ol>
+        <li> Server
+        <li> Watchers
+        <li> Libraries
+    </ol>
+    <li> Contributing
+  </ol>
+</details>
 
 ## About
 
@@ -118,35 +139,8 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 ### Installation & Usage
 
-**We're not there yet for end-users**, however if you are a developer you may try the following:
+Please see the [Getting started guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
 
-```sh
-# Ensure you have Python 3.5 or later installed
-python3 -V
-
-# Now you probably want to set up a virtualenv so we don't install everything system-wide.
-sudo pip3 install virtualenv  # Assuming you don't already have it, you might want to use your systems package manager instead.
-python3 -m venv venv
-# Now you need to activate the virtualenv
-# For bash/zsh users: source ./venv/bin/activate
-# For fish users:     source ./venv/bin/activate.fish
-
-# Now we build and install everything into the virtualenv.
-make build
-
-# Now you should be able to start ActivityWatch
-# Either use the trayicon manager:
-aw-qt
-# Or run each module seperately:
-aw-server
-aw-watcher-afk
-aw-watcher-window
-
-# Now everything should be running!
-# You can see your data at http://localhost:5600/
-```
-
-If anything doesn't work, let us know!
 
 ## About this repository
 

@@ -1,7 +1,8 @@
 API Reference
 =============
 
-Here's an API reference for :code:`aw_core`, :code:`aw_client` and :code:`aw_server`. These are the packages that are most central to ActivityWatch.
+Here's an API reference for some of the most central components in :code:`aw_core`, :code:`aw_client` and :code:`aw_server`.
+These are the most important packages in ActivityWatch.
 A lot of it currently lacks proper docstrings, but it's a start.
 
 .. contents::
