@@ -3,7 +3,7 @@ Writing your first watcher
 
 Writing watchers for ActivityWatch is pretty easy, all you need is the :code:`aw-client` library.
 
-A good watcher to study as an example is the `window watcher <https://github.com/ActivityWatch/aw-watcher-window>`.
+A good watcher to study as an example is the `window watcher <https://github.com/ActivityWatch/aw-watcher-window>`_.
 Below is a simplified version:
 
  .. code-block:: python
