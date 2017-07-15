@@ -44,6 +44,21 @@
 </p>
 
 
+Table of Contents
+=================
+
+      * [About](#about)
+         * [Screenshots](#screenshots)
+         * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
+            * [Feature comparison](#feature-comparison)
+         * [Installation &amp; Usage](#installation--usage)
+      * [About this repository](#about-this-repository)
+         * [Server](#server)
+         * [Watchers](#watchers)
+         * [Libraries](#libraries)
+      * [Contributing](#contributing)
+
+
 ## About
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
