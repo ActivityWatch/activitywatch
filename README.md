@@ -45,6 +45,7 @@
 
 <details>
  <summary>Table of Contents</summary>
+ 
  * [About](#about)
     * [Screenshots](#screenshots)
     * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
