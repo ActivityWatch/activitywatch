@@ -35,7 +35,7 @@ There are a few things you might consider when filing your issue:
  - Include a logfile
    - Log files can be found in different places, depending on platform:
      - macOS: `~/Library/Logs/activitywatch`
-     - Linux: `~/.local/cache/activitywatch/logs`
+     - Linux: `~/.cache/activitywatch/logs`
      - Windows: `C:\Users\<USERNAME>\AppData\Local\activitywatch\activitywatch\Logs`
 
 
