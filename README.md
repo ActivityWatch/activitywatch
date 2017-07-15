@@ -43,6 +43,8 @@
   All in a secure way where <i>you control the data</i>.
 </p>
 
+<details>
+ <summary>Table of Contents</summary>
 * [About](#about)
    * [Screenshots](#screenshots)
    * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
@@ -53,6 +55,7 @@
    * [Watchers](#watchers)
    * [Libraries](#libraries)
 * [Contributing](#contributing)
+</details>
 
 
 ## About
