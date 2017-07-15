@@ -43,6 +43,21 @@
   All in a secure way where <i>you control the data</i>.
 </p>
 
+<details>
+ <summary>Table of Contents</summary>
+ 
+ * [About](#about)
+    * [Screenshots](#screenshots)
+    * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
+       * [Feature comparison](#feature-comparison)
+    * [Installation &amp; Usage](#installation--usage)
+ * [About this repository](#about-this-repository)
+    * [Server](#server)
+    * [Watchers](#watchers)
+    * [Libraries](#libraries)
+ * [Contributing](#contributing)
+</details>
+
 
 ## About
 
