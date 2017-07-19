@@ -2,7 +2,7 @@
 #  - virtualenv --python=python3 venv
 #  - source ./venv/bin/activate
 
-.PHONY: build install test clean docs
+.PHONY: build install test docs clean clean_all
 
 # TODO: Currently no way to do a `setup.py develop`/`pip install --editable`
 build:
@@ -62,5 +62,13 @@ docs-deps:
 
 clean:
 	rm -rf build dist
-	mkdir dist
-	mkdir dist/activitywatch
+
+# Clean all subprojects
+clean_all: clean
+	make --directory=aw-client clean
+	make --directory=aw-core clean
+	make --directory=aw-qt clean
+	make --directory=aw-server clean
+	make --directory=aw-watcher-afk clean
+	make --directory=aw-watcher-window clean
+	make --directory=aw-webui clean
