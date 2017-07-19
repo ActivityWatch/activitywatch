@@ -61,6 +61,6 @@ docs-deps:
 	pip3 install --user -r docs/requirements.txt
 
 clean:
-	rm -r build dist
+	rm -rf build dist
 	mkdir dist
 	mkdir dist/activitywatch
