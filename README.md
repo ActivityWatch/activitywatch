@@ -38,7 +38,7 @@
 -->
 
 <p align="center">
-  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>. 
+  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>.
   <br>
   All in a secure way where <i>you control the data</i>.
 </p>
@@ -46,29 +46,20 @@
 *Do you want to receive email updates on major announcements?*<br>
 ***[Signup for the newsletter](http://eepurl.com/cTU6QX)!***
 
-<!-- WIP
 <details>
- <summary>Table of contents</summary>
- <ol>
-    <li> About
-    <ol>
-        <li> Screenshots
-        <li> Is this yet another time tracker?
-        <ol>
-            <li> Feature comparison
-        </ol>
-        <li> Installation & Usage
-    </ol>
-    <li> About this repository
-    <ol>
-        <li> Server
-        <li> Watchers
-        <li> Libraries
-    </ol>
-    <li> Contributing
-  </ol>
+ <summary>Table of Contents</summary>
+
+ * [About](#about)
+    * [Screenshots](#screenshots)
+    * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
+       * [Feature comparison](#feature-comparison)
+    * [Installation &amp; Usage](#installation--usage)
+ * [About this repository](#about-this-repository)
+    * [Server](#server)
+    * [Watchers](#watchers)
+    * [Libraries](#libraries)
+ * [Contributing](#contributing)
 </details>
--->
 
 ## About
 
@@ -80,7 +71,7 @@ We've worked towards this goal by creating a application for safe storage of the
  - Currently active browser tab and it's title and URL
  - Keyboard and mouse activity, to detect if you are afk or not
 </small>
- 
+
 It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
 
 **Note:** ActivityWatch is under development. There is still work to be done so we provide it with no guarantees with the hope that others may wish to help and give their feedback!
@@ -100,7 +91,7 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 
 ### Is this yet another time tracker?
 
-Yes, but we found that most time trackers lack in one or more important features. 
+Yes, but we found that most time trackers lack in one or more important features.
 
 **Common dealbreakers:**
 
