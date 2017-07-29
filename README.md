@@ -38,14 +38,17 @@
 -->
 
 <p align="center">
-  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>. 
+  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>.
   <br>
   All in a secure way where <i>you control the data</i>.
 </p>
 
+*Do you want to receive email updates on major announcements?*<br>
+***[Signup for the newsletter](http://eepurl.com/cTU6QX)!***
+
 <details>
  <summary>Table of Contents</summary>
- 
+
  * [About](#about)
     * [Screenshots](#screenshots)
     * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
@@ -58,7 +61,6 @@
  * [Contributing](#contributing)
 </details>
 
-
 ## About
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
@@ -69,7 +71,7 @@ We've worked towards this goal by creating a application for safe storage of the
  - Currently active browser tab and it's title and URL
  - Keyboard and mouse activity, to detect if you are afk or not
 </small>
- 
+
 It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
 
 **Note:** ActivityWatch is under development. There is still work to be done so we provide it with no guarantees with the hope that others may wish to help and give their feedback!
@@ -89,7 +91,7 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 
 ### Is this yet another time tracker?
 
-Yes, but we found that most time trackers lack in one or more important features. 
+Yes, but we found that most time trackers lack in one or more important features.
 
 **Common dealbreakers:**
 
@@ -133,35 +135,8 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 ### Installation & Usage
 
-**We're not there yet for end-users**, however if you are a developer you may try the following:
+Please see the [Getting started guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
 
-```sh
-# Ensure you have Python 3.5 or later installed
-python3 -V
-
-# Now you probably want to set up a virtualenv so we don't install everything system-wide.
-sudo pip3 install virtualenv  # Assuming you don't already have it, you might want to use your systems package manager instead.
-python3 -m venv venv
-# Now you need to activate the virtualenv
-# For bash/zsh users: source ./venv/bin/activate
-# For fish users:     source ./venv/bin/activate.fish
-
-# Now we build and install everything into the virtualenv.
-make build
-
-# Now you should be able to start ActivityWatch
-# Either use the trayicon manager:
-aw-qt
-# Or run each module seperately:
-aw-server
-aw-watcher-afk
-aw-watcher-window
-
-# Now everything should be running!
-# You can see your data at http://localhost:5600/
-```
-
-If anything doesn't work, let us know!
 
 ## About this repository
 
