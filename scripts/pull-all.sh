@@ -1,4 +1,22 @@
 #!/bin/bash
+
+echo "WARNING
+This will:
+ - Pull the bundle repo
+ - Pull all the submodules
+ - For each submodule:
+   - Checkout the master branch
+   - Pull the latest master commit"
+
+read -p "Are you sure? (y/n): " -n 1 -r
+echo    # (optional) move to a new line
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    echo "As you wish, starting now."
+else
+    exit 1
+fi
+
 # Pull this repo
 git pull
 # Pull other git modules
