@@ -4,7 +4,7 @@ echo "WARNING
 This will:
  - Pull the bundle repo
  - Pull all the submodules
- - For each submodule:
+ - And, if given the -a flag, for each submodule:
    - Checkout the master branch
    - Pull the latest master commit"
 
@@ -33,6 +33,7 @@ while getopts "a" opt; do
                 pushd $FOLDER
                 git checkout master
                 git pull origin master
+                echo "Checked out master and pulled for: $FOLDER"
                 popd
             done
 			;;
