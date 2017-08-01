@@ -35,7 +35,10 @@ You need to ensure you have:
 Using a virtualenv
 ------------------
 
-You might want to set up a virtualenv so we don't install everything system-wide. This isn't required, but it's recommended.
+You might want to set up a virtualenv so we don't install everything system-wide. 
+
+.. note:: 
+   This is currently required, but can be avoided with some minor modifications since some commands (notably those installing Python packages) will need root if not run in a virtualenv (sorry for not making it easier).
  
 .. code-block:: sh
  
