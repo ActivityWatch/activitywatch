@@ -24,25 +24,50 @@ Clients might in the future be able to have read-only or append-only access to b
 All clients will probably also encrypt data in transit.
 
 
-Buckets API
+Event model
 -----------
+
+The ActivityWatch event model is pretty simple, here's its representation in JSON:
+
+.. code-block:: js
+
+   {
+     "timestamp": "2016-04-27T15:23:55Z",  # ISO8601 formatted timestamp
+     "duration": 3.14,                     # Duration in seconds
+     "data": {"key": "value"}  # A JSON object, the schema of this depends on the bucket type
+   }
+
+It should be noted that all timestamps are stored as UTC. Timezone information (UTC offset) is currently discarded.
+
+
+API Reference
+-------------
+
+.. note::
+    This reference is highly incomplete. For an interactive view of the API, try out the API playground running on your local server at: http://localhost:5600/api/
+
+Buckets API
+~~~~~~~~~~~
 
 The most common API used by ActivityWatch clients is the API providing read and append access buckets.
 Buckets are data containers used to group data together which shares some metadata (such as client type, hostname or location).
 
-The basic API endpoints are as follows:
-
-
-Get bucket
-^^^^^^^^^^
+Get
+^^^
 
 .. code-block:: shell
 
     GET /api/0/buckets/<bucket_id>
 
+List
+^^^^
 
-Create bucket
-^^^^^^^^^^^^^
+.. code-block:: shell
+
+    GET /api/0/buckets/
+
+Create
+^^^^^^
 
 .. code-block:: shell
 
@@ -50,12 +75,10 @@ Create bucket
 
 
 Events API
------------
+~~~~~~~~~~
 
 The most common API used by ActivityWatch clients is the API providing read and append access buckets.
 Buckets are data containers used to group data together which shares some metadata (such as client type, hostname or location).
-
-The basic API endpoints are as follows:
 
 Get events
 ^^^^^^^^^^
@@ -64,7 +87,6 @@ Get events
 
     GET /api/0/buckets/<bucket_id>/events
 
-
 Create event
 ^^^^^^^^^^^^
 
@@ -72,13 +94,19 @@ Create event
 
     POST /api/0/buckets/<bucket_id>/events
 
-
 Heartbeat API
--------------
+~~~~~~~~~~~~~
+
+The heartbeat API is one of the most useful endpoints for writing watchers.
+
+.. code-block:: shell
+
+    POST /api/0/buckets/<bucket_id>/heartbeat
+
+View API
+~~~~~~~~~~~~~
 
 .. warning::
-    Experimental API, not yet ready for use.
+   This API should not be relied on. It's messy and has a bunch of issues that we hope to resolve by designing it.
 
-
-
-
+No documentation here, because you shouldn't use it (yet).
