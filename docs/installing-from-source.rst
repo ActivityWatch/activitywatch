@@ -35,24 +35,30 @@ You need to ensure you have:
 Using a virtualenv
 ------------------
 
-You might want to set up a virtualenv so we don't install everything system-wide. This isn't required, but it's recommended.
+You might want to set up a virtualenv so we don't install everything system-wide. 
+
+.. note:: 
+   This is currently required, but can be avoided with some minor modifications since some commands (notably those installing Python packages) will need root if not run in a virtualenv (sorry for not making it easier).
  
 .. code-block:: sh
  
     pip3 install --user virtualenv  # Assuming you don't already have it, you might want to use your systems package manager instead.
     python3 -m venv venv
     
-Now you need to activate the virtualenv
+Now activate the virtualenv in your current shell session:
 
 .. code-block:: sh
-    # For bash/zsh users: source ./venv/bin/activate
-    # For fish users:     source ./venv/bin/activate.fish
+
+    # For bash/zsh users: 
+    source ./venv/bin/activate
+    # For fish users:     
+    source ./venv/bin/activate.fish
 
 
 Building and installing
 -----------------------
 
-Now we build and install everything into the virtualenv.
+Build and install everything into the virtualenv:
 
 .. code-block:: sh
  
