@@ -29,8 +29,8 @@ companies have their data in hands they are forced to trust if they want to use 
 
 This is a significant problem, but the true reason that we decided to do something about it was that
 existing solutions were inadequate. They focused on short-term insight, a goal worthy in itself, but we also
-want long-term understanding. We made it `completely free and open source` so anyone can
-use, audit, improve and extend it.
+want long-term understanding. We made it completely free and open source so anyone can
+use, improve and extend it.
 
 
 Data philosophy

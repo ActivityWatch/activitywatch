@@ -24,22 +24,6 @@ Clients might in the future be able to have read-only or append-only access to b
 All clients will probably also encrypt data in transit.
 
 
-Event model
------------
-
-The ActivityWatch event model is pretty simple, here's its representation in JSON:
-
-.. code-block:: js
-
-   {
-     "timestamp": "2016-04-27T15:23:55Z",  # ISO8601 formatted timestamp
-     "duration": 3.14,                     # Duration in seconds
-     "data": {"key": "value"}  # A JSON object, the schema of this depends on the bucket type
-   }
-
-It should be noted that all timestamps are stored as UTC. Timezone information (UTC offset) is currently discarded.
-
-
 API Reference
 -------------
 
@@ -77,7 +61,7 @@ Create
 Events API
 ~~~~~~~~~~
 
-The most common API used by ActivityWatch clients is the API providing read and append access buckets.
+The most common API used by ActivityWatch clients is the API providing read and append `Events <event-model>` to buckets.
 Buckets are data containers used to group data together which shares some metadata (such as client type, hostname or location).
 
 Get events

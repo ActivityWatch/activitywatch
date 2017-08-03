@@ -4,6 +4,6 @@ Features
 Here we will document a few features.
 
 .. toctree::
-   user-interface
-   pausing-logging
-   filtering-data
+   features/user-interface
+   features/pausing-logging
+   features/filtering-data

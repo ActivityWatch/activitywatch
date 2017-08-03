@@ -1,3 +1,5 @@
+.. image:: banner.png
+
 Welcome to the ActivityWatch documentation!
 ===========================================
 
@@ -24,6 +26,7 @@ Welcome to the ActivityWatch documentation!
    :caption: Developer documentation
 
    architecture
+   event-model
    installing-from-source
    api-reference
    development

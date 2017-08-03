@@ -8,6 +8,7 @@ A lot of it currently lacks proper docstrings, but it's a start.
 .. contents::
 
 
+
 aw_core
 -------
 .. automodule:: aw_core

@@ -12,18 +12,20 @@ Server
 
 Known as aw-server, it handles storage and retrieval of all activities/entries in buckets. Usually there exists one bucket per watcher.
 
+The server also hosts the Web UI (aw-webui) which does all communication with the server using the REST API.
+
 Clients
 -------
 
-The server doesn't do anything interesting on its own, for that we need clients such as watchers and user interfaces.
-Writing these  clients is something we've tried to make as easy as possible by creating client libraries with a clear API.
+The server doesn't do anything very interesting on its own, for that we need clients. Most specifically a certain type of client known as watchers.
+Writing these clients is something we've tried to make as easy as possible by creating client libraries with a clear API.
 
 Currently the primary client library is written in Python (known simply as aw-client) but a client library written in JavaScript is on the way and is expected to have the same level of support in the future.
 
 Client libraries:
 
  - aw-client (Python)
- - aw-client-js (JavaScript)
+ - aw-client-js (JavaScript, work in progress)
 
 Watchers
 ^^^^^^^^
