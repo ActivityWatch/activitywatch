@@ -8,33 +8,25 @@ Welcome to the ActivityWatch documentation!
 
 .. _user-docs:
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: User documentation
 
    introduction
    getting-started
-
-
-.. _feature-docs:
-.. toctree::
-   :maxdepth: 2
-   :caption: Feature documentation
-
-   user-interface
-   pausing-logging
-   filtering-data
+   features
+   extending
 
 
 .. _dev-docs:
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Developer documentation
 
-   api-reference
+   architecture
    installing-from-source
+   api-reference
    development
    writing-watchers
-   modules
    rest
 
 
