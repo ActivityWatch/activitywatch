@@ -13,6 +13,7 @@ Welcome to the ActivityWatch documentation!
 
    introduction
    getting-started
+   faq
    features
    extending
 
