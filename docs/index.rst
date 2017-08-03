@@ -17,6 +17,7 @@ Welcome to the ActivityWatch documentation!
    getting-started
    faq
    features
+   watchers
    extending
 
 
