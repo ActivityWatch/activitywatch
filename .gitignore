@@ -3,9 +3,6 @@ dist
 __pycache__
 .*cache
 
-# Old repo
-activity-watch
-
 .idea
 venv*
 old
