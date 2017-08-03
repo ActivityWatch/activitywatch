@@ -4,11 +4,14 @@ FAQ
 ..
    Some of this should probably be moved to a development FAQ.
 
+.. note::
+   Some of these questions are technically not frequently asked.
+
 
 How do I programmatically use ActivityWatch?
 --------------------------------------------
 
-See the documentation for :doc:`extending` or checkout the aw-client repository.
+See the documentation for `extending` or checkout the aw-client repository.
 
 How do I understand the data that is stored?
 --------------------------------------------
@@ -26,11 +29,11 @@ Get some events with
    bucket_id = next(buckets.keys())
    events = ac.get_events(bucket_id)
 
-For a description of the `event-model`.
+See here for a description of events: `event-model`
 
 Events from the aw-watcher-afk bucket have the fields :code:`timestamp`, :code:`duration`, and :code:`data`.
 
-As an example for AFK events: The data field contains a JSON object (in Python a dict) which has one key :code:`status` which can be one of: :code:`afk`, :code:`not-afk`, :code:`hibernating`.
+As an example for AFK events: The data field contains a JSON object (in Python a dict) which has one key :code:`status` which can be :code:`afk` or :code:`not-afk`.
 
 ..
     If :code:`e0` and :code:`e1` are consecutive events, you should expect :code:`e0.timestamp + e0.duration == e1.timestamp` (within some milliseconds) and report issues when it is not the case.
@@ -52,7 +55,7 @@ If a watcher crashes, its bucket will simply remain untouched until it is restar
 What happens when my computer is off or asleep?
 -----------------------------------------------
 
-When asleep, aw-watcher-afk will record a "hibernating" event (this might change). aw-watcher-window will record nothing, i.e. some event's timestamp+duration will not match the following event's timestamp. When turned off, no data is logged.
+If your computer is off or asleep, watchers will usually record nothing. i.e. one events ending (:code:`timestamp + duration`) will not match up with the following event's beginning (:code:`timestamp`).
 
 Some events have 0 duration. What does this mean?
 -------------------------------------------------

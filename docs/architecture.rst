@@ -32,15 +32,25 @@ User interfaces
 
 ActivityWatch currently has two user interfaces, aw-qt and aw-webui.
 
-aw-qt manages the server and watchers to make ActivityWatch easy to use for end-users.
-
-aw-webui is hosted by the server to allow visualization and an overview of the database.
+ - `aw-qt <https://github.com/ActivityWatch/aw-qt>`_ - Manages the server and watchers to make ActivityWatch easy to use for end-users.
+ - `aw-webui <https://github.com/ActivityWatch/aw-webui>`_ - Offers visualization and an overview of the database. Hosted by aw-server in the bundle.
 
 Libraries
 ---------
 
-Some of the logic of ActivityWatch is shared across the server and clients, such as the Event model.
-Due to this, we've created a common library `aw-core` which includes many of the essentials in ActivityWatch.
+Some of the logic of ActivityWatch is shared across the server and clients, for these cases we moved some logic into seperate libraries.
+
+aw-core
+^^^^^^^
+
+The aw-core library contains many of the essential parts of ActivityWatch, notably:
+
+ - The `event-model`
+ - The datastore layer
+ - Utilities (configuration, logging, decorators)
+
+aw-analysis
+^^^^^^^^^^^
 
 There are also plans to create a library called `aw-analysis <https://github.com/ActivityWatch/aw-analysis>`_ to aid in
 different types of analysis and transformation one might want to make using ActivityWatch data.
