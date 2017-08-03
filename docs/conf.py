@@ -137,7 +137,10 @@ todo_include_todos = False
 import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-html_theme_options = {'collapse_navigation': True}
+html_theme_options = {
+    'collapse_navigation': False,
+    'navigation_depth': 4
+}
 using_rtd_theme = True
 
 # The name for this set of Sphinx documents.
