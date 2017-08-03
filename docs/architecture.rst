@@ -1,11 +1,7 @@
-============
 Architecture
 ============
 
 Here we hope to clarify the architecture of ActivityWatch for you. Please file an issue or pull request if you think something is missing.
-
-Modules
-=======
 
 Server
 ------
@@ -24,29 +20,28 @@ Currently the primary client library is written in Python (known simply as aw-cl
 
 Client libraries:
 
- - aw-client (Python)
- - aw-client-js (JavaScript, work in progress)
-
-Watchers
-^^^^^^^^
+ - `aw-client <https://github.com/ActivityWatch/aw-client>`_ (Python)
+ - `aw-client-js <https://github.com/ActivityWatch/aw-client-js>`_ (JavaScript, work in progress)
 
 Since aw-server doesn't do any data collection on it's own, we need watchers that observe the world and sent the data off to aw-server for storage.
 
-Examples of watchers:
-
- - aw-watcher-afk
- - aw-watcher-window
+For a list of watchers, see `watchers`.
 
 User interfaces
-^^^^^^^^^^^^^^^
+---------------
 
-Examples of UIs:
+ActivityWatch currently has two user interfaces, aw-qt and aw-webui.
 
- - aw-webui
+aw-qt manages the server and watchers to make ActivityWatch easy to use for end-users.
+
+aw-webui is hosted by the server to allow visualization and an overview of the database.
 
 Libraries
 ---------
 
 Some of the logic of ActivityWatch is shared across the server and clients, such as the Event model.
-Due to this, we've created a common library :code:`aw-core` which includes many of the essentials in ActivityWatch.
+Due to this, we've created a common library `aw-core` which includes many of the essentials in ActivityWatch.
+
+There are also plans to create a library called `aw-analysis <https://github.com/ActivityWatch/aw-analysis>`_ to aid in
+different types of analysis and transformation one might want to make using ActivityWatch data.
 
