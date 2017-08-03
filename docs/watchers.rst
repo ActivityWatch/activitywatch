@@ -10,8 +10,8 @@ Default
 
 ActivityWatch comes bundled with two watchers by default:
 
- - aw-watcher-afk - Watches for mouse & keyboard activity to detect if the user is active
- - aw-watcher-window - Watches the active window and its title
+ - `aw-watcher-afk <https://github.com/ActivityWatch/aw-watcher-afk>`_ - Watches for mouse & keyboard activity to detect if the user is active.
+ - `aw-watcher-window <https://github.com/ActivityWatch/aw-watcher-window>`_ - Watches the active window and its title.
 
 Others
 ------
