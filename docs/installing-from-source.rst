@@ -30,7 +30,9 @@ Checking dependencies
 You need to ensure you have:
 
 - Python 3.5 or later, check with :code:`python3 -V` (required to build the core components)
-- npm v5 or later, check with :code:`npm -v` (required to build the web UI)
+- Node 5 to 7, check with :code:`node -v` and :code:`npm -v` (required to build the web UI)
+
+  - If you have Node 8 or newer, use nvm to create a separate Node 7 installation.
 
 Using a virtualenv
 ------------------
