@@ -6,16 +6,16 @@
 
 # TODO: Currently no way to do a `setup.py develop`/`pip install --editable`
 build:
-	make --directory=aw-core build
-	make --directory=aw-client build
+	make --directory=aw-core build DEV=$(DEV)
+	make --directory=aw-client build DEV=$(DEV)
 #
-	make --directory=aw-webui build
+	make --directory=aw-webui build DEV=$(DEV)
 	cp -r aw-webui/dist/* aw-server/aw_server/static/
 #
-	make --directory=aw-server build
-	make --directory=aw-watcher-afk build
-	make --directory=aw-watcher-window build
-	make --directory=aw-qt build
+	make --directory=aw-server build DEV=$(DEV)
+	make --directory=aw-watcher-afk build DEV=$(DEV)
+	make --directory=aw-watcher-window build DEV=$(DEV)
+	make --directory=aw-qt build DEV=$(DEV)
 
 install:
 	make --directory=aw-qt install
