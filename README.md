@@ -23,14 +23,17 @@
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
   </a>
-  <a href="http://activitywatch.readthedocs.io">
-    <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
-  </a>
+
+  <br>
+
   <a href="https://travis-ci.org/ActivityWatch/activitywatch">
     <img title="Build Status Travis" src="https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master" />
   </a>
   <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
     <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
+  </a>
+  <a href="http://activitywatch.readthedocs.io">
+    <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
   </a>
 
   <br>
