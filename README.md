@@ -17,6 +17,16 @@
 
   <br>
 
+  <a href="https://twitter.com/ActivityWatchIt">
+    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
+  </a>
+  <a href="https://github.com/ActivityWatch/activitywatch">
+    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
+  </a>
+</p>
+
+<p align="center">
+
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Latest release" src="https://img.shields.io/github/release/ActivityWatch/activitywatch/all.svg">
   </a>
@@ -36,14 +46,6 @@
     <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
   </a>
 
-  <br>
-
-  <a href="https://twitter.com/ActivityWatchIt">
-    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
-  </a>
-  <a href="https://github.com/ActivityWatch/activitywatch">
-    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
-  </a>
 </p>
 
 <!--
