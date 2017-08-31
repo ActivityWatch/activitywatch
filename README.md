@@ -2,33 +2,44 @@
 
 <p align="center">
   <b>
-    <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
-    | <a href="http://activitywatch.net/">Website</a>
-    | <a href="http://activitywatch.readthedocs.io">Documentation</a>
-    | <a href="https://github.com/ActivityWatch/activitywatch/">GitHub</a>
-    | <a href="https://twitter.com/ActivityWatchIt">Twitter</a>
+    <a href="http://activitywatch.net/">Website</a>
+    — <a href="https://forum.activitywatch.net/">Forum</a>
+    — <a href="http://activitywatch.readthedocs.io">Documentation</a>
+    — <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
   </b>
 
   <br>
 
   <b>
-    <a href="http://activitywatch.net/contributors/">Contributor statistics</a>
-    | <a href="http://activitywatch.net/dev/overview/">Module statuses</a>
+    <a href="http://activitywatch.net/contributors/">Contributor stats</a>
+    — <a href="http://activitywatch.net/dev/overview/">CI overview</a>
   </b>
 
   <br>
 
-  <a href="https://travis-ci.org/ActivityWatch/activitywatch">
-    <img title="Build Status Travis" src="https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master" />
-  </a>
-  <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
-    <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
+  <a href="https://github.com/ActivityWatch/activitywatch/releases">
+    <img title="Latest release" src="https://img.shields.io/github/release/ActivityWatch/activitywatch/all.svg">
   </a>
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
   </a>
   <a href="http://activitywatch.readthedocs.io">
     <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
+  </a>
+  <a href="https://travis-ci.org/ActivityWatch/activitywatch">
+    <img title="Build Status Travis" src="https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master" />
+  </a>
+  <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
+    <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
+  </a>
+
+  <br>
+
+  <a href="https://twitter.com/ActivityWatchIt">
+    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
+  </a>
+  <a href="https://github.com/ActivityWatch/activitywatch">
+    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
   </a>
 </p>
 
