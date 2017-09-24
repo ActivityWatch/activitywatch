@@ -1,6 +1,12 @@
 <img title="ActivityWatch" src="docs/banner.png" align="center">
 
 <p align="center">
+  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>.
+  <br>
+  All in a secure way where <i>you control the data</i>.
+</p>
+
+<p align="center">
   <b>
     <a href="http://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
@@ -16,6 +22,16 @@
   </b>
 
   <br>
+
+  <a href="https://twitter.com/ActivityWatchIt">
+    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
+  </a>
+  <a href="https://github.com/ActivityWatch/activitywatch">
+    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
+  </a>
+</p>
+
+<p align="center">
 
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Latest release" src="https://img.shields.io/github/release/ActivityWatch/activitywatch/all.svg">
@@ -36,14 +52,6 @@
     <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
   </a>
 
-  <br>
-
-  <a href="https://twitter.com/ActivityWatchIt">
-    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
-  </a>
-  <a href="https://github.com/ActivityWatch/activitywatch">
-    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
-  </a>
 </p>
 
 <!--
@@ -52,11 +60,6 @@
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch?ref=badge_shield)
 -->
 
-<p align="center">
-  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>.
-  <br>
-  All in a secure way where <i>you control the data</i>.
-</p>
 
 *Do you want to receive email updates on major announcements?*<br>
 ***[Signup for the newsletter](http://eepurl.com/cTU6QX)!***
