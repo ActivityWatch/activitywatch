@@ -36,10 +36,10 @@ before_install:
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
    fi
- - pip install --upgrade pip
- - python --version
- - pip --version
- - pip install --upgrade -r scripts/dev-requirements.txt
+ - pip3 install --upgrade pip
+ - python3 --version
+ - pip3 --version
+ - pip3 install --upgrade -r scripts/dev-requirements.txt
  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 
 install:
