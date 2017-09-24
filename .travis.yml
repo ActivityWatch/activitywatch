@@ -49,9 +49,7 @@ install:
 script:
  - "make test"
  - "make test-integration"
- - if [[ "$(python -V | grep -o '3\.[0-9]')" == "3.5" ]]; then
-     make package;
-   fi
+ - "make package"
 
 before_deploy:
    # Remove the folder from which the zip was created
