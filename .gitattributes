@@ -1,2 +1,7 @@
 # See https://github.com/github/linguist for details
-scripts/ci/install_python.ps1 linguist-vendored
+
+# Trick to remove some build tools from language overview
+Makefile linguist-vendored
+*.sh linguist-vendored
+*.cmd linguist-vendored
+*.ps1 linguist-vendored
