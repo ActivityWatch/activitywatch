@@ -162,7 +162,7 @@ This repo is a bundle of the core components and official modules of ActivityWat
 
 ### Server
 
-`aw-server` is the official implementation of the core service which the other activitywatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
+`aw-server` is the official implementation of the core service which the other ActivityWatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
 
 The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
 
@@ -181,6 +181,6 @@ The webapp includes basic data visualization (WIP), data browsing and export, an
 
 Want to help? Great! Check out the [CONTRIBUTING.md file](./CONTRIBUTING.md)!
 
+## Questions and support
 
-## License
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch?ref=badge_large)
+Have a question, suggestion, problem, or just want to say hi? Post on [the forum](https://forum.activitywatch.net/)!
