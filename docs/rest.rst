@@ -14,8 +14,8 @@ If no such library yet exists for a given language, this document is meant to pr
     in the API browser available from the web UI of your aw-server instance.
 
 
-API Security
-------------
+REST Security
+-------------
 
 .. note::
     Our current security consists only of not allowing non-localhost connections, this is likely to be the case for quite a while.
@@ -24,8 +24,8 @@ Clients might in the future be able to have read-only or append-only access to b
 All clients will probably also encrypt data in transit.
 
 
-API Reference
--------------
+REST Reference
+--------------
 
 .. note::
     This reference is highly incomplete. For an interactive view of the API, try out the API playground running on your local server at: http://localhost:5600/api/

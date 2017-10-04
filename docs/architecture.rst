@@ -25,7 +25,7 @@ Client libraries:
 
 Since aw-server doesn't do any data collection on it's own, we need watchers that observe the world and sent the data off to aw-server for storage.
 
-For a list of watchers, see `watchers`.
+For a list of watchers, see :doc:`watchers`.
 
 User interfaces
 ---------------
