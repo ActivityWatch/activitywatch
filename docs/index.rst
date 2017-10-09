@@ -33,6 +33,7 @@ Welcome to the ActivityWatch documentation!
    development
    writing-watchers
    rest
+   changelog
 
 
 Indices and tables

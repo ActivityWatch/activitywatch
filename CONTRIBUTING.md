@@ -41,4 +41,4 @@ There are a few things you might consider when filing your issue:
 
 ## Questions?
 
-If you have any questions, open an issue or email one of the maintainers at: [erik@bjareho.lt](mailto:erik@bjareho.lt).
+If you have any questions, post on [the forum](https://forum.activitywatch.net/) or email one of the maintainers at: [erik@bjareho.lt](mailto:erik@bjareho.lt).
