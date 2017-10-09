@@ -2,6 +2,9 @@
 Changelog
 =========
 
+.. warning::
+    We haven't gotten to the point where we keep a flawless changelog yet. Please refer to the git history for more detail and certainty.
+
 v0.7.0
 ------
 
@@ -15,16 +18,18 @@ v0.7.0
 v0.7.0b3
 --------
 
-- Major improvements to the documentation.
 - Even more improvements to the web UI.
+- Major improvements to the documentation, notably instructions on how to install from builds and sources.
 
 v0.7.0b2
 --------
 
-- Improved the web UI with more visualization and information for users about the state of the project.
+- Improvements to the web UI: a new visualization method (the "today" view) and information for users about the state of the project on the first page.
 
 v0.7.0b1
 --------
+
+There have been several major changes since v0.6. Much of it wont end up here but hopefully the major things will.
 
 .. note::
     If you are upgrading from a previous version, you might want to stop all loggers for the duration of your UTC offset to prevent issues which we've had difficulty debugging (or you can just start right away and expect your first hours to end up a bit weird).
@@ -34,7 +39,7 @@ v0.7.0b1
 - All timestamps are now in UTC.
 - Updated outdated parts of the documentation.
 - Makefiles are now used throughout the projects to manage building, testing, and CI.
-- A lot of bug fixes (and hopefully not too many bugs).
+- A lot of bug fixes (and hopefully not too many new bugs).
 - Vastly improved code quality.
 
 v0.6.0 and older
