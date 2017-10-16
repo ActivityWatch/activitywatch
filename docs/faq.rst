@@ -7,6 +7,19 @@ FAQ
 .. note::
    Some of these questions are technically not frequently asked.
 
+How does ActivityWatch know when I am AFK?
+------------------------------------------
+
+On Windows and macOS, we use functionality offered by those platforms that gives us the
+time since last input.
+
+On Linux, we monitor all mouse and keyboard activity so that we can calculate the time
+since last input. We do not store what that activity was, just that it happened.
+
+With this data (seconds since last input) we then check if there is less than 3 minutes
+between input activity. If there is, we consider you not-AFK.  If more than 3 minutes
+passes without any input, we consider that as if you were AFK from the last input
+until the next input occurs.
 
 How do I programmatically use ActivityWatch?
 --------------------------------------------
@@ -16,7 +29,11 @@ See the documentation for `extending` or checkout the aw-client repository.
 How do I understand the data that is stored?
 --------------------------------------------
 
-Get some events with
+All ActivityWatch data is represented using the `event-model`.
+
+All events from have the fields :code:`timestamp` (ISO 8601 formatted), :code:`duration` (in seconds), and :code:`data` (a JSON object).
+
+You can programmatically get some events yourself to inspect with the following code:
 
 .. code-block:: py
 
@@ -29,11 +46,7 @@ Get some events with
    bucket_id = next(buckets.keys())
    events = ac.get_events(bucket_id)
 
-See here for a description of events: `event-model`
-
-Events from the aw-watcher-afk bucket have the fields :code:`timestamp`, :code:`duration`, and :code:`data`.
-
-As an example for AFK events: The data field contains a JSON object (in Python a dict) which has one key :code:`status` which can be :code:`afk` or :code:`not-afk`.
+As an example for AFK events: The data object contains has one attribute :code:`status` which can be :code:`afk` or :code:`not-afk`.
 
 ..
     If :code:`e0` and :code:`e1` are consecutive events, you should expect :code:`e0.timestamp + e0.duration == e1.timestamp` (within some milliseconds) and report issues when it is not the case.
