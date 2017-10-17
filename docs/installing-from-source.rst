@@ -66,7 +66,7 @@ Build and install everything into the virtualenv:
     make build
 
 Running
-----------
+-------
 
 Now you should be able to start ActivityWatch **from the terminal where you've activated the virtualenv**.
 You have two options:
@@ -85,3 +85,11 @@ Now everything should be running!
 Check out the web UI at http://localhost:5600/
 
 If anything doesn't work, let us know!
+
+
+Updating from source
+--------------------
+
+First pull the latest version of the repo with :code:`git pull` then get the updated submodules with :code:`git submodule update --recursive`. All that's needed then is a :code:`make build`.
+
+If it doesn't work, you can first try to run :code:`make uninstall` and then do a fresh :code:`make build`.
