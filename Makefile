@@ -41,20 +41,16 @@ package:
 	mkdir -p dist/activitywatch
 #
 	make --directory=aw-watcher-afk package
-	cp -r aw-watcher-afk/dist/aw-watcher-afk/* dist/activitywatch
-	cp -r aw-watcher-afk/dist/aw-watcher-afk/.* dist/activitywatch
+	cp -rT aw-watcher-afk/dist/aw-watcher-afk dist/activitywatch
 #
 	make --directory=aw-watcher-window package
-	cp -r aw-watcher-window/dist/aw-watcher-window/* dist/activitywatch
-	cp -r aw-watcher-window/dist/aw-watcher-window/.* dist/activitywatch
+	cp -rT aw-watcher-window/dist/aw-watcher-window dist/activitywatch
 #
 	make --directory=aw-server package
-	cp -r aw-server/dist/aw-server/* dist/activitywatch
-	cp -r aw-server/dist/aw-server/.* dist/activitywatch
+	cp -rT aw-server/dist/aw-server dist/activitywatch
 #
-	make --directory=aw-qt package;
-	cp -r aw-qt/dist/aw-qt/* dist/activitywatch
-	cp -r aw-qt/dist/aw-qt/.* dist/activitywatch
+	make --directory=aw-qt package
+	cp -rT aw-qt/dist/aw-qt dist/activitywatch
 #
 	bash scripts/package/package-zip.sh
 
