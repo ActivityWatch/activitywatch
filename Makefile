@@ -4,7 +4,7 @@
 
 .PHONY: build install test docs clean clean_all
 
-# TODO: Currently no way to do a `setup.py develop`/`pip install --editable`
+# When `make build DEV=true` is used all `pip install` commands will be run with `--editable` for easier development
 build:
 	make --directory=aw-core build DEV=$(DEV)
 	make --directory=aw-client build DEV=$(DEV)
@@ -21,7 +21,7 @@ install:
 	make --directory=aw-qt install
 # Installation is already happening in the `make build` step currently.
 # We might want to change this.
-# We should also add some option to install as user (pip3 install --user) or editable (pip3 install --editable)
+# We should also add some option to install as user (pip3 install --user)
 
 uninstall:
 	./scripts/uninstall.sh

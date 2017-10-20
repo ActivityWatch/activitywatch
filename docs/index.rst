@@ -26,11 +26,11 @@ Welcome to the ActivityWatch documentation!
    :maxdepth: 3
    :caption: Developer documentation
 
+   development
    architecture
    event-model
    installing-from-source
    api-reference
-   development
    writing-watchers
    rest
    changelog
