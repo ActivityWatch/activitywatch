@@ -130,10 +130,10 @@ Yes, but we found that most time trackers lack in one or more important features
 
 We have a plan to address all of these and we're well on our way. See the table below for our progress.
 
-#### Feature comparison
 
+### Feature comparison
 
-<!-- TODO: Replace Platform names with icons  -->
+##### Basics
 
 |               | User owns data     | GUI                | Sync                       | Open Source        |
 | ------------- |:------------------:|:------------------:|:--------------------------:|:------------------:|
@@ -145,18 +145,19 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 [sync]: https://github.com/ActivityWatch/activitywatch/issues/35
 
-**Platforms**
+##### Platforms
+<!-- TODO: Replace Platform names with icons  -->
 
-|               | Windows            | macOS              | Linux                    | Android            |
-| ------------- |:------------------:|:------------------:|:------------------------:|:------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark:       | [WIP][android]     |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:       | :x:                | 
-| ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :x:                |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark:       | :white_check_mark: | 
+|               | Windows            | macOS              | Linux              | Android            |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | [WIP][android]     |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | 
+| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | 
 
 [android]: https://github.com/ActivityWatch/activitywatch/issues/6
 
-**Tracking**
+##### Tracking
 
 |               | App & Window Title | AFK                | Browser Extensions | Editor Plugins     | Extensible            |
 | ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:---------------------:|
