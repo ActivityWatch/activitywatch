@@ -8,17 +8,17 @@
 
 <p align="center">
   <b>
-    <a href="http://activitywatch.net/">Website</a>
+    <a href="https://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
-    — <a href="http://activitywatch.readthedocs.io">Documentation</a>
+    — <a href="https://activitywatch.readthedocs.io">Documentation</a>
     — <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
   </b>
 
   <br>
 
   <b>
-    <a href="http://activitywatch.net/contributors/">Contributor stats</a>
-    — <a href="http://activitywatch.net/dev/overview/">CI overview</a>
+    <a href="https://activitywatch.net/contributors/">Contributor stats</a>
+    — <a href="https://activitywatch.net/ci/">CI overview</a>
   </b>
 
   <br>
