@@ -1,7 +1,7 @@
 <img title="ActivityWatch" src="docs/banner.png" align="center">
 
 <p align="center">
-  <b>Records what you do</b> so that you can <i>understand how you spend your time</i>.
+  <b>Records what you do</b> so that you can <i>know how you've spent your time</i>.
   <br>
   All in a secure way where <i>you control the data</i>.
 </p>
@@ -38,6 +38,9 @@
   </a>
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
+  </a>
+  <a href="https://activitywatch.net/donate/">
+    <img title="Donated" src="https://img.shields.io/badge/donations-%240%2Fmo-yellow.svg" />
   </a>
 
   <br>
@@ -132,23 +135,36 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 <!-- TODO: Replace Platform names with icons  -->
 
-|               | User owns data     | GUI                | Sync                     | Open Source        | Platforms                                 |
-| ------------- |:------------------:|:------------------:|:------------------------:|:------------------:| ----------------------------------------- |
-| ActivityWatch | :white_check_mark: | :white_check_mark: | ~~Decentralized~~ (WIP)  | :white_check_mark: | macOS, Linux, Windows, ~~Android~~ (WIP)  |
-| Selfspy       | :white_check_mark: | :x:                | :x:                      | :white_check_mark: | macOS, Linux, Windows                     |
-| ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :white_check_mark: | macOS, Linux                              |
-| RescueTime    | :x:                | :white_check_mark: | Centralized              | :x:                | macOS, Linux, Windows, Android, iOS       |
-| WakaTime      | :x:                | :white_check_mark: | Centralized              | Client             | Most popular text editors                 |
+|               | User owns data     | GUI                | Sync                       | Open Source        |
+| ------------- |:------------------:|:------------------:|:--------------------------:|:------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | [WIP][sync], decentralized | :white_check_mark: |
+| Selfspy       | :white_check_mark: | :x:                | :x:                        | :white_check_mark: |
+| ulogme        | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
+| RescueTime    | :x:                | :white_check_mark: | Centralized                | :x:                |
+| WakaTime      | :x:                | :white_check_mark: | Centralized                | Clients            |
+
+[sync]: https://github.com/ActivityWatch/activitywatch/issues/35
+
+**Platforms**
+
+|               | Windows            | macOS              | Linux                    | Android            |
+| ------------- |:------------------:|:------------------:|:------------------------:|:------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark:       | [WIP][android]     |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:       | :x:                | 
+| ulogme        | :white_check_mark: | :white_check_mark: | :x:                      | :x:                |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark:       | :white_check_mark: | 
+
+[android]: https://github.com/ActivityWatch/activitywatch/issues/6
 
 **Tracking**
 
-|               | Application        | Window Title       | AFK                | Browser Extensions | Editor Plugins           | Extensible            |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:------------------------:|:---------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | In Beta            | Possible                 | :white_check_mark:    |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :white_check_mark:?      | :x:?                  |
-| ulogme        | :white_check_mark: | :white_check_mark: | :white_check_mark:?| :x:                | :x:?                     | :x:?                  |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                      | :x:                   |
-| WakaTime      | :x:                | :x:                | :white_check_mark: | :x:                | :white_check_mark:, many | Only for text editors |
+|               | App & Window Title | AFK                | Browser Extensions | Editor Plugins     | Extensible            |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:---------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | Possible           | :white_check_mark:    |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
+| ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
+| WakaTime      | :x:                | :white_check_mark: | :x:                | :white_check_mark: | Only for text editors |
 
 
 ### Installation & Usage
@@ -170,7 +186,7 @@ The webapp includes basic data visualization (WIP), data browsing and export, an
 
  - `aw-watcher-afk` - can be used to log the presence/absence of user activity from keyboard and mouse input
  - `aw-watcher-window` - can be used to log the currently active application and it's window title
- - `aw-watcher-web` - (WIP) can be used to increase the logging detail when browsing the web by collecting the URLs and titles of tabs (your web history with superpowers)
+ - `aw-watcher-web` - can be used to increase the logging detail when browsing the web by collecting the URL and title of the active tab (your web history with superpowers)
 
 ### Libraries
 

@@ -59,8 +59,7 @@ def line_age(line):
 def main(exclude_testing: bool = False, limit_days: int = 10, limit_lines: int = 10):
     file_lines = collect()
 
-    exclude_testing_logs = False
-    if exclude_testing_logs:
+    if exclude_testing:
         keys = filter(lambda k: "testing" not in k, file_lines.keys())
         file_lines = {key: file_lines[key] for key in keys}
 
