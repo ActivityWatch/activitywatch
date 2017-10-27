@@ -1,11 +1,35 @@
-# I recommend creating a virtualenv as such before running before this makefile:
-#  - virtualenv --python=python3 venv
-#  - source ./venv/bin/activate
+# =====================================
+# Makefile for the ActivityWatch bundle
+# =====================================
+#
+# [GUIDE] How to install from source:
+#  - https://activitywatch.readthedocs.io/en/latest/installing-from-source.html
+#
+# We recommend creating and activating a Python virtualenv before building.
+# Instructions on how to do this can be found in the guide linked above.
 
+# These targets should always rerun
 .PHONY: build install test docs clean clean_all
 
-# When `make build DEV=true` is used all `pip install` commands will be run with `--editable` for easier development
+SHELL := /usr/bin/env bash
+
+# The `build` target
+# ------------------
+#
+# What it does:
+#  - Installs all the Python modules
+#  - Builds the web UI and bundles it with aw-server
+#
+# Arguments:
+#  - `DEV=true` makes all `pip install` commands run with `--editable`.
+#    Removes the need to reinstall Python packages when working on them.
 build:
+	if [ -d "aw-core/.git" ]; then \
+		echo "Submodules seem to already be initialized, continuing..."; \
+	else \
+		git submodules update --init --recursive; \
+	fi
+#
 	make --directory=aw-core build DEV=$(DEV)
 	make --directory=aw-client build DEV=$(DEV)
 #
@@ -17,14 +41,37 @@ build:
 	make --directory=aw-watcher-window build DEV=$(DEV)
 	make --directory=aw-qt build DEV=$(DEV)
 
+
+# Install
+# -------
+#
+# Installs things like desktop/menu shortcuts.
+# Might in the future configure autostart on the system.
 install:
 	make --directory=aw-qt install
 # Installation is already happening in the `make build` step currently.
 # We might want to change this.
 # We should also add some option to install as user (pip3 install --user)
 
+# Update
+# ------
+#
+# Pulls the latest version, updates all the submodules, then runs `make build`.
+update:
+	git pull
+	git submodule update --init --recursive
+	make build
+
+# Uninstall
+# ---------
+#
+# Uninstalls all the Python modules.
 uninstall:
-	./scripts/uninstall.sh
+	modules=$$(pip3 list --format=legacy | grep 'aw-' | grep -o '^aw-[^ ]*'); \
+	for module in $$modules; do \
+		echo "Uninstalling $$module"; \
+		pip3 uninstall -y $$module; \
+	done
 
 test:
 	make --directory=aw-core test
