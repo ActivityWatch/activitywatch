@@ -6,14 +6,12 @@ Getting started
     We're currently working on improving the installation experience by creating proper installers and packages,
     but for now we offer standalone archives containing everything you need.
 
-.. Content from aw-server/README.md should be moved here.
-
 Installation
 ============
 
 .. note::
-    The prebuilt executables have been known to sometimes have issues on Linux and macOS.
-    If they don't work for you consider `installing-from-source` and filing an issue.
+    The prebuilt packages are known to sometimes have issues on Linux.
+    If they don't work for you, please create an issue and consider `installing-from-source`.
 
 1. First, grab the `latest release from GitHub <https://github.com/ActivityWatch/activitywatch/releases>`_ for your operating system.
 
