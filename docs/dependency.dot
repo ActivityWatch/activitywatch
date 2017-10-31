@@ -1,0 +1,67 @@
+digraph {
+    //activitywatch [shape=box, label="activitywatch"];
+    //"aw-server" [shape=box, style=filled, fillcolor="0.4+0.5+1"]
+    //"aw-client" [shape=box, style=filled, fillcolor="0.2+1+1"]
+
+    activitywatch -> "aw-server" -> {"aw-webui" "aw-core"};
+    activitywatch -> "aw-qt";
+    activitywatch -> "aw-watcher-afk" -> {"aw-client" "aw-core"};
+    activitywatch -> "aw-watcher-window" -> {"aw-client" "aw-core"};
+
+    "aw-client" -> "aw-core";
+
+    "aw-server" -> "aw-analysis";
+    "aw-analysis" -> "aw-core";
+
+    subgraph {
+        rank = same; "aw-watcher-afk"; "aw-watcher-window";
+    }
+
+    //subgraph {
+    //    rank = same; "aw-core"; "aw-client";
+    //}
+
+
+
+    /*
+     * Legend, causes sigsegv...
+     * http://stackoverflow.com/a/4752766/965332
+     */
+/*
+    { rank = sink;
+      Legend [shape=none, margin=0, label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+       <TR>
+        <TD COLSPAN="2"><B>Legend</B></TD>
+       </TR>
+       <TR>
+        <TD>Foo</TD>
+        <TD><FONT COLOR="red">Foo</FONT></TD>
+       </TR>
+       <TR>
+        <TD>Bar</TD>
+        <TD BGCOLOR="RED"></TD>
+       </TR>
+       <TR>
+        <TD>Baz</TD>
+        <TD BGCOLOR="BLUE"></TD>
+       </TR>
+       <TR>
+        <TD>Test</TD>
+        <TD>HELLO</TD>
+       </TR>
+       <TR>
+        <TD>Test</TD>
+        <TD CELLPADDING="4">
+         <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+          <TR>
+           <TD BGCOLOR="Yellow"></TD>
+          </TR>
+         </TABLE>
+        </TD>
+       </TR>
+      </TABLE>
+     >];
+    }
+*/
+}
