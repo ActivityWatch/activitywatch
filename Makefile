@@ -9,7 +9,7 @@
 # Instructions on how to do this can be found in the guide linked above.
 
 # These targets should always rerun
-.PHONY: build install test docs clean clean_all
+.PHONY: build install test clean clean_all
 
 SHELL := /usr/bin/env bash
 
@@ -100,12 +100,6 @@ package:
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
 #
 	bash scripts/package/package-zip.sh
-
-docs:
-	make --directory=docs html
-
-docs-deps:
-	pip3 install --user -r docs/requirements.txt
 
 clean:
 	rm -rf build dist
