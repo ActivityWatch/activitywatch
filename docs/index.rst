@@ -33,6 +33,7 @@ Welcome to the ActivityWatch documentation!
    api-reference
    writing-watchers
    rest
+   code-guidelines
    changelog
 
 
