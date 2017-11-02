@@ -10,12 +10,6 @@
 [submodule "aw-watcher-afk"]
 	path = aw-watcher-afk
 	url = https://github.com/ActivityWatch/aw-watcher-afk.git
-[submodule "aw-webui"]
-	path = aw-webui
-	url = https://github.com/ActivityWatch/aw-webui.git
-[submodule "aw-client-js"]
-	path = aw-client-js
-	url = https://github.com/ActivityWatch/aw-client-js.git
 [submodule "aw-qt"]
 	path = aw-qt
 	url = https://github.com/ActivityWatch/aw-qt.git
