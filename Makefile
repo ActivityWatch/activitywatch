@@ -32,10 +32,6 @@ build:
 #
 	make --directory=aw-core build DEV=$(DEV)
 	make --directory=aw-client build DEV=$(DEV)
-#
-	make --directory=aw-webui build DEV=$(DEV)
-	cp -r aw-webui/dist/* aw-server/aw_server/static/
-#
 	make --directory=aw-server build DEV=$(DEV)
 	make --directory=aw-watcher-afk build DEV=$(DEV)
 	make --directory=aw-watcher-window build DEV=$(DEV)
@@ -112,4 +108,3 @@ clean_all: clean
 	make --directory=aw-server clean
 	make --directory=aw-watcher-afk clean
 	make --directory=aw-watcher-window clean
-	make --directory=aw-webui clean
