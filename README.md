@@ -34,7 +34,7 @@
 <p align="center">
 
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
-    <img title="Latest release" src="https://img.shields.io/github/release/ActivityWatch/activitywatch/all.svg">
+    <img title="Latest release" src="https://img.shields.io/github/release/ActivityWatch/activitywatch.svg">
   </a>
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
