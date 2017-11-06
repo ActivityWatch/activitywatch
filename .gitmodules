@@ -16,6 +16,3 @@
 [submodule "aw-watcher-window"]
 	path = aw-watcher-window
 	url = https://github.com/ActivityWatch/aw-watcher-window.git
-[submodule "aw-watcher-web"]
-	path = aw-watcher-web
-	url = https://github.com/ActivityWatch/aw-watcher-web.git
