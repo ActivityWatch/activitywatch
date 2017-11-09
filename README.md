@@ -103,6 +103,8 @@ You can read more on our [website](https://activitywatch.github.io/about/).
 
 <!-- TODO: We could probably stylize these (nice borders, scaled down) -->
 
+**Note:** This screenshot is outdated and alone, [we will fix that Soon™](https://github.com/ActivityWatch/activitywatch/issues/122).
+
 <img src="http://activitywatch.net/screenshot.png" width="22%">
 <!--
   <img src="http://activitywatch.net/screenshot.png" width="22%">
