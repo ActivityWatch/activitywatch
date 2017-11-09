@@ -40,7 +40,7 @@
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
   </a>
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/donations-%240%2Fmo-yellow.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/donations-%241%2Fmo-yellow.svg" />
   </a>
 
   <br>
