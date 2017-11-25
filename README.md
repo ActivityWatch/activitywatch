@@ -172,6 +172,8 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 ### Installation & Usage
 
+Ensure that Python 3.4, 3.5 or 3.6 is installed by typing on the command line: __python3 -V__
+
 Please see the [Getting started guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
 
 
