@@ -43,16 +43,10 @@
   <br>
 
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/donations-%241%2Fmo-yellow.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/donations-%2419%2Fmo-yellow.svg" />
   </a>
   <a href="https://www.patreon.com/erikbjare">
     <img title="Donate on Patreon" src="https://img.shields.io/badge/patreon-donate-yellow.svg" />
-  </a>
-  <a href="https://opencollective.com/activitywatch">
-    <img title="Donate on Open Collective" src="https://img.shields.io/badge/bountysource-donate-yellow.svg" />
-  </a>
-  <a href="https://salt.bountysource.com/teams/activitywatch">
-    <img title="Donate on Bountysource" src="https://img.shields.io/badge/bountysource-donate-yellow.svg" />
   </a>
   <a href="https://activitywatch.net/donate/">
     <img title="Donate with another method" src="https://img.shields.io/badge/others-donate-yellow.svg" />
