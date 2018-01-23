@@ -39,8 +39,23 @@
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
   </a>
+
+  <br>
+
   <a href="https://activitywatch.net/donate/">
     <img title="Donated" src="https://img.shields.io/badge/donations-%241%2Fmo-yellow.svg" />
+  </a>
+  <a href="https://www.patreon.com/erikbjare">
+    <img title="Donate on Patreon" src="https://img.shields.io/badge/patreon-donate-yellow.svg" />
+  </a>
+  <a href="https://opencollective.com/activitywatch">
+    <img title="Donate on Open Collective" src="https://img.shields.io/badge/bountysource-donate-yellow.svg" />
+  </a>
+  <a href="https://salt.bountysource.com/teams/activitywatch">
+    <img title="Donate on Bountysource" src="https://img.shields.io/badge/bountysource-donate-yellow.svg" />
+  </a>
+  <a href="https://activitywatch.net/donate/">
+    <img title="Donate with another method" src="https://img.shields.io/badge/others-donate-yellow.svg" />
   </a>
 
   <br>
@@ -95,10 +110,6 @@ We've worked towards this goal by creating a application for safe storage of the
 
 It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
 
-**Note:** ActivityWatch is under development. There is still work to be done so we provide it with no guarantees with the hope that others may wish to help and give their feedback!
-
-You can read more on our [website](https://activitywatch.github.io/about/).
-
 ### Screenshots
 
 <!-- TODO: We could probably stylize these (nice borders, scaled down) -->
@@ -112,7 +123,16 @@ You can read more on our [website](https://activitywatch.github.io/about/).
   <img src="http://activitywatch.net/screenshot.png" width="22%">
 -->
 
-### Is this yet another time tracker?
+
+## Installation & Usage
+
+Downloads are available on our [releases page](https://github.com/ActivityWatch/activitywatch/releases).
+
+For instructions on how to get started, please see [our guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
+
+Interested in building from source? [There's a guide for that too](https://activitywatch.readthedocs.io/en/latest/installing-from-source.html).
+
+## Is this yet another time tracker?
 
 Yes, but we found that most time trackers lack in one or more important features.
 
@@ -168,11 +188,6 @@ We have a plan to address all of these and we're well on our way. See the table 
 | ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
-
-
-### Installation & Usage
-
-Please see the [Getting started guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
 
 
 ## About this repository
