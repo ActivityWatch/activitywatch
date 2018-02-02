@@ -24,7 +24,7 @@ SHELL := /usr/bin/env bash
 #  - `DEV=true` makes all `pip install` commands run with `--editable`.
 #    Removes the need to reinstall Python packages when working on them.
 build:
-	if [ -d "aw-core/.git" ]; then \
+	if [ -e "aw-core/.git" ]; then \
 		echo "Submodules seem to already be initialized, continuing..."; \
 	else \
 		git submodule update --init --recursive; \
