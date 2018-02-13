@@ -23,6 +23,11 @@ SHELL := /usr/bin/env bash
 # Arguments:
 #  - `DEV=true` makes all `pip install` commands run with `--editable`.
 #    Removes the need to reinstall Python packages when working on them.
+#
+# Tips:
+#  - Set the environment variable `PIP_USER=true` for pip to install all Python
+#    packages as user packages (same as `pip install --user <pkg>`). This makes
+#    it possible to install without using a virtualenv (or root).
 build:
 	if [ -e "aw-core/.git" ]; then \
 		echo "Submodules seem to already be initialized, continuing..."; \
@@ -94,6 +99,8 @@ package:
 #
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
+# Remove problem-causing binaries, see https://github.com/ActivityWatch/activitywatch/issues/161
+	rm -f dist/activitywatch/libdrm.so.2
 #
 	bash scripts/package/package-zip.sh
 
