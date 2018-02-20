@@ -41,6 +41,9 @@ build:
 	make --directory=aw-watcher-afk build DEV=$(DEV)
 	make --directory=aw-watcher-window build DEV=$(DEV)
 	make --directory=aw-qt build DEV=$(DEV)
+#   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
+	make --directory=aw-client build DEV=$(DEV)
+	make --directory=aw-core build DEV=$(DEV)
 
 
 # Install
