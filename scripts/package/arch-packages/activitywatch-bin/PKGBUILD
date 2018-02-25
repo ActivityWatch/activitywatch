@@ -8,40 +8,10 @@ pkgdesc="Log what you do on your computer. Simple, extensible, no third parties.
 arch=('i686' 'x86_64')
 url="https://github.com/ActivityWatch/activitywatch"
 license=('MPL2')
-groups=()
-depends=()
-makedepends=()
-checkdepends=()
-optdepends=()
-provides=()
+provides=("activitywatch")
 conflicts=("activitywatch")
-replaces=()
-backup=()
-options=()
-install=
-changelog=
-source=("${pkgname}.zip::https://github.com/ActivityWatch/activitywatch/releases/download/v${pkgver}/activitywatch-v${pkgver}-linux-x86_64.zip")
-noextract=()
-md5sums=("")
-validpgpkeys=()
+source=("https://github.com/ActivityWatch/activitywatch/releases/download/v${pkgver}/activitywatch-v${pkgver}-linux-x86_64.zip")
 md5sums=('SKIP')
-
-prepare() {
-	#cd "$pkgname-$pkgver"
-	#patch -p1 -i "$srcdir/$pkgname-$pkgver.patch"
-    true
-}
-
-build() {
-    #cd activitywatch
-    true
-}
-
-check() {
-	#cd "$pkgname-$pkgver"
-	#make -k check
-    true
-}
 
 package() {
     # Install into /opt/activitywatch
