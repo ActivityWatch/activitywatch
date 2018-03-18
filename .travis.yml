@@ -43,6 +43,7 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
      brew install python3;
+     brew postinstall python3;
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
    fi
