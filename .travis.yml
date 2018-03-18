@@ -42,6 +42,7 @@ matrix:
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
+     brew upgrade python;
      brew install python3;
      brew postinstall python3;
      brew install findutils;
