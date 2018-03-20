@@ -21,7 +21,7 @@ package() {
     # Symlink executables to /usr/bin
     mkdir -p $pkgdir/usr/bin
     execnames=("aw-server" "aw-watcher-afk" "aw-watcher-window" "aw-qt")
-    for execname in $execnames; do
+    for execname in "${execnames[@]}"; do
         ln -s /opt/activitywatch/$execname $pkgdir/usr/bin/$execname
     done
 }
