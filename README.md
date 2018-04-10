@@ -190,15 +190,25 @@ This repo is a bundle of the core components and official modules of ActivityWat
 
 ### Server
 
-`aw-server` is the official implementation of the core service which the other ActivityWatch services interact with. It provides a datastore and serves the web interface developed in the *aw-webui* project (which provides the frontend part of the webapp).
+`aw-server` is the official implementation of the core service which the other ActivityWatch services interact with. It provides a REST API to a datastore and query engine. It also serves the web interface developed in the `aw-webui` project (which provides the frontend part of the webapp).
 
-The webapp includes basic data visualization (WIP), data browsing and export, and has a lot more planned for it.
+The REST API includes:
+
+ - Access to a datastore suitable for timeseries/timeperiod-data
+ - A query engine and language for such data
+
+The webapp includes:
+
+ - Data visualization & browser
+ - Query explorer
+ - Export functionality 
+   - Import is not currently implemented, see [issue #103](https://github.com/ActivityWatch/activitywatch/issues/103).
 
 ### Watchers
 
- - `aw-watcher-afk` - can be used to log the presence/absence of user activity from keyboard and mouse input
- - `aw-watcher-window` - can be used to log the currently active application and it's window title
- - `aw-watcher-web` - can be used to increase the logging detail when browsing the web by collecting the URL and title of the active tab (your web history with superpowers)
+ - `aw-watcher-afk` - logs the presence/absence of user activity from keyboard and mouse input
+ - `aw-watcher-window` - logs the currently active application and it's window title
+ - `aw-watcher-web` - logs your web browsing in better detail (notably the URL in addition to the title of the page)
 
 ### Libraries
 

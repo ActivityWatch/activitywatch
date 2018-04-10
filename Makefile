@@ -79,6 +79,7 @@ uninstall:
 
 test:
 	make --directory=aw-core test
+	make --directory=aw-client test
 	make --directory=aw-server test
 	make --directory=aw-qt test
 
