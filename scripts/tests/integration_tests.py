@@ -1,6 +1,5 @@
 import subprocess
 from time import sleep
-from contextlib import contextmanager
 import tempfile
 import platform
 
@@ -39,9 +38,9 @@ def server_process():
     error_indicators = ["ERROR"]
 
     with open(logfile_stdout.name, "r+b") as f:
-        stdout = f.read()
-        if stdout:
-            pytest.fail("Server shouldn't write anything to stdout, wrote: {}".format(stdout))
+        stdout = str(f.read(), "utf8")
+        if any(e in stdout for e in error_indicators):
+            pytest.fail("Found ERROR indicator in stdout from server: {}".format(stdout))
 
     with open(logfile_stderr.name, "r+b") as f:
         stderr = str(f.read(), "utf8")
