@@ -154,12 +154,16 @@ We have a plan to address all of these and we're well on our way. See the table 
 |               | User owns data     | GUI                | Sync                       | Open Source        |
 | ------------- |:------------------:|:------------------:|:--------------------------:|:------------------:|
 | ActivityWatch | :white_check_mark: | :white_check_mark: | [WIP][sync], decentralized | :white_check_mark: |
-| Selfspy       | :white_check_mark: | :x:                | :x:                        | :white_check_mark: |
-| ulogme        | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
-| RescueTime    | :x:                | :white_check_mark: | Centralized                | :x:                |
-| WakaTime      | :x:                | :white_check_mark: | Centralized                | Clients            |
+| [Selfspy]       | :white_check_mark: | :x:                | :x:                        | :white_check_mark: |
+| [ulogme]        | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
+| [RescueTime]    | :x:                | :white_check_mark: | Centralized                | :x:                |
+| [WakaTime]      | :x:                | :white_check_mark: | Centralized                | Clients            |
 
 [sync]: https://github.com/ActivityWatch/activitywatch/issues/35
+[Selfspy]: https://github.com/selfspy/selfspy
+[ulogme]: https://github.com/karpathy/ulogme
+[RescueTime]: https://www.rescuetime.com/
+[WakaTime]: https://wakatime.com/
 
 ##### Platforms
 <!-- TODO: Replace Platform names with icons  -->
