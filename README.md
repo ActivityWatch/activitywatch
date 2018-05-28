@@ -43,7 +43,7 @@
   <br>
 
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/donations-%2419%2Fmo-yellow.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/donations-%247%2Fmo-yellow.svg" />
   </a>
   <a href="https://www.patreon.com/erikbjare">
     <img title="Donate on Patreon" src="https://img.shields.io/badge/patreon-donate-yellow.svg" />
