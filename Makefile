@@ -44,6 +44,8 @@ build:
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build DEV=$(DEV)
 	make --directory=aw-core build DEV=$(DEV)
+#
+	python3 -c "import aw_server; print(aw_server.__version__)"
 
 
 # Install
