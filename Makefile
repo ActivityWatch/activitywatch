@@ -66,6 +66,18 @@ update:
 	git submodule update --init --recursive
 	make build
 
+lint:
+	pylint -E \
+		aw-core/aw_core/ \
+		aw-core/aw_datastore/ \
+		aw-core/aw_transform/ \
+		aw-core/aw_analysis/ \
+		aw-client/aw_client/ \
+		aw-server/aw_server/ \
+		aw-watcher-window/aw_watcher_window/ \
+		aw-watcher-afk/aw_watcher_afk/ \
+		aw-qt/aw_qt/
+
 # Uninstall
 # ---------
 #
