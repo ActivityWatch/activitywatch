@@ -181,11 +181,13 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 |               | App & Window Title | AFK                | Browser Extensions | Editor Plugins     | Extensible            |
 | ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:---------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | Possible           | :white_check_mark:    |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark:    |
 | Selfspy       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
 | ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
+
+For more things ActivityWatch can track, [click here](https://activitywatch.readthedocs.io/en/latest/watchers.html).
 
 
 ## About this repository
