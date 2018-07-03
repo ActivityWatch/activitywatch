@@ -187,7 +187,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
 
-For more things ActivityWatch can track, [click here](https://activitywatch.readthedocs.io/en/latest/watchers.html).
+For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://activitywatch.readthedocs.io/en/latest/watchers.html).
 
 
 ## About this repository
