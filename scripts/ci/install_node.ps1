@@ -11,7 +11,7 @@ function InstallNode () {
 }
 
 function DownloadNodeMSI () {
-    $url = "https://nodejs.org/dist/v6.10.2/node-v6.10.2-x64.msi"
+    $url = "https://nodejs.org/dist/v8.11.4/node-v8.11.4-x64.msi"
     $start_time = Get-Date
 
     Write-Output "Downloading node msi"
