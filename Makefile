@@ -68,6 +68,28 @@ update:
 	git submodule update --init --recursive
 	make build
 
+# Update (bleeding edge)
+# ------
+#
+# Pulls the latest version, updates all the submodules, then runs `make build`.
+update-edge:
+	git pull
+	git submodule update --init --recursive
+	git submodule foreach -v --recursive "echo 'test' $$(pwd); git checkout master; git pull origin master"
+	make build
+
+create-pipenv:
+	# pipenv --python 3.6
+	#pipenv install --skip-lock -r aw-core/requirements.txt
+	#pipenv install --skip-lock -r aw-core/requirements-dev.txt --dev
+	#pipenv install --skip-lock -r aw-server/requirements.txt
+	#pipenv install --skip-lock -r aw-client/requirements.txt
+	#pipenv install --skip-lock -r aw-watcher-afk/requirements.txt
+	pipenv install --skip-lock -r aw-watcher-window/requirements.txt
+	pipenv install --skip-lock -r aw-qt/requirements.txt
+
+
+
 lint:
 	pylint -E \
 		aw-core/aw_core/ \
@@ -119,6 +141,8 @@ package:
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
 # Remove problem-causing binaries, see https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libdrm.so.2
+# Remove unecessary files
+	rm -rf dist/activitywatch/pytz
 #
 	bash scripts/package/package-zip.sh
 
