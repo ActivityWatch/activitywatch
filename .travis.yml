@@ -3,7 +3,6 @@ dist: trusty
 language: python
 python:
    # These jobs are only used in testing, no packaging done and are currently allowed failures
- - 3.6
  - nightly
 
 env:
@@ -16,7 +15,7 @@ matrix:
   include:
      # This is the job that will be used when building packages for Linux
    - os: linux
-     python: 3.5
+     python: 3.6
      env:
       - DEPLOY=true
       - TRAVIS_NODE_VERSION="8"
