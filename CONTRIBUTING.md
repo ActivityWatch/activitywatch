@@ -6,7 +6,16 @@ How to Contribute
 **Note:** This is a work in progress, there is a lot we could do better so file a PR if you think we've missed something!
 
 
-## Getting started
+## Getting started with development
+
+To develop on ActivityWatch you'll first want to install from source. To do so, follow [the guide in the documentation](https://activitywatch.readthedocs.io/en/latest/installing-from-source.html).
+
+You might then want to read about the [architecture](https://activitywatch.readthedocs.io/en/latest/architecture.html) and the [data model](https://activitywatch.readthedocs.io/en/latest/buckets-and-events.html).
+
+If you want some code examples for how to write watchers or other types of clients, see the [documentation for writing watchers](https://activitywatch.readthedocs.io/en/latest/writing-watchers.html).
+
+
+## How you can help
 
 There are many ways to contribute to ActivityWatch:
 
