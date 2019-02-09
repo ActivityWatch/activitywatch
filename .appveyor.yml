@@ -102,7 +102,7 @@ install:
   - "%CMD_IN_ENV% powershell scripts\\ci\\install_pyhook.ps1"
 
   # Packaging dependencies
-  - "%CMD_IN_ENV% pip install --upgrade pyinstaller"
+  - "%CMD_IN_ENV% pip install pyinstaller==3.3.1"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
