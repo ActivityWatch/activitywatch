@@ -1,10 +1,7 @@
 os: linux
 dist: trusty
 language: python
-python:
-   # These jobs are only used in testing, no packaging done and are currently allowed failures
- - 3.6
- - nightly
+python: 3.6
 
 env:
  - TRAVIS_NODE_VERSION="8"
@@ -14,19 +11,23 @@ services:
 
 matrix:
   include:
-     # This is the job that will be used when building packages for Linux
    - os: linux
-     python: 3.5
+     python: 3.6
      env:
       - DEPLOY=true
       - TRAVIS_NODE_VERSION="8"
-     # This is the job that will be used when building packages for macOS
    - os: osx
      osx_image: xcode7.3
      language: generic
      python: null
      env:
       - DEPLOY=true
+      - TRAVIS_NODE_VERSION="8"
+   - os: windows
+     language: sh
+     python: 3.6
+     env:
+      - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
       - TRAVIS_NODE_VERSION="8"
    - os: osx
      osx_image: xcode9
@@ -40,21 +41,37 @@ matrix:
    - osx_image: xcode9
 
 before_install:
- # Install Python 3.6.5
+ # Windows: Install Python 3.6.8
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     choco install -y python --version=3.6.8;
+     choco install -y nvm;
+     cp /c/Python36/python.exe /c/Python36/python3.exe;
+     export PATH="/c/Python36:/c/Python36/Scripts:/c/ProgramData/nvm;$PATH";
+     python3 -m pip install --upgrade pip wheel;
+     nvm install $TRAVIS_NODE_VERSION;
+     nvm use $TRAVIS_NODE_VERSION;
+   fi
+ # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
      brew unlink python;
      brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb;
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
+     rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+   fi
+ # Linux: Install nvm and use correct node version
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+     rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
    fi
  - pip3 install --upgrade pip
  - python3 --version
  - pip3 --version
- - pip3 install --upgrade -r scripts/dev-requirements.txt
- - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
+ - node --version
+ - npm --version
 
 install:
+ - pip3 install --upgrade -r scripts/dev-requirements.txt
  - "make build"
  - "make install"
 
