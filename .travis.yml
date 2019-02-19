@@ -41,8 +41,7 @@ matrix:
    - osx_image: xcode9
 
 before_install:
- - set -x
- # Windows: Install Python 3.6.8
+ # Windows: Install Python 3.6.8, make, node/npm using nvs
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      choco install -y python --version=3.6.8;
      cp /c/Python36/python.exe /c/Python36/python3.exe;
@@ -55,6 +54,11 @@ before_install:
      nvs add node/$TRAVIS_NODE_VERSION;
      nvs use node/$TRAVIS_NODE_VERSION;
      choco install -y make;
+
+   fi
+ # Windows: Downgrade of pip needed as workaround for: https://github.com/ActivityWatch/activitywatch/issues/195
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     pip3 install --upgrade pip==9.0.3;
    fi
  # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -64,12 +68,13 @@ before_install:
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+     pip3 install --upgrade pip;
    fi
  # Linux: Install nvm and use correct node version
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+     pip3 install --upgrade pip;
    fi
- - pip3 install --upgrade pip
  - python3 --version
  - pip3 --version
  - node --version
