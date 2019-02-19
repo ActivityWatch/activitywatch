@@ -44,10 +44,12 @@ before_install:
  # Windows: Install Python 3.6.8
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      choco install -y python --version=3.6.8;
-     choco install -y nvs;
      cp /c/Python36/python.exe /c/Python36/python3.exe;
-     export PATH="/c/Python36:/c/Python36/Scripts:/c/ProgramData/nvs;$PATH";
+     export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
      python3 -m pip install --upgrade pip wheel;
+     git clone --single-branch https://github.com/jasongin/nvs $NVS_HOME;
+     source $NVS_HOME/nvs.sh;
+     export PATH="./node_modules/.bin:$PATH"
      nvs add $TRAVIS_NODE_VERSION;
      nvs use $TRAVIS_NODE_VERSION;
    fi
