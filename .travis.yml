@@ -51,7 +51,7 @@ before_install:
      export NVS_HOME="C:\ProgramData\nvs";
      git clone --single-branch https://github.com/jasongin/nvs $NVS_HOME;
      source $NVS_HOME/nvs.sh;
-     export PATH="./node_modules/.bin:$PATH"
+     export PATH="./node_modules/.bin:$PATH";
      nvs add node/$TRAVIS_NODE_VERSION;
      nvs use node/$TRAVIS_NODE_VERSION;
    fi
