@@ -54,6 +54,7 @@ before_install:
      export PATH="./node_modules/.bin:$PATH";
      nvs add node/$TRAVIS_NODE_VERSION;
      nvs use node/$TRAVIS_NODE_VERSION;
+     choco install -y make;
    fi
  # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
