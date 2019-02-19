@@ -44,12 +44,12 @@ before_install:
  # Windows: Install Python 3.6.8
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      choco install -y python --version=3.6.8;
-     choco install -y nvm;
+     choco install -y nvs;
      cp /c/Python36/python.exe /c/Python36/python3.exe;
-     export PATH="/c/Python36:/c/Python36/Scripts:/c/ProgramData/nvm;$PATH";
+     export PATH="/c/Python36:/c/Python36/Scripts:/c/ProgramData/nvs;$PATH";
      python3 -m pip install --upgrade pip wheel;
-     nvm install $TRAVIS_NODE_VERSION;
-     nvm use $TRAVIS_NODE_VERSION;
+     nvs add $TRAVIS_NODE_VERSION;
+     nvs use $TRAVIS_NODE_VERSION;
    fi
  # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
