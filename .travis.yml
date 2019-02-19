@@ -58,9 +58,9 @@ before_install:
    fi
  # Windows: Downgrade of pip needed as workaround for: https://github.com/ActivityWatch/activitywatch/issues/195
  # Skipping as we get a permission error if trying to replace the system pip, and pip breaks if using --user
- - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-     #pip3 install --user --upgrade pip==9.0.3;
-   fi
+ #- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+ #    pip3 install --user --upgrade pip==9.0.3;
+ #  fi
  # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
