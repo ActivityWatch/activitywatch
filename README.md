@@ -95,7 +95,7 @@
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
 
-We've worked towards this goal by creating a application for safe storage of the data on the users local machine and as well as a set of watchers which record data such as:
+We've worked towards this goal by creating an application for safe storage of the data on the users local machine and as well as a set of watchers which record data such as:
 
  - Currently active application and the title of its window
  - Currently active browser tab and it's title and URL
@@ -215,6 +215,8 @@ The webapp includes:
  - `aw-watcher-afk` - logs the presence/absence of user activity from keyboard and mouse input
  - `aw-watcher-window` - logs the currently active application and it's window title
  - `aw-watcher-web` - logs your web browsing in better detail (notably the URL in addition to the title of the page)
+ - `aw-watcher-vscode` - logs your coding activity in the _VS Code_ editor
+ - `aw-watcher-vim` - logs your activity in the _Vim_ editor
 
 ### Libraries
 
