@@ -34,7 +34,6 @@ matrix:
 before_install:
  # Windows: Install Python, make, node/npm using nvs
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-     set -xe;
      choco install -y python --version=$TRAVIS_PYTHON_VERSION;
      cp /c/Python36/python.exe /c/Python36/python3.exe;
      export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
@@ -49,7 +48,6 @@ before_install:
    fi
  # macOS: Install Python 3.7.2
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-     set -xe;
      brew update;
      brew unlink python;
      brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/8de2c2b06a030b9f9a137f16481ed6c84512240c/Formula/python.rb;
