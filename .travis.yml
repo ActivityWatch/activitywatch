@@ -70,7 +70,10 @@ before_install:
 
 install:
  - pip3 install --upgrade -r scripts/dev-requirements.txt
- - travis_wait 30 make build
+ # Output something every 10 minutes or Travis kills the job if building takes more than 20min without output (as pip seems to on Windows when installing aw-server)
+ - while sleep 9m; do echo "=====[ $SECONDS seconds still running ]====="; done &
+ - make build
+ - kill %1  # Killing background sleep loop
  - "make install"
 
 script:
