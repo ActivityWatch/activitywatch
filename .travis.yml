@@ -47,12 +47,12 @@ before_install:
      nvs use node/$TRAVIS_NODE_VERSION;
      choco install -y make;
    fi
- # macOS: Install Python 3.6.5
+ # macOS: Install Python 3.7.2
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      set -xe;
      brew update;
      brew unlink python;
-     brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb;
+     brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/8de2c2b06a030b9f9a137f16481ed6c84512240c/Formula/python.rb;
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
