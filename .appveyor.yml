@@ -90,8 +90,8 @@ install:
   # about it being out of date.
   # Disabled for same reason as specified here:
   #  - https://github.com/ActivityWatch/aw-core/commit/e19ce9ea10912cf105859f97b8a7836dadd0fe58#diff-180360612c6b8c4ed830919bbb4dd459
-  # - "%CMD_IN_ENV% pip install --disable-pip-version-check --user --upgrade pip"
-  - "%CMD_IN_ENV% python3 -m pip install --upgrade pip==9.0.3"
+  - "%CMD_IN_ENV% python3 -m pip install --upgrade pip"
+  #- "%CMD_IN_ENV% python3 -m pip install --upgrade pip==9.0.3"
 
   # Testing dependencies
   - "%CMD_IN_ENV% pip install --upgrade -r scripts\\dev-requirements.txt"
