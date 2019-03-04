@@ -30,15 +30,12 @@ matrix:
       - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
       - TRAVIS_NODE_VERSION=8
    - os: osx
-     osx_image: xcode9
+     osx_image: xcode10.1
      language: generic
      python: null
      env:
       - DEPLOY=false
       - TRAVIS_NODE_VERSION=8
-  allow_failures:
-   - python: nightly
-   - osx_image: xcode9
 
 before_install:
  # Windows: Install Python, make, node/npm using nvs
@@ -57,6 +54,7 @@ before_install:
    fi
  # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+     set -xe;
      brew update;
      brew unlink python;
      brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb;
