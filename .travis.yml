@@ -25,7 +25,7 @@ matrix:
       - TRAVIS_NODE_VERSION=8
    - os: windows
      language: sh
-     python: 3.5
+     python: 3.6.8
      env:
       - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
       - TRAVIS_NODE_VERSION=8
@@ -41,11 +41,11 @@ matrix:
    - osx_image: xcode9
 
 before_install:
- # Windows: Install Python 3.6.8, make, node/npm using nvs
+ # Windows: Install Python, make, node/npm using nvs
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-     choco install -y python --version=3.5.4;
-     cp /c/Python35/python.exe /c/Python35/python3.exe;
-     export PATH="/c/Python35:/c/Python35/Scripts:$PATH";
+     choco install -y python --version=$TRAVIS_PYTHON_VERSION;
+     cp /c/Python36/python.exe /c/Python36/python3.exe;
+     export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
      python3 -m pip install --upgrade pip wheel;
      export NVS_HOME="C:\ProgramData\nvs";
      git clone --single-branch https://github.com/jasongin/nvs $NVS_HOME;
@@ -54,13 +54,7 @@ before_install:
      nvs add node/$TRAVIS_NODE_VERSION;
      nvs use node/$TRAVIS_NODE_VERSION;
      choco install -y make;
-
    fi
- # Windows: Downgrade of pip needed as workaround for: https://github.com/ActivityWatch/activitywatch/issues/195
- # Skipping as we get a permission error if trying to replace the system pip, and pip breaks if using --user
- #- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
- #    pip3 install --user --upgrade pip==9.0.3;
- #  fi
  # macOS: Install Python 3.6.5
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
