@@ -1,61 +1,77 @@
 os: linux
 dist: trusty
 language: python
-python:
-   # These jobs are only used in testing, no packaging done and are currently allowed failures
- - 3.6
- - nightly
+python: 3.6
 
 env:
- - TRAVIS_NODE_VERSION="8"
+ - TRAVIS_NODE_VERSION=8
 
 services:
  - mongodb
 
 matrix:
   include:
-     # This is the job that will be used when building packages for Linux
    - os: linux
-     python: 3.5
+     python: 3.6
      env:
       - DEPLOY=true
-      - TRAVIS_NODE_VERSION="8"
-     # This is the job that will be used when building packages for macOS
+      - TRAVIS_NODE_VERSION=8
    - os: osx
-     osx_image: xcode7.3
+     osx_image: xcode10.1
      language: generic
      python: null
      env:
       - DEPLOY=true
-      - TRAVIS_NODE_VERSION="8"
-   - os: osx
-     osx_image: xcode9
-     language: generic
-     python: null
+      - TRAVIS_NODE_VERSION=8
+   - os: windows
+     language: sh
+     python: 3.6.8
      env:
-      - DEPLOY=false
-      - TRAVIS_NODE_VERSION="8"
-  allow_failures:
-   - python: nightly
-   - osx_image: xcode9
+      - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
+      - TRAVIS_NODE_VERSION=8
+      - TRAVIS_PYTHON_VERSION=3.6.8
 
 before_install:
- # Install Python 3.6.5
+ # Windows: Install Python, make, node/npm using nvs
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     choco install -y python --version=$TRAVIS_PYTHON_VERSION;
+     cp /c/Python36/python.exe /c/Python36/python3.exe;
+     export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
+     python3 -m pip install --upgrade pip wheel;
+     export NVS_HOME="C:\ProgramData\nvs";
+     git clone --single-branch https://github.com/jasongin/nvs $NVS_HOME;
+     source $NVS_HOME/nvs.sh;
+     export PATH="./node_modules/.bin:$PATH";
+     nvs add node/$TRAVIS_NODE_VERSION;
+     nvs use node/$TRAVIS_NODE_VERSION;
+     choco install -y make;
+   fi
+ # macOS: Install Python 3.7.2
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
      brew unlink python;
-     brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb;
+     brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/8de2c2b06a030b9f9a137f16481ed6c84512240c/Formula/python.rb;
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
+     rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+     pip3 install --upgrade pip;
    fi
- - pip3 install --upgrade pip
+ # Linux: Install nvm and use correct node version
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+     rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+     pip3 install --upgrade pip;
+   fi
  - python3 --version
  - pip3 --version
- - pip3 install --upgrade -r scripts/dev-requirements.txt
- - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
+ - node --version
+ - npm --version
 
 install:
- - "make build"
+ - pip3 install --upgrade -r scripts/dev-requirements.txt
+ # Output something every 10 minutes or Travis kills the job if building takes more than 20min without output (as pip seems to on Windows when installing aw-server)
+ - while sleep 9m; do echo "=====[ $SECONDS seconds still running ]====="; done &
+ - make build
+ - kill %1  # Killing background sleep loop
  - "make install"
 
 script:
