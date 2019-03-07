@@ -7,6 +7,16 @@
 </p>
 
 <p align="center">
+
+  <a href="https://twitter.com/ActivityWatchIt">
+    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
+  </a>
+  <a href="https://github.com/ActivityWatch/activitywatch">
+    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
+  </a>
+
+  <br>
+
   <b>
     <a href="https://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
@@ -20,36 +30,11 @@
     <a href="https://activitywatch.net/contributors/">Contributor stats</a>
     — <a href="https://activitywatch.net/ci/">CI overview</a>
   </b>
-
-  <br>
-
-  <a href="https://twitter.com/ActivityWatchIt">
-    <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
-  </a>
-  <a href="https://github.com/ActivityWatch/activitywatch">
-    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
-  </a>
 </p>
 
 <p align="center">
-
-  <a href="https://github.com/ActivityWatch/activitywatch/releases">
-    <img title="Latest release" src="https://img.shields.io/github/release/ActivityWatch/activitywatch.svg">
-  </a>
-  <a href="https://github.com/ActivityWatch/activitywatch/releases">
-    <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
-  </a>
-
-  <br>
-
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/donations-%247%2Fmo-yellow.svg" />
-  </a>
-  <a href="https://www.patreon.com/erikbjare">
-    <img title="Donate on Patreon" src="https://img.shields.io/badge/patreon-donate-yellow.svg" />
-  </a>
-  <a href="https://activitywatch.net/donate/">
-    <img title="Donate with another method" src="https://img.shields.io/badge/others-donate-yellow.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/current%20donations-%247%2Fmo%20from%206%20supporters-yellow.svg" />
   </a>
 
   <br>
@@ -64,6 +49,14 @@
     <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
   </a>
 
+  <br>
+
+  <a href="https://github.com/ActivityWatch/activitywatch/releases">
+    <img title="Latest release" src="https://img.shields.io/github/release-pre/ActivityWatch/activitywatch.svg">
+  </a>
+  <a href="https://github.com/ActivityWatch/activitywatch/releases">
+    <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
+  </a>
 </p>
 
 <!--
@@ -228,3 +221,4 @@ Want to help? Great! Check out the [CONTRIBUTING.md file](./CONTRIBUTING.md)!
 ## Questions and support
 
 Have a question, suggestion, problem, or just want to say hi? Post on [the forum](https://forum.activitywatch.net/)!
+
