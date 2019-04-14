@@ -1,8 +1,17 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
+title: ''
+labels: ''
+assignees: ''
 
 ---
+
+## Feature requests belong on the forum [here](https://forum.activitywatch.net/c/features)!
+
+Below is a template suggestion you should preferably use.
+
+------------
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
