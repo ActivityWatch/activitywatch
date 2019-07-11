@@ -99,16 +99,8 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<!-- TODO: We could probably stylize these (nice borders, scaled down) -->
-
-**Note:** This screenshot is outdated and alone, [we will fix that Soon™](https://github.com/ActivityWatch/activitywatch/issues/122).
-
-<img src="http://activitywatch.net/screenshot.png" width="22%">
-<!--
-  <img src="http://activitywatch.net/screenshot.png" width="22%">
-  <img src="http://activitywatch.net/screenshot.png" width="22%">
-  <img src="http://activitywatch.net/screenshot.png" width="22%">
--->
+<img src="https://activitywatch.net/screenshot-v0.8.0b9-today.png"    width="22%">
+<img src="https://activitywatch.net/screenshot-v0.8.0b9-timeline.png" width="22%">
 
 
 ## Installation & Usage
