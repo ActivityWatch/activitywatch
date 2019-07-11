@@ -99,8 +99,8 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<img src="https://activitywatch.net/screenshot-v0.8.0b9-today.png"    width="22%">
-<img src="https://activitywatch.net/screenshot-v0.8.0b9-timeline.png" width="22%">
+<span><img src="https://activitywatch.net/screenshot-v0.8.0b9-today.png"    width="35%"></span>
+<span><img src="https://activitywatch.net/screenshot-v0.8.0b9-timeline.png" width="43%"></span>
 
 
 ## Installation & Usage
