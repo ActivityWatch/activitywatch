@@ -9,3 +9,4 @@ venv*
 old
 other
 docs
+.venv
