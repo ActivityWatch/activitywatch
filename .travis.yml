@@ -32,6 +32,12 @@ matrix:
       - TRAVIS_PYTHON_VERSION=3.6.8
 
 before_install:
+ # Windows: Enable long paths
+ # The `set -x` makes it easier to debug what happens in the if-statements
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     set -x;
+     REG ADD "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f ;
+   fi
  # Windows: Install Python, make, node/npm using nvs
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      choco install -y python --version=$TRAVIS_PYTHON_VERSION;

@@ -23,6 +23,9 @@ environment:
    #  PYTHON_ARCH: "64"
 
 install:
+  # Enable long paths
+  - "REG ADD \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" /v LongPathsEnabled /t REG_DWORD /d 1 /f"
+
   # Clone submodules
   - "git submodule update --init --recursive"
 
