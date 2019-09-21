@@ -145,7 +145,6 @@ package:
 	rm -rf dist/activitywatch/pytz
 #
 	bash scripts/package/package-zip.sh
-	bash scripts/package/package-windows-installer.sh
 
 clean:
 	rm -rf build dist

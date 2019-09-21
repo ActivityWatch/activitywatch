@@ -2,4 +2,4 @@
 
 choco install -y innosetup
 
-# TODO: Run innosetup
+iscc scripts/package/activitywatch-setup.iss

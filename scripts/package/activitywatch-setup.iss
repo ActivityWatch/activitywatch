@@ -6,6 +6,10 @@
 #define MyAppPublisher "ActivityWatch Contributors"
 #define MyAppURL "https://activitywatch.net/"
 #define MyAppExeName "aw-qt.exe"
+#define RootDir "..\.."
+#define DistDir "..\..\dist"
+
+#pragma verboselevel 9
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -24,7 +28,7 @@ DisableProgramGroupPage=yes
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputBaseFilename=activitywatch-setup
-SetupIconFile=activitywatch-logo.ico
+SetupIconFile="{#RootDir}\aw-qt\media\logo\logo.ico"
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -37,8 +41,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "StartMenuEntry" ; Description: "Start ActivityWatch when Windows starts"; GroupDescription: "Windows Startup"; MinVersion: 4,4;
 
 [Files]
-Source: "C:\Users\Shadow\Downloads\activitywatch\aw-qt.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Shadow\Downloads\activitywatch\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#DistDir}\activitywatch\aw-qt.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DistDir}\activitywatch\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
