@@ -67,7 +67,7 @@ function build_setup() {
 
     choco install -y innosetup
 
-    iscc scripts/package/activitywatch-setup.iss
+    "/c/Program Files (x86)/Inno Setup 6/iscc.exe" scripts/package/activitywatch-setup.iss
     mv dist/activitywatch-setup.exe dist/$filename
     echo "Setup built!"
 }
