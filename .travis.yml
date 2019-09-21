@@ -78,9 +78,6 @@ script:
  - "make test"
  - "make test-integration"
  - "make package"
- - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-     ./scripts/package/package-windows-installer.sh;
-   fi
 
 before_deploy:
    # Remove the folder from which the zip was created

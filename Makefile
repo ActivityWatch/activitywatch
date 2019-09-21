@@ -143,8 +143,8 @@ package:
 	rm -f dist/activitywatch/libdrm.so.2
 # Remove unecessary files
 	rm -rf dist/activitywatch/pytz
-#
-	bash scripts/package/package-zip.sh
+# Builds zips and setups
+	bash scripts/package/package-all.sh
 
 clean:
 	rm -rf build dist

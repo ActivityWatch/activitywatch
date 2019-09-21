@@ -2,10 +2,6 @@
 
 set -e
 
-echo "-------------------------------------"
-echo "Zipping executables..."
-cd dist;
-
 function get_platform() {
     # Will return "linux" for GNU/Linux
     #   I'd just like to interject for a moment...
@@ -48,19 +44,39 @@ function get_arch() {
 platform=$(get_platform)
 version=$(get_version)
 arch=$(get_arch)
-
 echo "Platform: $platform, arch: $arch, version: $version"
 
-zipname="activitywatch-${version}-${platform}-${arch}.zip"
-echo "Name of package will be: $zipname"
+function build_zip() {
+    echo "Zipping executables..."
+    pushd dist;
+    filename="activitywatch-${version}-${platform}-${arch}.zip"
+    echo "Name of package will be: $filename"
 
+    if [[ $platform == "windows"* ]]; then
+        7z a $filename activitywatch;
+    else
+        zip -r $filename activitywatch;
+    fi
+    popd;
+    echo "Zip built!"
+}
+
+function build_setup() {
+    filename="activitywatch-setup-${version}-${platform}-${arch}.exe"
+    echo "Name of package will be: $filename"
+
+    choco install -y innosetup
+
+    iscc scripts/package/activitywatch-setup.iss
+    mv dist/activitywatch-setup.exe dist/$filename
+    echo "Setup built!"
+}
+
+
+build_zip
 if [[ $platform == "windows"* ]]; then
-    7z a $zipname activitywatch;
-else
-    zip -r $zipname activitywatch;
+    build_setup
 fi
-cd ..;
-echo "-------------------------------------"
 
 echo
 echo "-------------------------------------"
