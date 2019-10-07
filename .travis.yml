@@ -32,12 +32,16 @@ matrix:
       - TRAVIS_PYTHON_VERSION=3.6.8
 
 before_install:
- # Windows: Install Python, make, node/npm using nvs
+ # Windows:
+ #  - Enable long paths
+ #  - Install Python
+ #  - Install node/npm using nvs
+ #  - Install make
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     ./scripts/ci/enable_long_paths.bat;
      choco install -y python --version=$TRAVIS_PYTHON_VERSION;
      cp /c/Python36/python.exe /c/Python36/python3.exe;
      export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
-     python3 -m pip install --upgrade pip wheel;
      export NVS_HOME="C:\ProgramData\nvs";
      git clone --single-branch https://github.com/jasongin/nvs $NVS_HOME;
      source $NVS_HOME/nvs.sh;
@@ -46,7 +50,9 @@ before_install:
      nvs use node/$TRAVIS_NODE_VERSION;
      choco install -y make;
    fi
- # macOS: Install Python 3.7.2
+ # macOS:
+ #  - Install Python 3.7.2
+ #  - Install node using nvm
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
      brew unlink python;
@@ -54,13 +60,15 @@ before_install:
      brew install findutils;
      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
-     pip3 install --upgrade pip;
    fi
- # Linux: Install nvm and use correct node version
+ # Linux:
+ #  - Install nvm and use correct node version
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
-     pip3 install --upgrade pip;
    fi
+ # Upgrade pip
+ - python3 -m pip install --upgrade pip wheel;
+ # Print version used
  - python3 --version
  - pip3 --version
  - node --version

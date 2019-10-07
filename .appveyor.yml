@@ -23,6 +23,9 @@ environment:
    #  PYTHON_ARCH: "64"
 
 install:
+  # Enable long paths
+  - "./scripts/ci/enable_long_paths.bat"
+
   # Clone submodules
   - "git submodule update --init --recursive"
 
