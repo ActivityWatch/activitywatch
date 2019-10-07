@@ -36,7 +36,7 @@ before_install:
  # The `set -x` makes it easier to debug what happens in the if-statements
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      set -x;
-     REG ADD "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f ;
+     ./scripts/ci/enable_long_paths.bat;
    fi
  # Windows: Install Python, make, node/npm using nvs
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
