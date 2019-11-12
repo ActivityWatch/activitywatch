@@ -2,6 +2,8 @@
 
 set -e
 
+echoerr() { echo "$@" 1>&2; }
+
 function get_platform() {
     # Will return "linux" for GNU/Linux
     #   I'd just like to interject for a moment...
@@ -16,8 +18,8 @@ function get_platform() {
         _platform="windows";
     elif [[ $_platform == "mingw"* ]]; then
         _platform="windows";
-    elif [[ $_platform == "cygwin"* ]]; then
-        echo "ERROR: cygwin is not a valid platform";
+    else
+        echoerr "ERROR: $_platform is not a valid platform";
         exit 1;
     fi
 
@@ -62,7 +64,7 @@ function build_zip() {
 }
 
 function build_setup() {
-    filename="activitywatch-setup-${version}-${platform}-${arch}.exe"
+    filename="activitywatch-${version}-${platform}-${arch}-setup.exe"
     echo "Name of package will be: $filename"
 
     choco install -y innosetup
@@ -71,7 +73,6 @@ function build_setup() {
     mv dist/activitywatch-setup.exe dist/$filename
     echo "Setup built!"
 }
-
 
 build_zip
 if [[ $platform == "windows"* ]]; then

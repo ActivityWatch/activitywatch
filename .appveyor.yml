@@ -150,7 +150,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: fI8Ar/HiYNXcmeXQct/yzkKeEF4MHdYgP5/XL7uHKNs4lhPyUmT6GSltcLwkqk45
-  artifact: /.*\.zip/
+  artifact: /.*\.(zip|exe)/
   draft: true
   prerelease: true
   on:
