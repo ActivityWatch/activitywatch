@@ -18,6 +18,9 @@ function get_platform() {
         _platform="windows";
     elif [[ $_platform == "mingw"* ]]; then
         _platform="windows";
+    elif [[ $_platform == "linux" ]]; then
+        # Nothing to do
+        true;
     else
         echoerr "ERROR: $_platform is not a valid platform";
         exit 1;
