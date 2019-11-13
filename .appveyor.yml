@@ -104,9 +104,6 @@ install:
   - "%CMD_IN_ENV% pip install --upgrade pyqt5"
   - "%CMD_IN_ENV% powershell scripts\\ci\\install_pyhook.ps1"
 
-  # Packaging dependencies
-  - "%CMD_IN_ENV% pip install pyinstaller==3.3.1"
-
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
@@ -142,7 +139,7 @@ after_test:
 artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
   - path: dist\*.zip
-  #- name:
+  - path: dist\*.exe
 
 deploy:
   # release: myproduct-v$(appveyor_build_version)  # optional
