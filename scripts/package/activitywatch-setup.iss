@@ -54,3 +54,7 @@ Name: "{userstartup}\(#MyAppName)"; Filename: "{app}\{#MyAppExeName}"; Tasks: St
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+; Removes the previously installed version before installing the new one
+; NOTE: Doesn't work? And also discouraged by the docs
+;[InstallDelete]
+;Type: filesandordirs; Name: "{app}\"
