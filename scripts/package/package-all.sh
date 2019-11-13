@@ -72,7 +72,7 @@ function build_setup() {
 
     choco install -y innosetup
 
-    "/c/Program Files (x86)/Inno Setup 6/iscc.exe" scripts/package/activitywatch-setup.iss
+    env AW_VERSION=$version "/c/Program Files (x86)/Inno Setup 6/iscc.exe" scripts/package/activitywatch-setup.iss
     mv dist/activitywatch-setup.exe dist/$filename
     echo "Setup built!"
 }
