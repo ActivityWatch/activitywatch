@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ActivityWatch"
-#define MyAppVersion "v0.8.0b9"
+#define MyAppVersion GetEnv('AW_VERSION')
 #define MyAppPublisher "ActivityWatch Contributors"
 #define MyAppURL "https://activitywatch.net/"
 #define MyAppExeName "aw-qt.exe"
