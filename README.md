@@ -169,7 +169,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark:    |
 | Selfspy       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
 | ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
 
 For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://activitywatch.readthedocs.io/en/latest/watchers.html).
