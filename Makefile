@@ -125,6 +125,10 @@ test-integration:
 	#        Example: https://ci.appveyor.com/project/ErikBjare/activitywatch/build/1.0.167/job/k1ulexsc5ar5uv4v
 	pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
 
+pyinstaller:
+	pip install -r requirements.txt
+	pyinstaller --clean --noconfirm --windowed aw.spec
+
 package:
 	mkdir -p dist/activitywatch
 #
