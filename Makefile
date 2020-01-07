@@ -37,6 +37,7 @@ build:
 #
 	make --directory=aw-core build DEV=$(DEV)
 	make --directory=aw-client build DEV=$(DEV)
+	make --directory=aw-server build DEV=$(DEV)
 	make --directory=aw-watcher-afk build DEV=$(DEV)
 	make --directory=aw-watcher-window build DEV=$(DEV)
 	make --directory=aw-server-rust build
@@ -44,6 +45,8 @@ build:
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build DEV=$(DEV)
 	make --directory=aw-core build DEV=$(DEV)
+#	Needed to ensure that the server has the correct version set
+	python3 -c "import aw_server; print(aw_server.__version__)"
 
 
 # Install
@@ -95,6 +98,7 @@ lint:
 		aw-core/aw_transform/ \
 		aw-core/aw_analysis/ \
 		aw-client/aw_client/ \
+		aw-server/aw_server/ \
 		aw-watcher-window/aw_watcher_window/ \
 		aw-watcher-afk/aw_watcher_afk/ \
 		aw-qt/aw_qt/
@@ -113,6 +117,7 @@ uninstall:
 test:
 	make --directory=aw-core test
 	make --directory=aw-client test
+	make --directory=aw-server test
 	make --directory=aw-server-rust test
 	make --directory=aw-qt test
 
@@ -156,6 +161,9 @@ package:
 #
 	make --directory=aw-watcher-window package
 	cp -r aw-watcher-window/dist/aw-watcher-window dist/activitywatch
+#
+	make --directory=aw-server package
+	cp -r aw-server/dist/aw-server dist/activitywatch
 #
 	make --directory=aw-server-rust package
 	cp -r aw-server-rust/target/package/* dist/activitywatch
