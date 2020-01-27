@@ -196,4 +196,4 @@ if platform.system() == "Darwin":
                             # TODO: Get the right version here
                              "CFBundleShortVersionString": "0.8.4"})
     import subprocess
-    subprocess.run("dmgbuild -s config/dmgbuild-settings.py dist/ActivityWatch.app dist/ActivityWatch.dmg", shell=True)
+    subprocess.run("dmgbuild -s dmgbuild-settings.py dist/ActivityWatch.app dist/ActivityWatch.dmg", shell=True)
