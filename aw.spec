@@ -5,10 +5,6 @@ import os
 import platform
 import aw_core
 import flask_restplus
-# TODO: These are here for IDE analysis, remove before merging
-# from PyInstaller.building.api import MERGE, COLLECT, EXE, PYZ
-# from PyInstaller.building.build_main import Analysis
-# from PyInstaller.building.osx import BUNDLE
 
 aw_core_path = os.path.dirname(aw_core.__file__)
 restplus_path = os.path.dirname(flask_restplus.__file__)
@@ -193,4 +189,5 @@ if platform.system() == "Darwin":
                  icon=icon,
                  bundle_identifier="ActivityWatch",
                  info_plist={"CFBundleExecutable": "MacOS/aw-qt",
-                             "CFBundleIconFile": "logo.ico"})
+                             "CFBundleShortVersionString": aw_core.__about__.__version__,
+                             "CFBundleVersion": aw_core.__about__.__version__ })
