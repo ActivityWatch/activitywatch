@@ -18,7 +18,10 @@ aw_qt_location = "aw-qt/"
 awa_location = "aw-watcher-afk/"
 aww_location = "aw-watcher-window/"
 
-icon = aw_qt_location + 'media/logo/logo.ico'
+if platform.system() == "Darwin":
+    icon = aw_qt_location + 'media/logo/logo.icns'
+else:
+    icon = aw_qt_location + 'media/logo/logo.ico'
 block_cipher = None
 
 extra_pathex = []
@@ -193,4 +196,6 @@ if platform.system() == "Darwin":
                  icon=icon,
                  bundle_identifier="ActivityWatch",
                  info_plist={"CFBundleExecutable": "MacOS/aw-qt",
-                             "CFBundleIconFile": "logo.ico"})
+                             "CFBundleIconFile": "logo.icns",
+                            # TODO: Get the right version here
+                             "CFBundleShortVersionString": "0.8.4"})

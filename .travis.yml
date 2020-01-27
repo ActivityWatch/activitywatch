@@ -87,6 +87,9 @@ script:
  - "make test"
  - "make test-integration"
  - "make package"
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+     make dist/ActivityWatch.app;
+   fi
 
 before_deploy:
    # Remove the folder from which the zip was created
