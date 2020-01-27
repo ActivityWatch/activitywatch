@@ -65,6 +65,7 @@ before_install:
  # Linux:
  #  - Install nvm and use correct node version
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+     sudo apt-get install libqt5xml5;
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
    fi
  # Upgrade pip
@@ -87,6 +88,9 @@ script:
  - "make test"
  - "make test-integration"
  - "make package"
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+     make dist/ActivityWatch.app;
+   fi
 
 before_deploy:
    # Remove the folder from which the zip was created

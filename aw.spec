@@ -14,8 +14,10 @@ aw_qt_location = "aw-qt/"
 awa_location = "aw-watcher-afk/"
 aww_location = "aw-watcher-window/"
 
-icon = aw_qt_location + 'media/logo/logo.ico'
-macos_icon = aw_qt_location + 'media/logo/icon.icns'
+if platform.system() == "Darwin":
+    icon = aw_qt_location + 'media/logo/logo.icns'
+else:
+    icon = aw_qt_location + 'media/logo/logo.ico'
 block_cipher = None
 
 extra_pathex = []
@@ -187,12 +189,11 @@ if platform.system() == "Darwin":
                  awa_coll,
                  aws_coll,
                  name="ActivityWatch.app",
-                 icon=macos_icon,
+                 icon=icon,
                  bundle_identifier="ActivityWatch",
                  info_plist={"CFBundleExecutable": "MacOS/aw-qt",
-                             "CFBundleShortVersionString": aw_core.__about__.__version__,
-                             "CFBundleVersion": aw_core.__about__.__version__ })
+                             "CFBundleIconFile": "logo.icns",
+                            # TODO: Get the right version here
+                             "CFBundleShortVersionString": "0.8.4"})
     import subprocess
     subprocess.run("dmgbuild -s config/dmgbuild-settings.py dist/ActivityWatch.app dist/ActivityWatch.dmg", shell=True)
-    # dmgbuild -s dmgbuild-settings.py dist/ActivityWatch.app dist/ActivityWatch.dmg
-

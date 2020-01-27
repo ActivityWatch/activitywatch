@@ -3,6 +3,7 @@ dist
 __pycache__
 .*cache
 *.swp
+.DS_Store
 
 .idea
 venv*

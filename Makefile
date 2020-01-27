@@ -9,7 +9,7 @@
 # Instructions on how to do this can be found in the guide linked above.
 
 # These targets should always rerun
-.PHONY: build install test clean clean_all
+.PHONY: build install test clean clean_all dist/ActivityWatch.app
 
 SHELL := /usr/bin/env bash
 
@@ -125,8 +125,26 @@ test-integration:
 	#        Example: https://ci.appveyor.com/project/ErikBjare/activitywatch/build/1.0.167/job/k1ulexsc5ar5uv4v
 	pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
 
-pyinstaller:
-	pip install -r requirements.txt
+ICON := "aw-qt/media/logo/logo.png"
+
+aw-qt/media/logo/logo.icns:
+	mkdir -p build/MyIcon.iconset
+	sips -z 16 16     $(ICON) --out build/MyIcon.iconset/icon_16x16.png
+	sips -z 32 32     $(ICON) --out build/MyIcon.iconset/icon_16x16@2x.png
+	sips -z 32 32     $(ICON) --out build/MyIcon.iconset/icon_32x32.png
+	sips -z 64 64     $(ICON) --out build/MyIcon.iconset/icon_32x32@2x.png
+	sips -z 128 128   $(ICON) --out build/MyIcon.iconset/icon_128x128.png
+	sips -z 256 256   $(ICON) --out build/MyIcon.iconset/icon_128x128@2x.png
+	sips -z 256 256   $(ICON) --out build/MyIcon.iconset/icon_256x256.png
+	sips -z 512 512   $(ICON) --out build/MyIcon.iconset/icon_256x256@2x.png
+	sips -z 512 512   $(ICON) --out build/MyIcon.iconset/icon_512x512.png
+	cp				  $(ICON)       build/MyIcon.iconset/icon_512x512@2x.png
+	iconutil -c icns build/MyIcon.iconset
+	rm -R build/MyIcon.iconset
+	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
+
+dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
+	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
 	pyinstaller --clean --noconfirm --windowed aw.spec
 
 package:
