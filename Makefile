@@ -128,7 +128,7 @@ test-integration:
 ICON := "aw-qt/media/logo/logo.png"
 
 aw-qt/media/logo/logo.icns:
-	mkdir build/MyIcon.iconset
+	mkdir -p build/MyIcon.iconset
 	sips -z 16 16     $(ICON) --out build/MyIcon.iconset/icon_16x16.png
 	sips -z 32 32     $(ICON) --out build/MyIcon.iconset/icon_16x16@2x.png
 	sips -z 32 32     $(ICON) --out build/MyIcon.iconset/icon_32x32.png
