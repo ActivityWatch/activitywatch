@@ -1,4 +1,0 @@
-# Currently use `pip install https://github.com/pyinstaller/pyinstaller/tarball/develop`
-# To install develop version of pyinstaller which has multi-bundles fixed
-pyinstaller==4.0.dev0+55c8855d9d
-dmgbuild
