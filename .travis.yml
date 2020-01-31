@@ -89,11 +89,12 @@ script:
  - "make test-integration"
  - "make package"
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-     make dist/ActivityWatch.app;
+     make dist/ActivityWatch.dmg;
+     mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh).dmg;
    fi
 
 before_deploy:
-   # Remove the folder from which the zip was created
+   # Remove things in the dist folder that shouldn't be deployed (such as the folder from which the zip was created)
  - find dist/ -type f | grep -v "activitywatch-[^/]*" | xargs --no-run-if-empty rm -r
 
 deploy:

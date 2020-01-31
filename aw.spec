@@ -195,5 +195,3 @@ if platform.system() == "Darwin":
                              "CFBundleIconFile": "logo.icns",
                             # TODO: Get the right version here
                              "CFBundleShortVersionString": "0.8.4"})
-    import subprocess
-    subprocess.run("dmgbuild -s dmgbuild-settings.py dist/ActivityWatch.app dist/ActivityWatch.dmg", shell=True)

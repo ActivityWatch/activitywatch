@@ -9,7 +9,7 @@
 # Instructions on how to do this can be found in the guide linked above.
 
 # These targets should always rerun
-.PHONY: build install test clean clean_all dist/ActivityWatch.app
+.PHONY: build install test clean clean_all
 
 SHELL := /usr/bin/env bash
 
@@ -142,6 +142,10 @@ aw-qt/media/logo/logo.icns:
 	iconutil -c icns build/MyIcon.iconset
 	rm -R build/MyIcon.iconset
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
+
+dist/ActivityWatch.dmg: dist/ActivityWatch.app
+	pip install dmgbuild
+	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
