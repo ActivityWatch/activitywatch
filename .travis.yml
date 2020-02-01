@@ -70,6 +70,9 @@ before_install:
    fi
  # Upgrade pip
  - python3 -m pip install --upgrade pip wheel;
+ # Install Rust
+ - curl https://build.travis-ci.org/files/rustup-init.sh -sSf | sh -s -- -y --default-toolchain nightly
+ - export PATH="$HOME/.cargo/bin:$PATH";
  # Print version used
  - python3 --version
  - pip3 --version

@@ -16,3 +16,6 @@
 [submodule "aw-watcher-window"]
 	path = aw-watcher-window
 	url = https://github.com/ActivityWatch/aw-watcher-window.git
+[submodule "aw-server-rust"]
+	path = aw-server-rust
+	url = https://github.com/ActivityWatch/aw-server-rust.git

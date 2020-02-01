@@ -48,6 +48,13 @@ install:
   # not already installed.
   - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\ci\install_python.ps1 }
 
+  # Install Rust nightly and add it to PATH
+  - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - rustup-init -yv --default-toolchain nightly
+  - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+  - rustc -vV
+  - cargo -vV
+
   # Required in order to get `make` to work
   - "copy C:\\MinGW\\bin\\mingw32-make.exe C:\\MinGW\\bin\\make.exe"
 
