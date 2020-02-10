@@ -151,7 +151,7 @@ dist/ActivityWatch.dmg: dist/ActivityWatch.app
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
-	pyinstaller --clean --noconfirm --windowed aw.spec
+	pyinstaller --clean --noconfirm --windowed -i aw-qt/media/logo/logo.icns aw.spec
 
 package:
 	mkdir -p dist/activitywatch
