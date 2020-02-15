@@ -4,10 +4,10 @@
 import os
 import platform
 import aw_core
-import flask_restplus
+import flask_restx
 
 aw_core_path = os.path.dirname(aw_core.__file__)
-restplus_path = os.path.dirname(flask_restplus.__file__)
+restx_path = os.path.dirname(flask_restx.__file__)
 
 aws_location = "aw-server/"
 aw_qt_location = "aw-qt/"
@@ -36,8 +36,8 @@ aw_server_a = Analysis(['aw-server/__main__.py'],
                        datas=[
                            (aws_location + 'aw_server/static', 'aw_server/static'),
 
-                           (os.path.join(restplus_path, 'templates'), 'flask_restplus/templates'),
-                           (os.path.join(restplus_path, 'static'), 'flask_restplus/static'),
+                           (os.path.join(restx_path, 'templates'), 'flask_restx/templates'),
+                           (os.path.join(restx_path, 'static'), 'flask_restx/static'),
                            (os.path.join(aw_core_path, 'schemas'), 'aw_core/schemas')
                        ],
                        hiddenimports=[],
