@@ -103,6 +103,7 @@ script:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      make dist/ActivityWatch.dmg;
      mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh).dmg;
+     make dist/codesign
    fi
 
 before_deploy:

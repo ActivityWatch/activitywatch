@@ -145,9 +145,12 @@ aw-qt/media/logo/logo.icns:
 	rm -R build/MyIcon.iconset
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
-dist/ActivityWatch.dmg: dist/ActivityWatch.app
+dist/codesigned-ActivityWatch.dmg: dist/ActivityWatch.app
+	scripts/add-osx-cert.sh
+	codesign --deep -s "ActivityWatch" dist/ActivityWatch.app
 	pip install dmgbuild
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
+
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
