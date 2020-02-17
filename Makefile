@@ -145,16 +145,17 @@ aw-qt/media/logo/logo.icns:
 	rm -R build/MyIcon.iconset
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
-dist/codesigned-ActivityWatch.dmg: dist/ActivityWatch.app
-	scripts/add-osx-cert.sh
-	codesign --deep -s "ActivityWatch" dist/ActivityWatch.app
-	pip install dmgbuild
-	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
-
-
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
 	pyinstaller --clean --noconfirm --windowed aw.spec
+
+dist/ActivityWatch.dmg: dist/ActivityWatch.app
+	pip install dmgbuild
+	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
+# Don't try to run this outside CI, it causes messes in your macos keychain
+codesign-dmg: dist/ActivityWatch.dmg
+	./scripts/ci/import-macos-p12.sh
+	codesign --verbose -s "aw_certificate" --deep dist/ActivityWatch.dmg
 
 package:
 	mkdir -p dist/activitywatch

@@ -102,8 +102,8 @@ script:
  - "make package"
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      make dist/ActivityWatch.dmg;
+     make codesign-dmg;
      mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh).dmg;
-     make dist/codesign
    fi
 
 before_deploy:
@@ -114,7 +114,7 @@ deploy:
  - provider: releases
    file_glob: true
    file: dist/activitywatch-*.*
-   api_key:
+   token:
      secure: PSkaHT7bhmCBFutBhfIyHd/j784e0bgzVrahA9+IrEZQqHmJzGvkytf4mQ+EWz0lYDX/Jko7aIFfuCQ8yoVNnnwCu8SwTKXcwrkwuJrymupIK+Xxau6C4rMBLK81mphZs8t2YjJK720EquZ54Tt5Y79Dh2tk9ZxdgqWgVLVhhZziD2/I5BfpsqRgCFqZc4UKAOAf5jpe1lgCOz4zkLP3vgQUyIJgkc9A1BT01f5v860hAlH8HchBAlIMklzPJt3ps9ch8dLRtCC3ZQRWIQpNGjw10P4BO3DqjF4ASeo0ZtbLGIFZeWnnAbQxRIztPUqiYnTQckvHcHYAKG8cyO8SBKQj1au5FRTCHbafpOOzLDWkXx+fqaYakxmPlW6YGp+zaiDQsmNCIdCWWsFU8+gUgZL8Owf4eYc2LI4LW7SI/RC7HjllqNP8WVbZSbQRcvQrK9ZN6fiOixTLni2cXyKy6SxVaDd/+iji8YwPW8JrOawTsXIoZRDE6vq41Y47tO/MU9yLm8RkRkApBGgsc+5RJCEEiDyghJ3op+rWIavcMmSZQ3TBo5e00XyPBd7dGkxoLk9WUSuaZgTmi7FSfDDxWW9TiE7tP2ruIV4fcAlOOkM5ll3K6XIo61JM0JAuAKsg7g32lOnr2DEGDk8XlV3QqIEzwjXLjdVrk3ALabp8HjI=
    on:
      tags: true
