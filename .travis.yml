@@ -4,7 +4,6 @@ os:
   - windows
 dist: trusty
 language: python
-python: 3.6
 
 services:
  - mongodb
@@ -24,6 +23,7 @@ env:
 jobs:
   include:
     - os: linux
+      python: 3.6
       # Install nvm and use correct node version
       before_install:
         - sudo apt-get install libqt5xml5;
@@ -31,7 +31,6 @@ jobs:
     - os: osx
       osx_image: xcode11.2 # Contains a modern (3.7.4) installed python version
       language: shell 
-      python: null
       before_install:
         - brew update;
         - brew install findutils;
