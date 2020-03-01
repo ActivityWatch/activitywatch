@@ -1,46 +1,50 @@
-os: linux
+os:
+  - linux
+  - osx
+  - windows
 dist: trusty
 language: python
 python: 3.6
 
-env:
- - TRAVIS_NODE_VERSION=12
- - MAKE_COMMAND=test
- - MAKE_COMMAND=integration-test
- - MAKE_COMMAND=package
-
 services:
  - mongodb
 
+
+env: 
+  jobs:   
+   - MAKE_COMMAND=test
+   - MAKE_COMMAND=integration-test
+   - MAKE_COMMAND=package
+  global: 
+    - DEPLOY=true
+    - TRAVIS_NODE_VERSION=12
+    - WINDOWS_TRAVIS_PYTHON_VERSION=3.6.8
+
+
 jobs:
   include:
-   - os: linux
-     python: 3.6
-     env:
-      - DEPLOY=true
-     # Install nvm and use correct node version
-     before_install:
-       - sudo apt-get install libqt5xml5;
-       - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
-   - os: osx
-     osx_image: 11.2 # Contains a modern (3.7.4) installed python version
-     language: shell 
-     python: null
-     env:
-      - DEPLOY=true
-     before_install:
-      - brew update;
-      - brew install findutils;
-      - export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
-      #  - Install node using nvm
-      - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+    - os: linux
+      # Install nvm and use correct node version
+      before_install:
+        - sudo apt-get install libqt5xml5;
+        - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+    - os: osx
+      osx_image: xcode11.2 # Contains a modern (3.7.4) installed python version
+      language: shell 
+      python: null
+      before_install:
+        - brew update;
+        - brew install findutils;
+        - export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH";
+          #  - Install node using nvm
+        - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
+    - os: windows
+      language: shell  
+      python: 3.6.8
+      env:
+        global: #global settings affect all builds and don't matrix expand
+          - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
 
-   - os: windows
-     language: shell  
-     python: 3.6.8
-     env:
-      - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
-      - TRAVIS_PYTHON_VERSION=3.6.8
    
 before_install:
  # Windows:
@@ -50,7 +54,7 @@ before_install:
  #  - Install make
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      ./scripts/ci/enable_long_paths.bat;
-     choco install -y python --version=$TRAVIS_PYTHON_VERSION;
+     choco install -y python --version=$WINDOWS_TRAVIS_PYTHON_VERSION;
      cp /c/Python36/python.exe /c/Python36/python3.exe;
      export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
      export NVS_HOME="C:\ProgramData\nvs";
