@@ -3,11 +3,11 @@ os:
   - osx
   - windows
 dist: trusty
-language: python
+language: shell 
+cache: pip
 
 services:
  - mongodb
-
 
 env: 
   jobs:   
@@ -16,13 +16,14 @@ env:
    - MAKE_COMMAND=package
   global: 
     - DEPLOY=true
-    - TRAVIS_NODE_VERSION=12
-    - WINDOWS_TRAVIS_PYTHON_VERSION=3.6.8
+      TRAVIS_NODE_VERSION=12
+      WINDOWS_TRAVIS_PYTHON_VERSION=3.6.8
 
 
 jobs:
   include:
     - os: linux
+      language: python
       python: 3.6
       # Install nvm and use correct node version
       before_install:
@@ -30,7 +31,6 @@ jobs:
         - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
     - os: osx
       osx_image: xcode11.2 # Contains a modern (3.7.4) installed python version
-      language: shell 
       before_install:
         - brew update;
         - brew install findutils;
@@ -38,7 +38,6 @@ jobs:
           #  - Install node using nvm
         - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
     - os: windows
-      language: shell  
       python: 3.6.8
       env:
         global: #global settings affect all builds and don't matrix expand
