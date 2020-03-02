@@ -10,6 +10,7 @@ aw_core_path = os.path.dirname(aw_core.__file__)
 restx_path = os.path.dirname(flask_restx.__file__)
 
 aws_location = "aw-server/"
+aw_server_rust_bin = "aw-server-rust/target/package/aw-server-rust"
 aw_qt_location = "aw-qt/"
 awa_location = "aw-watcher-afk/"
 aww_location = "aw-watcher-window/"
@@ -50,7 +51,7 @@ aw_server_a = Analysis(['aw-server/__main__.py'],
 
 aw_qt_a = Analysis([aw_qt_location + 'aw_qt/__main__.py'],
                    pathex=[] + extra_pathex,
-                   binaries=None,
+                   binaries=[(aw_server_rust_bin, '.')],
                    datas=[(aw_qt_location + 'resources/aw-qt.desktop', 'aw_qt/resources')],
                    hiddenimports=[],
                    hookspath=[],
