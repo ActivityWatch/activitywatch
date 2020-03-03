@@ -1,7 +1,7 @@
 #!/bin/sh
 # Source: https://www.update.rocks/blog/osx-signing-with-travis/
-export KEY_CHAIN=aw-build.keychain
-export CERTIFICATE_P12="aw_certificate"
+export KEY_CHAIN=build.keychain
+export CERTIFICATE_P12=aw_certificate
 
 # Recreate the certificate from the secure environment variable
 echo $CERTIFICATE_OSX_P12 | base64 --decode > $CERTIFICATE_P12

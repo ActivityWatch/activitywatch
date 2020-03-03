@@ -155,7 +155,7 @@ dist/ActivityWatch.dmg: dist/ActivityWatch.app
 # Don't try to run this outside CI, it causes messes in your macos keychain
 codesign-dmg: dist/ActivityWatch.dmg
 	./scripts/ci/import-macos-p12.sh
-	codesign --verbose -s "aw_certificate" --deep dist/ActivityWatch.dmg
+	codesign --verbose -s aw_certificate --deep dist/ActivityWatch.dmg
 
 package:
 	mkdir -p dist/activitywatch
