@@ -23,8 +23,10 @@ environment:
    #  PYTHON_ARCH: "64"
 
 install:
-  # Enable long paths
-  - "./scripts/ci/enable_long_paths.bat"
+  # Enable long paths (new solution from here https://github.com/appveyor/ci/issues/3129 )
+  - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+  - ps: Start-Sleep -s 10
+  - ps: Restart-Computer -Force
 
   # Clone submodules
   - "git submodule update --init --recursive"
