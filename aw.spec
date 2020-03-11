@@ -195,4 +195,4 @@ if platform.system() == "Darwin":
                  info_plist={"CFBundleExecutable": "MacOS/aw-qt",
                              "CFBundleIconFile": "logo.icns",
                             # TODO: Get the right version here
-                             "CFBundleShortVersionString": "0.8.4"})
+                             "CFBundleShortVersionString": "0.9.0"})
