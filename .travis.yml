@@ -102,7 +102,7 @@ script:
  - "make package"
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      make dist/ActivityWatch.dmg;
-     mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh).dmg;
+     mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
    fi
 
 before_deploy:
