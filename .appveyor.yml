@@ -100,7 +100,10 @@ install:
   # about it being out of date.
   # Disabled for same reason as specified here:
   #  - https://github.com/ActivityWatch/aw-core/commit/e19ce9ea10912cf105859f97b8a7836dadd0fe58#diff-180360612c6b8c4ed830919bbb4dd459
-  - "%CMD_IN_ENV% python3 -m pip install --upgrade pip poetry"
+  - "%CMD_IN_ENV% python3 -m pip install --upgrade pip"
+
+  # Install poetry
+  - "%CMD_IN_ENV% python3 -m pip install poetry"
 
   # Prevent poetry from creating one virtualenv for each submodule (which it will on macOS and Windows where one isn't set up)
   - "%CMD_IN_ENV% poetry config virtualenvs.create false"
