@@ -92,7 +92,7 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
      pip3 install virtualenv;
      virtualenv -p python3 ~/venv;
-     source ~/venv/bin/activate;
+     source ~/venv/Scripts/activate;
    fi
  # Set up a virtualenv on macOS
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
