@@ -87,6 +87,8 @@ before_install:
  - pip3 --version
  - node --version
  - npm --version
+ # Prevent poetry from creating one virtualenv for each submodule (which it will on macOS and Windows where one isn't set up)
+ - poetry config virtualenvs.create false
 
 install:
  - poetry install  # installs dev dependencies
