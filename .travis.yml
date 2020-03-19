@@ -62,6 +62,7 @@ before_install:
  # macOS:
  #  - Install Python 3.7.2
  #  - Install node using nvm
+ #  - Set up a virtualenv
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
      brew unlink python;
@@ -87,8 +88,18 @@ before_install:
  - pip3 --version
  - node --version
  - npm --version
- # Prevent poetry from creating one virtualenv for each submodule (which it will on macOS and Windows where one isn't set up)
- - poetry config virtualenvs.create false
+ # Set up a virtualenv on Windows
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     pip3 install virtualenv;
+     virtualenv -p python3 ~/venv;
+     source ~/venv/bin/activate;
+   fi
+ # Set up a virtualenv on macOS
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+     pip3 install virtualenv;
+     virtualenv -p python3 ~/venv;
+     source ~/venv/bin/activate;
+   fi
 
 install:
  - poetry install  # installs dev dependencies
