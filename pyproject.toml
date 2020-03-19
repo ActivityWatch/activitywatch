@@ -20,7 +20,7 @@ mypy = "^0.770"
 pytest = "^5.4.1"
 pytest-cov = "^2.8.1"
 pytest-benchmark = "^3.2.3"
-pyinstaller = "^3.6"
+pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git"}
 psutil = "^5.7.0"
 
 [build-system]
