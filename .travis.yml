@@ -39,6 +39,8 @@ jobs:
       - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
       - TRAVIS_NODE_VERSION=12
       - TRAVIS_PYTHON_VERSION=3.6.8
+  allow_failures:
+   - os: windows
 
 before_install:
  # Windows:
