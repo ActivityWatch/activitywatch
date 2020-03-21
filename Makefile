@@ -20,10 +20,6 @@ SHELL := /usr/bin/env bash
 #  - Installs all the Python modules
 #  - Builds the web UI and bundles it with aw-server
 #
-# Arguments:
-#  - `DEV=true` makes all `pip install` commands run with `--editable`.
-#    Removes the need to reinstall Python packages when working on them.
-#
 # Tips:
 #  - Set the environment variable `PIP_USER=true` for pip to install all Python
 #    packages as user packages (same as `pip install --user <pkg>`). This makes
@@ -35,18 +31,18 @@ build:
 		git submodule update --init --recursive; \
 	fi
 #
-	make --directory=aw-core build DEV=$(DEV)
-	make --directory=aw-client build DEV=$(DEV)
-	make --directory=aw-server build DEV=$(DEV)
-	make --directory=aw-watcher-afk build DEV=$(DEV)
-	make --directory=aw-watcher-window build DEV=$(DEV)
-	make --directory=aw-server-rust build
-	make --directory=aw-qt build DEV=$(DEV)
+	make --directory=aw-core build
+	make --directory=aw-client build
+	make --directory=aw-watcher-afk build
+	make --directory=aw-watcher-window build
+	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
+	make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI)
+	make --directory=aw-qt build
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
-	make --directory=aw-client build DEV=$(DEV)
-	make --directory=aw-core build DEV=$(DEV)
+	make --directory=aw-client build
+	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
-	python3 -c "import aw_server; print(aw_server.__version__)"
+	python -c "import aw_server; print(aw_server.__version__)"
 
 
 # Install
@@ -166,7 +162,7 @@ package:
 	cp -r aw-server/dist/aw-server dist/activitywatch
 #
 	make --directory=aw-server-rust package
-	mkdir dist/activitywatch/aw-server-rust
+	mkdir -p dist/activitywatch/aw-server-rust
 	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
 #
 	make --directory=aw-qt package

@@ -14,9 +14,9 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python36"
-      PYTHON_VERSION: "3.6.x" # currently 3.6.6
-      PYTHON_ARCH: "32"
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x" # currently 3.6.8
+      PYTHON_ARCH: "64"
 
    #- PYTHON: "C:\\Python35-x64"
    #  PYTHON_VERSION: "3.5.x" # currently 3.5.2
@@ -88,10 +88,6 @@ install:
   - "%CMD_IN_ENV% python --version"
   - "%CMD_IN_ENV% python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # Add the python3 executable
-  - "copy %PYTHON%\\python.exe %PYTHON%\\python3.exe"
-  - "%CMD_IN_ENV% python3 --version"
-
   # Install node and npm
   - ps: "./scripts/ci/install_node.ps1"
   - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
@@ -100,27 +96,22 @@ install:
   # about it being out of date.
   # Disabled for same reason as specified here:
   #  - https://github.com/ActivityWatch/aw-core/commit/e19ce9ea10912cf105859f97b8a7836dadd0fe58#diff-180360612c6b8c4ed830919bbb4dd459
-  - "%CMD_IN_ENV% python3 -m pip install --upgrade pip"
-  #- "%CMD_IN_ENV% python3 -m pip install --upgrade pip==9.0.3"
+  - "%CMD_IN_ENV% python -m pip install --upgrade pip"
+
+  # Install poetry and virtualenv
+  - "%CMD_IN_ENV% python -m pip install poetry virtualenv"
+
+  # Create build virtualenv
+  - "virtualenv --clear venv"
+  - "venv\\Scripts\\activate.bat"
 
   # Testing dependencies
-  - "%CMD_IN_ENV% pip install --upgrade -r scripts\\dev-requirements.txt"
+  - "%CMD_IN_ENV% poetry install"
 
   # Build dependencies
   # Don't install as user, since that puts the pyrcc5 script in a user-specific place
   - "%CMD_IN_ENV% pip install --upgrade pyqt5"
   - "%CMD_IN_ENV% powershell scripts\\ci\\install_pyhook.ps1"
-
-  # Install the build dependencies of the project. If some dependencies contain
-  # compiled extensions and are not provided as pre-built wheel packages,
-  # pip will build them from source using the MSVC compiler matching the
-  # target Python version and architecture
-  # - "%CMD_IN_ENV% pip install -r dev-requirements.txt"
-
-  # Lets start with seeing if aw-server will build
-  # TODO: Install stuff here
-  #- "cd aw-server"
-  #- "%CMD_IN_ENV% python setup.py install"
 
 build_script:
   # Build the compiled extension

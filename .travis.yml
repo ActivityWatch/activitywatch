@@ -39,6 +39,8 @@ jobs:
       - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
       - TRAVIS_NODE_VERSION=12
       - TRAVIS_PYTHON_VERSION=3.6.8
+  allow_failures:
+   - os: windows
 
 before_install:
  # Windows:
@@ -62,6 +64,7 @@ before_install:
  # macOS:
  #  - Install Python 3.7.2
  #  - Install node using nvm
+ #  - Set up a virtualenv
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      brew update;
      brew unlink python;
@@ -77,8 +80,8 @@ before_install:
      sudo apt-get install libqt5xml5;
      rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION;
    fi
- # Upgrade pip
- - python3 -m pip install --upgrade pip wheel;
+ # Upgrade pip and install poetry
+ - python3 -m pip install --upgrade pip wheel poetry;
  # Install Rust
  - curl https://build.travis-ci.org/files/rustup-init.sh -sSf | sh -s -- -y --default-toolchain nightly
  - export PATH="$HOME/.cargo/bin:$PATH";
@@ -87,9 +90,21 @@ before_install:
  - pip3 --version
  - node --version
  - npm --version
+ # Set up a virtualenv on Windows
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+     pip3 install virtualenv;
+     virtualenv -p python3 ~/venv;
+     source ~/venv/Scripts/activate;
+   fi
+ # Set up a virtualenv on macOS
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+     pip3 install virtualenv;
+     virtualenv -p python3 ~/venv;
+     source ~/venv/bin/activate;
+   fi
 
 install:
- - pip3 install --upgrade -r scripts/dev-requirements.txt
+ - poetry install  # installs dev dependencies
  # Output something every 10 minutes or Travis kills the job if building takes more than 20min without output (as pip seems to on Windows when installing aw-server)
  - while sleep 9m; do echo "=====[ $SECONDS seconds still running ]====="; done &
  - make build
