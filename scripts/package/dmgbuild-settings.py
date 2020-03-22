@@ -13,6 +13,7 @@ import os.path
 
 # .. Useful stuff ..............................................................
 
+global defines  # declared in the calling script
 application = defines.get('app', 'dist/ActivityWatch.app')
 appname = os.path.basename(application)
 
