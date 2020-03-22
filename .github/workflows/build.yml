@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Test on ${{ matrix.os }}, python ${{ matrix.python_version }}, node ${{ matrix.node_version }}
+    name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
       RELEASE: false
