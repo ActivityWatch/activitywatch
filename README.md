@@ -121,7 +121,7 @@ Yes, but we found that most time trackers lack in one or more important features
  - The user does not own the data (common with non-open source options)
  - Lack of synchronization (and when available: it's centralized and the sync server knows everything)
  - Difficult to setup/use (most open source options tend to target programmers)
- - Low data resolution (low level of detail, does not store raw data, long intevals between entries)
+ - Low data resolution (low level of detail, does not store raw data, long intervals between entries)
  - Hard or impossible to extend (collecting more data is not as simple as it could be)
 
 **To sum it up:**
