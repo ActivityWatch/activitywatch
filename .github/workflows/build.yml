@@ -72,6 +72,6 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v2-preview
       with:
-        name: builds
+        name: builds-${{ runner.os }}
         path: dist/activitywatch-*.*
 
