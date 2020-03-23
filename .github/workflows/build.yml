@@ -21,6 +21,15 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
+    - name: Cache cargo build
+      uses: actions/cache@v1
+      env:
+        cache-name: cargo-build-target
+      with:
+        path: aw-server-rust/target
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
@@ -35,11 +44,6 @@ jobs:
         profile: minimal
         toolchain: nightly
         override: true
-    - name: Cache cargo build
-      uses: actions/cache@v1
-      with:
-        path: aw-server-rust/target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
     - name: Create virtualenv
       shell: bash
       run: |
