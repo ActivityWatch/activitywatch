@@ -39,6 +39,9 @@
 
   <br>
 
+  <a href="https://github.com/ActivityWatch/activitywatch/actions?query=branch%3Amaster">
+    <img title="Build Status GitHub" src="https://github.com/ActivityWatch/activitywatch/workflows/Build/badge.svg?branch=master" />
+  </a>
   <a href="https://travis-ci.org/ActivityWatch/activitywatch">
     <img title="Build Status Travis" src="https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master" />
   </a>

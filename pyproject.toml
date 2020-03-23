@@ -25,7 +25,6 @@ pyinstaller = "3.5"
 psutil = "^5.7.0"
 pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
 pefile = {version = "^2019.4.18", platform = "win32"}
-setuptools = "<45.0.0"  # workaround for https://github.com/pypa/setuptools/issues/1963#issuecomment-573675633
 
 [build-system]
 requires = ["poetry>=0.12"]
