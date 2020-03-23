@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      RELEASE: false
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, windows-latest, macOS-latest]
+        python_version: [3.6]
+        node_version: ['12']
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_version }}
+    - name: Set up Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node_version }}
+    - name: Install minimal Rust nightly (no clippy or rustfmt)
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
+    - name: Cache cargo build
+      uses: actions/cache@v1
+      with:
+        path: aw-server-rust/target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+    - name: Create virtualenv
+      shell: bash
+      run: |
+        pip install virtualenv
+        python -m virtualenv venv
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install poetry
+        source venv/bin/activate || source venv/Scripts/activate
+        poetry install
+        make build
+    - name: Run tests
+      shell: bash
+      run: |
+        source venv/bin/activate || source venv/Scripts/activate
+        make test
+        make test-integration
+    - name: Package
+      shell: bash
+      run: |
+        source venv/bin/activate || source venv/Scripts/activate
+        make package
+    - name: Package dmg
+      if: startsWith(runner.os, 'macOS')
+      run: |
+        source venv/bin/activate
+        make dist/ActivityWatch.dmg;
+        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
+    - name: Upload packages
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: builds
+        path: dist/activitywatch-*.*
+
