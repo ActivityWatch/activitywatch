@@ -32,13 +32,13 @@ jobs:
      env:
       - DEPLOY=true
       - TRAVIS_NODE_VERSION=12
-   - os: windows
-     language: sh
-     python: 3.6.8
-     env:
-      - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
-      - TRAVIS_NODE_VERSION=12
-      - TRAVIS_PYTHON_VERSION=3.6.8
+   #- os: windows
+   #  language: sh
+   #  python: 3.6.8
+   #  env:
+   #   - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
+   #   - TRAVIS_NODE_VERSION=12
+   #   - TRAVIS_PYTHON_VERSION=3.6.8
   allow_failures:
    - os: windows
 

@@ -150,6 +150,7 @@ dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 	pyinstaller --clean --noconfirm --windowed aw.spec
 
 package:
+	pip install 'setuptools<45.0.0'  # workaround for https://github.com/pypa/setuptools/issues/1963#issuecomment-573675633
 	mkdir -p dist/activitywatch
 #
 	make --directory=aw-watcher-afk package
