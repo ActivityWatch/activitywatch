@@ -95,7 +95,7 @@ We've worked towards this goal by creating a application for safe storage of the
 
  - Currently active application and the title of its window
  - Currently active browser tab and it's title and URL
- - Keyboard and mouse activity, to detect if you are afk or not
+ - Keyboard and mouse activity, to detect if you are AFK ("away from keyboard") or not
 </small>
 
 It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
