@@ -3,8 +3,13 @@
 
 import os
 import platform
+import subprocess
 import aw_core
 import flask_restx
+
+git_cmd = "git describe --tags --abbrev=0"
+current_release = subprocess.run(git_cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8").stdout.strip()
+print("bundling activitywatch version " + current_release)
 
 aw_core_path = os.path.dirname(aw_core.__file__)
 restx_path = os.path.dirname(flask_restx.__file__)
@@ -195,4 +200,4 @@ if platform.system() == "Darwin":
                  info_plist={"CFBundleExecutable": "MacOS/aw-qt",
                              "CFBundleIconFile": "logo.icns",
                             # TODO: Get the right version here
-                             "CFBundleShortVersionString": "0.9.0"})
+                             "CFBundleShortVersionString": current_release })
