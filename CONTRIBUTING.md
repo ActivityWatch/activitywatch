@@ -62,7 +62,7 @@ The format is:
 [optional footer]
 ```
 
-Where `type` can be one of: `feat, fix, chore, docs, style, refactor, perf, test`
+Where `type` can be one of: `feat, fix, chore, ci, docs, style, refactor, perf, test`
 
 Examples:
 
