@@ -46,6 +46,33 @@ There are a few things you might consider when filing your issue:
      - macOS: `~/Library/Logs/activitywatch`
      - Linux: `~/.cache/activitywatch/log`
      - Windows: `C:\Users\<USERNAME>\AppData\Local\activitywatch\activitywatch\Logs`
+     
+
+## Commit message guidelines
+
+When writing commit messages try to follow [Conventional Commits](https://www.conventionalcommits.org/). It is not a strict requirement (to minimize overhead for new contributors) but it is encouraged.
+
+The format is: 
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+Where `type` can be one of: `feat, fix, chore, ci, docs, style, refactor, perf, test`
+
+Examples:
+
+```
+ - feat: added ability to sort by duration
+ - fix: fixes incorrect week number (#407)
+ - docs: improved query documentation 
+```
+
+This guideline was adopted in [issue #391](https://github.com/ActivityWatch/activitywatch/issues/391).
 
 
 ## Questions?
