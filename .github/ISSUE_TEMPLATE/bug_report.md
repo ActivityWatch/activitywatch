@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: 🐞 Bug report
 about: Report a bug in ActivityWatch
 title: ''
 labels: 'type: bug'
@@ -9,8 +9,8 @@ assignees: ''
 
 **You need to follow this template. If you don't, your issue might be removed.**
 
- - [ ] I am on the latest version of ActivityWatch: *(specify your version here)*
- - [ ] I am using the operating system: *(specify your operating system here, eg Windows/macOS/Linux)*
+ - [ ] I am on the latest version of ActivityWatch: *[specify your version here]*
+ - [ ] I am using the operating system: *[specify your OS and version here, e.g. Windows 10, macOS (Catalina), Linux(Ubuntu)]*
  - [ ] I have searched the issues of this repo and believe that this is not a duplicate.
 
 ## Describe the bug
