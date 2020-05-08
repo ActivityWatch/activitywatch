@@ -1,0 +1,7 @@
+# Issue templates are based on templates for poetry:
+# https://github.com/python-poetry/poetry/tree/master/.github/ISSUE_TEMPLATE
+blank_issues_enabled: false
+contact_links:
+  - name: "\U0001F381 Feature requests"
+    url: https://forum.activitywatch.net/c/features
+    about: Request and vote on features on the forum.
