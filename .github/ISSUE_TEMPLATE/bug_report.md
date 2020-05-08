@@ -1,13 +1,17 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a bug in ActivityWatch
 title: ''
-labels: ''
+labels: 'type: bug'
 assignees: ''
 
 ---
 
-**For us to be able to understand the issue you're having you need to follow this template.** Please make sure there isn't already an issue for the bug you've found, otherwise it'll just take more resources, which means less time for us to actually fix bugs. Thanks for reporting!
+**You need to follow this template. If you don't, your issue might be removed.**
+
+ - [ ] I am on the latest version of ActivityWatch: *(specify your version here)*
+ - [ ] I am using the operating system: *(specify your operating system here, eg Windows/macOS/Linux)*
+ - [ ] I have searched the issues of this repo and believe that this is not a duplicate.
 
 ## Describe the bug
 A clear and concise description of what the bug is.
@@ -23,16 +27,12 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 ## Documentation
-If applicable, add screenshots or logfiles to help explain your problem.
+If applicable, add screenshots or logs to help explain your problem.
 
-Logfiles can be found in different places depending on platform:
+Logs can be found in different places depending on platform:
  - Windows: `C:\Users\<USER>\AppData\Local\ActivityWatch\Logs`
- - macOS: /Users/<USER>/Library/Logs/activitywatch
- - Linux: /home/<USER>/.cache/SuperApp/log
-
-## Environment
- - ActivityWatch version: [e.g. v0.8.0b7]
- - OS: [e.g. Windows 10, Linux (Ubuntu), macOS (High Sierra)]
+ - macOS: `/Users/<USER>/Library/Logs/activitywatch`
+ - Linux: `/home/<USER>/.cache/activitywatch/log`
 
 ## Additional context
 Add any other context about the problem here.

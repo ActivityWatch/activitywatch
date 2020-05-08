@@ -1,26 +1,12 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an feature, or how you think something should work differently.
 title: ''
-labels: ''
+labels: 'type: request'
 assignees: ''
 
 ---
 
-## Feature requests belong on the forum [here](https://forum.activitywatch.net/c/features)!
+IMPORTANT! Feature requests are not accepted as issues.
 
-Below is a template suggestion you should preferably use.
-
-------------
-
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
-
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Additional context**
-Add any other context or screenshots about the feature request here.
+Instead, check that the feature has not already been proposed on the forum and then post it there. You can find the feature request category here: https://forum.activitywatch.net/c/features
