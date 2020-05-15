@@ -196,7 +196,6 @@ The webapp includes:
  - Data visualization & browser
  - Query explorer
  - Export functionality 
-   - Import is not currently implemented, see [issue #103](https://github.com/ActivityWatch/activitywatch/issues/103).
 
 ### Watchers
 
