@@ -1,8 +1,8 @@
-# These are supported funding model platforms
+# Docs for this file can be found here:
+# https://docs.github.com/en/github/administering-a-repository/displaying-a-sponsor-button-in-your-repository
 
 github: ["ErikBjare", "johan-bjareholt"]
 patreon: "erikbjare"
 open_collective: "activitywatch"
-ko_fi: # Replace with a single Ko-fi username
-tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel
-custom: # Replace with a single custom sponsorship URL
+liberapay: "ActivityWatch"
+custom: ["https://activitywatch.net/donate/"]
