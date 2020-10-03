@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Test on ${{ matrix.os }}
+    name: ${{ matrix.os }}, py-${{ matrix.python_version}}, node-${{ matrix.node_version }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
@@ -18,11 +18,13 @@ jobs:
       matrix:
         os: [ubuntu-18.04, windows-latest, macOS-latest]
         python_version: [3.6]
-        node_version: ['12']
+        node_version: [12]
         experimental: [false]
         include:
-          - python_version: 3.8
-            os: ubuntu-18.04
+          # Experimental: Python 3.8
+          - os: ubuntu-18.04
+            python_version: 3.8
+            node_version: 12
             experimental: true
     steps:
     - uses: actions/checkout@v2
