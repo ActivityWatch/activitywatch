@@ -10,13 +10,20 @@ jobs:
   build:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     env:
       RELEASE: false
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-18.04, windows-latest, macOS-latest]
         python_version: [3.6]
         node_version: ['12']
+        experimental: [false]
+        include:
+          - python_version: 3.8
+            os: ubuntu-18.04
+            experimental: true
     steps:
     - uses: actions/checkout@v2
       with:
