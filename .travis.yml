@@ -1,7 +1,7 @@
 os: linux
 dist: trusty
 language: python
-python: 3.6
+python: 3.7
 
 env:
  - TRAVIS_NODE_VERSION=12
@@ -18,7 +18,7 @@ cache:
 jobs:
   include:
    - os: linux
-     python: 3.6
+     python: 3.7
      env:
       - DEPLOY=true
       - TRAVIS_NODE_VERSION=12
@@ -62,7 +62,7 @@ before_install:
      choco install -y make;
    fi
  # macOS:
- #  - Install Python 3.7.2
+ #  - Install Python 3.7
  #  - Install node using nvm
  #  - Set up a virtualenv
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
