@@ -99,7 +99,7 @@ install:
   - "%CMD_IN_ENV% python -m pip install --upgrade pip"
 
   # Install poetry and virtualenv
-  - "%CMD_IN_ENV% python -m pip install poetry virtualenv"
+  - "%CMD_IN_ENV% python -m pip install --upgrade poetry virtualenv"
 
   # Create build virtualenv
   - "virtualenv --clear venv"
