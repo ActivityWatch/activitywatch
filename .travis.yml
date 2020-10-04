@@ -114,6 +114,7 @@ install:
 script:
  - "make test"
  - "make test-integration"
+ - "poetry install"  # install pyinstaller again since it gets uninstalled for some reason
  - "make package"
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      make dist/ActivityWatch.dmg;
