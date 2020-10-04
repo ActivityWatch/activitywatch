@@ -132,6 +132,7 @@ after_test:
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   #- ps: "ls dist"
+  - "%CMD_IN_ENV% poetry install"  # reinstall PyInstaller, because somehow its altgraph dependency gets uninstalled by poetry when installing previous packages
   - "%CMD_IN_ENV% make package"
 
 artifacts:
