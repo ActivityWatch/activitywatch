@@ -14,13 +14,9 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6.x" # currently 3.6.8
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "64"
-
-   #- PYTHON: "C:\\Python35-x64"
-   #  PYTHON_VERSION: "3.5.x" # currently 3.5.2
-   #  PYTHON_ARCH: "64"
 
 install:
   # Enable long paths

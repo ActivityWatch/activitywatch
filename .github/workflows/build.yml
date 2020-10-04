@@ -17,15 +17,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, windows-latest, macOS-latest]
-        python_version: [3.6]
+        python_version: [3.7]
         node_version: [12]
         experimental: [false]
-        include:
-          # Experimental: Python 3.8
-          - os: ubuntu-18.04
-            python_version: 3.8
-            node_version: 12
-            experimental: true
+        #include:
+        #  # Experimental: Python 3.8
+        #  - os: ubuntu-18.04
+        #    python_version: 3.8
+        #    node_version: 12
+        #    experimental: true
     steps:
     - uses: actions/checkout@v2
       with:
