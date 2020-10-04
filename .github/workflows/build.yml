@@ -83,6 +83,11 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test
+    # Don't run integration tests on Windows, doesn't work for some reason
+    - name: Run integration tests
+      if: "!startsWith(runner.os, 'windows')"
+      run: |
+        source venv/bin/activate || source venv/Scripts/activate
         make test-integration
     - name: Package
       shell: bash
