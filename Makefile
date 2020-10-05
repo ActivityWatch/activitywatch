@@ -31,6 +31,10 @@ build:
 		git submodule update --init --recursive; \
 	fi
 #
+#	needed due to https://github.com/pypa/setuptools/issues/1963
+#	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
+	pip install 'setuptools>49.1.1'
+#
 	make --directory=aw-core build
 	make --directory=aw-client build
 	make --directory=aw-watcher-afk build
