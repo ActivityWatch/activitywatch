@@ -62,9 +62,13 @@ function build_setup() {
     filename="activitywatch-${version}-${platform}-${arch}-setup.exe"
     echo "Name of package will be: $filename"
 
-    choco install -y innosetup
+    innosetupdir="/c/Program Files (x86)/Inno Setup 6"
+    if [ ! -d "$innosetupdir" ]; then
+        echo "ERROR: Couldn't find innosetup which is needed to build the installer. We suggest you install it using chocolatey. Exiting."
+        exit 1
+    fi
 
-    env AW_VERSION=$version "/c/Program Files (x86)/Inno Setup 6/iscc.exe" scripts/package/activitywatch-setup.iss
+    env AW_VERSION=$version "$innosetupdir/iscc.exe" scripts/package/activitywatch-setup.iss
     mv dist/activitywatch-setup.exe dist/$filename
     echo "Setup built!"
 }

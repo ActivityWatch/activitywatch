@@ -66,15 +66,17 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
-    - name: Create virtualenv
-      shell: bash
-      run: |
-        pip install virtualenv
-        python -m virtualenv venv
     - name: Install dependencies
       shell: bash
       run: |
-        pip install poetry
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          choco install innosetup
+        fi
+        pip install poetry virtualenv
+    - name: Build
+      shell: bash
+      run: |
+        python -m virtualenv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
         make build
