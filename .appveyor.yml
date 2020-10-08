@@ -97,6 +97,9 @@ install:
   # Install poetry and virtualenv
   - "%CMD_IN_ENV% python -m pip install --upgrade poetry virtualenv"
 
+  # Install innosetup
+  - "choco install innosetup"
+
   # Create build virtualenv
   - "virtualenv --clear venv"
   - "venv\\Scripts\\activate.bat"
