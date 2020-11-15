@@ -89,11 +89,12 @@ def commit_linkify(commitid: str, repo: str) -> str:
     return f"[`{commitid}`](https://github.com/ActivityWatch/{repo}/commit/{commitid})"
 
 
-def summary_repo(
-    path: str, commitrange: str, filter_types: List[str]
-) -> Tuple[str, List[str]]:
+def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
+    if commitrange.endswith("0000000"):
+        # Happens when a submodule has been removed
+        return ""
     dirname = run("bash -c 'basename $(pwd)'", cwd=path).strip()
-    out = f"## {dirname}"
+    out = f"\n## {dirname}"
 
     feats = ""
     fixes = ""
@@ -117,7 +118,7 @@ def summary_repo(
     for name, entries in (("✨ Features", feats), ("🐛 Fixes", fixes), ("🔨 Misc", misc)):
         if entries:
             if "Misc" in name:
-                header = f"\n\n<details><summary><b>{name}</b></summary>\n<p>\n\n"
+                header = f"\n\n<details><summary><b>{name}</b></summary>\n<p>\n"
             else:
                 header = f"\n\n#### {name}"
             out += header
@@ -125,39 +126,37 @@ def summary_repo(
             if "Misc" in name:
                 out += "\n\n</p></details>"
 
-    submodules = []
-    output = run("git submodule foreach 'basename $(pwd)'")
-    for line in output.split("\n"):
-        if not line or line.startswith("Entering"):
+    # NOTE: For now, these TODOs can be manually fixed for each changelog.
+    # TODO: Fix issue where subsubmodules can appear twice (like aw-webui)
+    # TODO: Use specific order (aw-webui should be one of the first, for example)
+    summary_subrepos = run(
+        f"git submodule summary {commitrange.split('...')[0]}", cwd=path
+    )
+    for s in summary_subrepos.split("\n\n"):
+        lines = s.split("\n")
+        header = lines[0]
+        if header.startswith("fatal: not a git repository"):
+            # Happens when a submodule has been removed
             continue
-        submodules.append(line)
+        if header.strip():
+            out += "\n"
+            _, name, commitrange, count = header.split(" ")
+            name = name.strip(".").strip("/")
 
-    return out, submodules
+            output = summary_repo(
+                f"{path}/{name}", commitrange, filter_types=filter_types
+            )
+            out += output
+
+    return out
 
 
 def build(filter_types=["build", "ci", "tests"]):
     prev_release = run("git describe --tags --abbrev=0").strip()
-    output, submodules = summary_repo(
+    output = summary_repo(
         ".", commitrange=f"{prev_release}...master", filter_types=filter_types
     )
     print(output)
-
-    # TODO: Include subsubmodules (like aw-webui)
-    # TODO: Include commits from merges (exclude merge commits themselves?)
-    # TODO: Use specific order (aw-webui should be one of the first, for example)
-    summary_subrepos = run(f"git submodule summary {prev_release}")
-    for s in summary_subrepos.split("\n\n"):
-        lines = s.split("\n")
-        header = lines[0]
-        if header.strip():
-            print("\n")
-            _, name, commitrange, count = header.split(" ")
-            name = name.strip(".").strip("/")
-
-            output, submodules = summary_repo(
-                f"./{name}", commitrange, filter_types=filter_types
-            )
-            print(output)
 
 
 if __name__ == "__main__":
