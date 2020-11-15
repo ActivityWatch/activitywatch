@@ -6,24 +6,27 @@ import platform
 import subprocess
 import aw_core
 import flask_restx
+import shlex
+from pathlib import Path
 
-git_cmd = "git describe --tags --abbrev=0"
-current_release = subprocess.run(git_cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8").stdout.strip()
+current_release = subprocess.run(shlex.split("git describe --tags --abbrev=0"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8").stdout.strip()
 print("bundling activitywatch version " + current_release)
 
-aw_core_path = os.path.dirname(aw_core.__file__)
-restx_path = os.path.dirname(flask_restx.__file__)
+aw_core_path = Path(os.path.dirname(aw_core.__file__))
+restx_path = Path(os.path.dirname(flask_restx.__file__))
 
-aws_location = "aw-server/"
-aw_server_rust_bin = "aw-server-rust/target/package/aw-server-rust"
-aw_qt_location = "aw-qt/"
-awa_location = "aw-watcher-afk/"
-aww_location = "aw-watcher-window/"
+aws_location = Path("aw-server")
+aw_server_rust_location = Path("aw-server-rust")
+aw_server_rust_bin = aw_server_rust_location / "target/package/aw-server-rust"
+aw_server_rust_webui = aw_server_rust_location / "target/package/static"
+aw_qt_location = Path("aw-qt")
+awa_location = Path("aw-watcher-afk")
+aww_location = Path("aw-watcher-window")
 
 if platform.system() == "Darwin":
-    icon = aw_qt_location + 'media/logo/logo.icns'
+    icon = aw_qt_location / 'media/logo/logo.icns'
 else:
-    icon = aw_qt_location + 'media/logo/logo.ico'
+    icon = aw_qt_location / 'media/logo/logo.ico'
 block_cipher = None
 
 extra_pathex = []
@@ -40,11 +43,11 @@ aw_server_a = Analysis(['aw-server/__main__.py'],
                        pathex=[],
                        binaries=None,
                        datas=[
-                           (aws_location + 'aw_server/static', 'aw_server/static'),
+                           (aws_location / 'aw_server/static', 'aw_server/static'),
 
-                           (os.path.join(restx_path, 'templates'), 'flask_restx/templates'),
-                           (os.path.join(restx_path, 'static'), 'flask_restx/static'),
-                           (os.path.join(aw_core_path, 'schemas'), 'aw_core/schemas')
+                           (restx_path / 'templates', 'flask_restx/templates'),
+                           (restx_path / 'static', 'flask_restx/static'),
+                           (aw_core_path / 'schemas', 'aw_core/schemas')
                        ],
                        hiddenimports=[],
                        hookspath=[],
@@ -54,10 +57,13 @@ aw_server_a = Analysis(['aw-server/__main__.py'],
                        win_private_assemblies=False,
                        cipher=block_cipher)
 
-aw_qt_a = Analysis([aw_qt_location + 'aw_qt/__main__.py'],
+aw_qt_a = Analysis([aw_qt_location / 'aw_qt/__main__.py'],
                    pathex=[] + extra_pathex,
                    binaries=[(aw_server_rust_bin, '.')],
-                   datas=[(aw_qt_location + 'resources/aw-qt.desktop', 'aw_qt/resources')],
+                   datas=[
+                       (aw_qt_location / 'resources/aw-qt.desktop', 'aw_qt/resources'),
+                       (aw_server_rust_webui, 'aw_server_rust/static'),
+                   ],
                    hiddenimports=[],
                    hookspath=[],
                    runtime_hooks=[],
@@ -66,7 +72,7 @@ aw_qt_a = Analysis([aw_qt_location + 'aw_qt/__main__.py'],
                    win_private_assemblies=False,
                    cipher=block_cipher)
 
-aw_watcher_afk_a = Analysis([awa_location + 'aw_watcher_afk/__main__.py'],
+aw_watcher_afk_a = Analysis([awa_location / 'aw_watcher_afk/__main__.py'],
                             pathex=[],
                             binaries=None,
                             datas=None,
@@ -93,10 +99,10 @@ aw_watcher_afk_a = Analysis([awa_location + 'aw_watcher_afk/__main__.py'],
                             win_private_assemblies=False,
                             cipher=block_cipher)
 
-aw_watcher_window_a = Analysis([aww_location + 'aw_watcher_window/__main__.py'],
+aw_watcher_window_a = Analysis([aww_location / 'aw_watcher_window/__main__.py'],
                                pathex=[],
                                binaries=None,
-                               datas=[(aww_location + "aw_watcher_window/printAppTitle.scpt", 'aw_watcher_window')],
+                               datas=[(aww_location / "aw_watcher_window/printAppTitle.scpt", 'aw_watcher_window')],
                                hiddenimports=[],
                                hookspath=[],
                                runtime_hooks=[],
