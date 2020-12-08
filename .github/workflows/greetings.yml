@@ -12,7 +12,8 @@ jobs:
         issue-message: >
           Hi there!
 
-          As you're new to this repo, please make sure you've used an appropriate issue template and searched for duplicates (it helps us focus on actual development!). We'd also like to suggest that you read our [contribution guidelines](https://github.com/ActivityWatch/activitywatch/blob/master/CONTRIBUTING.md) and our [code of conduct](https://github.com/ActivityWatch/activitywatch/blob/master/CODE_OF_CONDUCT.md).
+          As you're new to this repo, please make sure you've used an appropriate [issue template](https://github.com/ActivityWatch/activitywatch/issues/new/choose) and searched for duplicates (it helps us focus on actual development!).
+          We'd also like to suggest that you read our [contribution guidelines](https://github.com/ActivityWatch/activitywatch/blob/master/CONTRIBUTING.md) and our [code of conduct](https://github.com/ActivityWatch/activitywatch/blob/master/CODE_OF_CONDUCT.md).
 
           Thanks a bunch for opening your first issue! 🙏
         pr-message: >
