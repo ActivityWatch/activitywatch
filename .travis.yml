@@ -144,4 +144,5 @@ deploy:
    local_dir: dist
    acl: public_read
    on:
+     all_branches: true
      condition: $DEPLOY = true
