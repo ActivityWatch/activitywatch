@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os }}, py-${{ matrix.python_version}}, node-${{ matrix.node_version }}
+    name: ${{ matrix.os }}, py-${{ matrix.python_version }}, node-${{ matrix.node_version }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
@@ -112,6 +112,6 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v2-preview
       with:
-        name: builds-${{ runner.os }}
+        name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
 
