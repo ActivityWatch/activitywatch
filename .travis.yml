@@ -32,35 +32,8 @@ jobs:
      env:
       - DEPLOY=true
       - TRAVIS_NODE_VERSION=12
-   #- os: windows
-   #  language: sh
-   #  python: 3.6.8
-   #  env:
-   #   - DEPLOY=false  # set to true when tested and AppVeyor is deprecated
-   #   - TRAVIS_NODE_VERSION=12
-   #   - TRAVIS_PYTHON_VERSION=3.6.8
-  allow_failures:
-   - os: windows
 
 before_install:
- # Windows:
- #  - Enable long paths
- #  - Install Python
- #  - Install node/npm using nvs
- #  - Install make
- - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-     ./scripts/ci/enable_long_paths.bat;
-     choco install -y python --version=$TRAVIS_PYTHON_VERSION;
-     cp /c/Python36/python.exe /c/Python36/python3.exe;
-     export PATH="/c/Python36:/c/Python36/Scripts:$PATH";
-     export NVS_HOME="C:\ProgramData\nvs";
-     git clone --single-branch https://github.com/jasongin/nvs $NVS_HOME;
-     source $NVS_HOME/nvs.sh;
-     export PATH="./node_modules/.bin:$PATH";
-     nvs add node/$TRAVIS_NODE_VERSION;
-     nvs use node/$TRAVIS_NODE_VERSION;
-     choco install -y make;
-   fi
  # macOS:
  #  - Install Python 3.7
  #  - Install node using nvm
@@ -90,12 +63,6 @@ before_install:
  - pip3 --version
  - node --version
  - npm --version
- # Set up a virtualenv on Windows
- - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-     pip3 install virtualenv;
-     virtualenv -p python3 ~/venv;
-     source ~/venv/Scripts/activate;
-   fi
  # Set up a virtualenv on macOS
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
      pip3 install virtualenv;
@@ -144,4 +111,5 @@ deploy:
    local_dir: dist
    acl: public_read
    on:
+     all_branches: true
      condition: $DEPLOY = true
