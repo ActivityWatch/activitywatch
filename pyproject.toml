@@ -16,11 +16,11 @@ python = "^3.6"
 #aw-qt = {path = "aw-qt"}
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.770"
-pytest = "^5.4.1"
+mypy = "*"
+pytest = "^6.0"
 pytest-cov = "^2.8.1"
 pytest-benchmark = "^3.2.3"
-pyinstaller = "3.5"
+pyinstaller = "4.1"
 #pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
 psutil = "^5.7.0"
 pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
