@@ -49,6 +49,7 @@ jobs:
         node-version: ${{ matrix.node_version }}
     - name: Set up Rust nightly
       uses: actions-rs/toolchain@v1
+      id: toolchain
       with:
         profile: minimal
         toolchain: nightly
@@ -72,9 +73,10 @@ jobs:
         cache-name: cargo-build-target
       with:
         path: aw-server-rust/target
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
+        # key needs to contain rustc_hash due to https://github.com/ActivityWatch/aw-server-rust/issues/180
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
     - name: Install dependencies
       shell: bash
       run: |
