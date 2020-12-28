@@ -18,6 +18,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.14
+      SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk
     strategy:
       fail-fast: false
       matrix:
