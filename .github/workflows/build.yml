@@ -13,12 +13,8 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     env:
       RELEASE: false
-      # sets the xcode version, see: https://github.community/t/selecting-an-xcode-version/16204
-      # Xcode 10.3 supports Mojave 10.14.3 and up: https://developer.apple.com/support/xcode/
-      DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.14
-      SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk
     strategy:
       fail-fast: false
       matrix:
