@@ -68,6 +68,7 @@ jobs:
           ${{ runner.os }}-${{ env.cache-name }}-
     - name: Cache cargo build
       uses: actions/cache@v1
+      if: runner.os != 'macOS'  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
