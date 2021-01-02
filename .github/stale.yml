@@ -4,7 +4,7 @@ daysUntilStale: 180
 daysUntilClose: 14
 # Issues with these labels will never be considered stale
 exemptLabels:
-  - pinned
+  - '!pinned'
   - 'priority: high'
   - 'improves: security'
 # Label to use when marking an issue as stale
