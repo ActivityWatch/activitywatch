@@ -155,12 +155,12 @@ We have a plan to address all of these and we're well on our way. See the table 
 ##### Platforms
 <!-- TODO: Replace Platform names with icons  -->
 
-|               | Windows            | macOS              | Linux              | Android            |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | [WIP][android]     |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | 
-| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | 
+|               | Windows            | macOS              | Linux              | Android            | iOS                 |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:-------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | [WIP][android]     |:x:                  |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
+| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
 
 [android]: https://github.com/ActivityWatch/activitywatch/issues/6
 
