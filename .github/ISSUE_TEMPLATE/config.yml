@@ -5,16 +5,15 @@ contact_links:
   - name: "\U0001F381 Feature requests"
     url: https://forum.activitywatch.net/c/features
     about: Request and vote on features on the forum.
-    # TODO: Use suitable emojis
-  - name: "\U0001F381 Support"
+  - name: "\u2753 Support"
     url: https://forum.activitywatch.net/
     about: Need help with something? Ask for help on the forum!
-  - name: "\U0001F381 Discussion (on our forum)"
+  - name: "\U0001F4AD Discussion (on our forum)"
     url: https://forum.activitywatch.net/
     about: The preferred place for general discussion about ActivityWatch
-  - name: "\U0001F381 Discussion (on GitHub Discussions)"
+  - name: "\U0001F4AD Discussion (on GitHub Discussions)"
     url: https://forum.activitywatch.net/
     about: We're testing it out (but the forum is still the preferred place).
-  - name: "\U0001F381 Chat with us on Discord"
+  - name: "\U0001F4AC Chat with us on Discord"
     url: https://discord.gg/dctJK6USjK
     about: We love to see people who are active in issues on our Discord, come join us!
