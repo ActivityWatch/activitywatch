@@ -12,7 +12,7 @@ assignees: ''
 
   Before you submit this; let's make sure of a few things.
   Please make sure the following boxes are ticked if they are correct.
-  If not, please try and fulfill these first.
+  If not, please try and complete them first.
 -->
 
 <!-- Checked checkbox should look like this: [x] -->
@@ -25,18 +25,18 @@ assignees: ''
   it'd be very helpful to whoever handles the issue.
 -->
 
-- **OS version and name**: <!-- Replace with version + name -->
-- **ActivityWatch version**: <!-- Replace with version -->
+- **OS name and version**: <!-- Replace this comment with OS name + version -->
+- **ActivityWatch version**: <!-- Replace this comment with the ActivityWatch version (found at the bottom of the Web UI) -->
 
 ## Describe the bug
 <!-- A clear and concise description of what the bug is. -->
 
 ## To Reproduce
 <!--
-  Steps to reproduce the behavior:
+  Steps to reproduce the behavior, for example:
     1. Go to '...'
-    2. Click on '....'
-    3. Scroll down to '....'
+    2. Click on '...'
+    3. Scroll down to '...'
     4. See error
 -->
 
