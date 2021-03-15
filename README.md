@@ -101,8 +101,8 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<span><img src="https://activitywatch.net/img/screenshot-v0.9.3-activity.png"   width="40%"></span>
-<span><img src="https://activitywatch.net/img/screenshot-v0.8.0b9-timeline.png" width="40%"></span>
+<span><img src="https://activitywatch.net/img/screenshot-v0.9.3-activity.png"   width="100%"></span>
+<span><img src="https://activitywatch.net/img/screenshot-v0.8.0b9-timeline.png" width="100%"></span>
 
 
 ## Installation & Usage
