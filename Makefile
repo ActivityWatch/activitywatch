@@ -79,18 +79,6 @@ update-edge:
 	git submodule foreach -v --recursive "echo 'test' $$(pwd); git checkout master; git pull origin master"
 	make build
 
-create-pipenv:
-	# pipenv --python 3.6
-	#pipenv install --skip-lock -r aw-core/requirements.txt
-	#pipenv install --skip-lock -r aw-core/requirements-dev.txt --dev
-	#pipenv install --skip-lock -r aw-server/requirements.txt
-	#pipenv install --skip-lock -r aw-client/requirements.txt
-	#pipenv install --skip-lock -r aw-watcher-afk/requirements.txt
-	pipenv install --skip-lock -r aw-watcher-window/requirements.txt
-	pipenv install --skip-lock -r aw-qt/requirements.txt
-
-
-
 lint:
 	pylint -E \
 		aw-core/aw_core/ \
