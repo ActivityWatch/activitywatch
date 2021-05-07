@@ -20,7 +20,7 @@
   <b>
     <a href="https://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
-    — <a href="https://activitywatch.readthedocs.io">Documentation</a>
+    — <a href="https://docs.activitywatch.net">Documentation</a>
     — <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
   </b>
 
@@ -48,7 +48,7 @@
   <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
     <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
   </a>
-  <a href="http://activitywatch.readthedocs.io">
+  <a href="https://docs.activitywatch.net">
     <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
   </a>
 
@@ -109,9 +109,9 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 Downloads are available on our [releases page](https://github.com/ActivityWatch/activitywatch/releases).
 
-For instructions on how to get started, please see [our guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
+For instructions on how to get started, please see [our guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
 
-Interested in building from source? [There's a guide for that too](https://activitywatch.readthedocs.io/en/latest/installing-from-source.html).
+Interested in building from source? [There's a guide for that too](https://docs.activitywatch.net/en/latest/installing-from-source.html).
 
 ## Is this yet another time tracker?
 
@@ -174,7 +174,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
 
-For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://activitywatch.readthedocs.io/en/latest/watchers.html).
+For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 
 ## About this repository
@@ -200,7 +200,7 @@ The webapp includes:
 
 ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and it's window title.
 
-There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which tracks spent time coding and many more! [A full list of watchers can be found in our documentation here](https://activitywatch.readthedocs.io/en/latest/watchers.html).
+There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which tracks spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 
