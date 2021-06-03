@@ -69,27 +69,6 @@ update:
 	git submodule update --init --recursive
 	make build
 
-# Update (bleeding edge)
-# ------
-#
-# Pulls the latest version, updates all the submodules, then runs `make build`.
-update-edge:
-	git pull
-	git submodule update --init --recursive
-	git submodule foreach -v --recursive "echo 'test' $$(pwd); git checkout master; git pull origin master"
-	make build
-
-create-pipenv:
-	# pipenv --python 3.6
-	#pipenv install --skip-lock -r aw-core/requirements.txt
-	#pipenv install --skip-lock -r aw-core/requirements-dev.txt --dev
-	#pipenv install --skip-lock -r aw-server/requirements.txt
-	#pipenv install --skip-lock -r aw-client/requirements.txt
-	#pipenv install --skip-lock -r aw-watcher-afk/requirements.txt
-	pipenv install --skip-lock -r aw-watcher-window/requirements.txt
-	pipenv install --skip-lock -r aw-qt/requirements.txt
-
-
 
 lint:
 	pylint -E \
@@ -189,3 +168,9 @@ clean_all: clean
 	make --directory=aw-server clean
 	make --directory=aw-watcher-afk clean
 	make --directory=aw-watcher-window clean
+	make --directory=aw-server-rust clean
+
+clean-auto:
+	rm -rIv **/aw-server-rust/target
+	rm -rIv **/aw-android/mobile/build
+	rm -rIfv **/node_modules
