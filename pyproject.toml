@@ -6,7 +6,7 @@ authors = ["Erik Bjäreholt <erik@bjareho.lt>"]
 license = "MPL-2.0"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 # Installing them from here won't work
 #aw-core = {path = "aw-core"}
 #aw-client = {path = "aw-client"}
@@ -17,10 +17,10 @@ python = "^3.6"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
-pytest = "^6.0"
-pytest-cov = "^2.8.1"
-pytest-benchmark = "^3.2.3"
-pyinstaller = "4.1"
+pytest = "*"
+pytest-cov = "*"
+pytest-benchmark = "*"
+pyinstaller = "4.3"
 #pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
 psutil = "^5.7.0"
 pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
