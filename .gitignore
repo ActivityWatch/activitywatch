@@ -1,13 +1,21 @@
 build
 dist
-__pycache__
-.*cache
-*.swp
-.DS_Store
-
-.idea
-venv*
-old
-other
 docs
-.venv
+other
+old
+
+# Coverage
+*coverage*
+htmlcov
+
+# Editor/IDEs
+.idea
+*.swp
+
+# Python
+*venv*
+__pycache__
+
+# Misc
+.*cache
+.DS_Store
