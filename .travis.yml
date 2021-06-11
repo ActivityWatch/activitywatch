@@ -39,7 +39,7 @@ before_install:
  #  - Install node using nvm
  #  - Set up a virtualenv
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-     brew update;
+     travis_wait 20 brew update;
      brew unlink python;
      brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/2efdfe5519df7654ece8d70786baa298e568eafd/Formula/python.rb;
      brew link python;
