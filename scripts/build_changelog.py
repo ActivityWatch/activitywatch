@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 """
 Script that outputs a changelog for the repository in the current directory and its submodules.
+
+Manual actions needed to clean up for changelog:
+ - Reorder modules in a logical order (aw-webui, aw-server, aw-server-rust, aw-watcher-window, aw-watcher-afk, ...)
+ - Add the "bundle repo" notice to the main ActivityWatch repo.
 """
 
 import shlex
@@ -89,6 +93,13 @@ def commit_linkify(commitid: str, repo: str) -> str:
     return f"[`{commitid}`](https://github.com/ActivityWatch/{repo}/commit/{commitid})"
 
 
+def wrap_details(title, body):
+    out = f"\n\n<details><summary><b>{title}</b></summary>\n<p>\n"
+    out += body
+    out += "\n\n</p></details>"
+    return out
+
+
 def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     if commitrange.endswith("0000000"):
         # Happens when a submodule has been removed
@@ -117,14 +128,13 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
 
     for name, entries in (("✨ Features", feats), ("🐛 Fixes", fixes), ("🔨 Misc", misc)):
         if entries:
-            if "Misc" in name:
-                header = f"\n\n<details><summary><b>{name}</b></summary>\n<p>\n"
+            _count = len(entries.strip().split("\n"))
+            title = f"{name} ({_count})"
+            if "Misc" in name or "Fixes" in name:
+                out += wrap_details(title, entries)
             else:
-                header = f"\n\n#### {name}"
-            out += header
-            out += entries
-            if "Misc" in name:
-                out += "\n\n</p></details>"
+                out += f"\n\n#### {title}"
+                out += entries
 
     # NOTE: For now, these TODOs can be manually fixed for each changelog.
     # TODO: Fix issue where subsubmodules can appear twice (like aw-webui)
@@ -152,7 +162,8 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
 
 
 def build(filter_types=["build", "ci", "tests"]):
-    prev_release = run("git describe --tags --abbrev=0").strip()
+    # prev_release = run("git describe --tags --abbrev=0").strip()
+    prev_release = "v0.9.2"
     output = summary_repo(
         ".", commitrange=f"{prev_release}...master", filter_types=filter_types
     )
