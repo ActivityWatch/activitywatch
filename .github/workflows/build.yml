@@ -77,6 +77,10 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+    - name: Install APT dependencies
+      shell: bash
+      if: "startsWith(runner.os, 'linux')"
+      run: sudo apt-get install -y qt5-default libfontconfig1 libxcb1
     - name: Install dependencies
       shell: bash
       run: |
