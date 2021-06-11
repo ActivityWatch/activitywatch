@@ -20,7 +20,7 @@
   <b>
     <a href="https://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
-    — <a href="https://activitywatch.readthedocs.io">Documentation</a>
+    — <a href="https://docs.activitywatch.net">Documentation</a>
     — <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
   </b>
 
@@ -39,13 +39,16 @@
 
   <br>
 
-  <a href="https://travis-ci.org/ActivityWatch/activitywatch">
-    <img title="Build Status Travis" src="https://travis-ci.org/ActivityWatch/activitywatch.svg?branch=master" />
+  <a href="https://github.com/ActivityWatch/activitywatch/actions?query=branch%3Amaster">
+    <img title="Build Status GitHub" src="https://github.com/ActivityWatch/activitywatch/workflows/Build/badge.svg?branch=master" />
+  </a>
+  <a href="https://travis-ci.com/ActivityWatch/activitywatch">
+    <img title="Build Status Travis" src="https://travis-ci.com/ActivityWatch/activitywatch.svg?branch=master" />
   </a>
   <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
     <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
   </a>
-  <a href="http://activitywatch.readthedocs.io">
+  <a href="https://docs.activitywatch.net">
     <img title="Documentation" src="https://readthedocs.org/projects/activitywatch/badge/?version=latest" />
   </a>
 
@@ -92,24 +95,23 @@ We've worked towards this goal by creating a application for safe storage of the
 
  - Currently active application and the title of its window
  - Currently active browser tab and it's title and URL
- - Keyboard and mouse activity, to detect if you are afk or not
-</small>
+ - Keyboard and mouse activity, to detect if you are AFK ("away from keyboard") or not
 
 It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
 
 ### Screenshots
 
-<span><img src="https://activitywatch.net/screenshot-v0.8.0b9-today.png"    width="35%"></span>
-<span><img src="https://activitywatch.net/screenshot-v0.8.0b9-timeline.png" width="43%"></span>
+<span><img src="https://activitywatch.net/img/screenshot-v0.9.3-activity.png"   width="100%"></span>
+<span><img src="https://activitywatch.net/img/screenshot-v0.8.0b9-timeline.png" width="100%"></span>
 
 
 ## Installation & Usage
 
 Downloads are available on our [releases page](https://github.com/ActivityWatch/activitywatch/releases).
 
-For instructions on how to get started, please see [our guide in the documentation](https://activitywatch.readthedocs.io/en/latest/getting-started.html).
+For instructions on how to get started, please see [our guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
 
-Interested in building from source? [There's a guide for that too](https://activitywatch.readthedocs.io/en/latest/installing-from-source.html).
+Interested in building from source? [There's a guide for that too](https://docs.activitywatch.net/en/latest/installing-from-source.html).
 
 ## Is this yet another time tracker?
 
@@ -121,7 +123,7 @@ Yes, but we found that most time trackers lack in one or more important features
  - The user does not own the data (common with non-open source options)
  - Lack of synchronization (and when available: it's centralized and the sync server knows everything)
  - Difficult to setup/use (most open source options tend to target programmers)
- - Low data resolution (low level of detail, does not store raw data, long intevals between entries)
+ - Low data resolution (low level of detail, does not store raw data, long intervals between entries)
  - Hard or impossible to extend (collecting more data is not as simple as it could be)
 
 **To sum it up:**
@@ -153,12 +155,12 @@ We have a plan to address all of these and we're well on our way. See the table 
 ##### Platforms
 <!-- TODO: Replace Platform names with icons  -->
 
-|               | Windows            | macOS              | Linux              | Android            |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | [WIP][android]     |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | 
-| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | 
+|               | Windows            | macOS              | Linux              | Android            | iOS                 |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:-------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | [WIP][android]     |:x:                  |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
+| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
 
 [android]: https://github.com/ActivityWatch/activitywatch/issues/6
 
@@ -172,7 +174,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
 
-For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://activitywatch.readthedocs.io/en/latest/watchers.html).
+For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 
 ## About this repository
@@ -193,13 +195,12 @@ The webapp includes:
  - Data visualization & browser
  - Query explorer
  - Export functionality 
-   - Import is not currently implemented, see [issue #103](https://github.com/ActivityWatch/activitywatch/issues/103).
 
 ### Watchers
 
 ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and it's window title.
 
-There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which tracks spent time coding and many more! [A full list of watchers can be found in our documentation here](https://activitywatch.readthedocs.io/en/latest/watchers.html).
+There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which tracks spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 

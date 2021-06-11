@@ -15,12 +15,6 @@ def get_filepaths():
     filepaths = []
     for folder, dirs, files in os.walk(log_dir):
         print("Crawling folder: " + folder)
-
-        if False:
-            print("Files: ")
-            for filename in files:
-                print(" - " + filename)
-
         filepaths.extend([os.path.join(folder, filename) for filename in files])
     return filepaths
 

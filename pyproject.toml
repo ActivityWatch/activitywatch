@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "activitywatch"
+version = "0.9.0"
+description = ""
+authors = ["Erik Bjäreholt <erik@bjareho.lt>"]
+license = "MPL-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+# Installing them from here won't work
+#aw-core = {path = "aw-core"}
+#aw-client = {path = "aw-client"}
+#aw-watcher-afk = {path = "aw-watcher-afk"}
+#aw-watcher-window = {path = "aw-watcher-window"}
+#aw-server = {path = "aw-server"}
+#aw-qt = {path = "aw-qt"}
+
+[tool.poetry.dev-dependencies]
+mypy = "*"
+pytest = "^6.0"
+pytest-cov = "^2.8.1"
+pytest-benchmark = "^3.2.3"
+pyinstaller = "4.1"
+#pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
+psutil = "^5.7.0"
+pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
+pefile = {version = "^2019.4.18", platform = "win32"}
+
+# Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
+#setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

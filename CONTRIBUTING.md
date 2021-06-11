@@ -1,12 +1,20 @@
 How to Contribute
 =================
 
-**Did you come here to read what you should do before creating an issue?** Scroll down!
+<!-- This guide could be improved by following the advice at https://mozillascience.github.io/working-open-workshop/contributing/ -->
 
-**Note:** This is a work in progress, there is a lot we could do better so file a PR if you think we've missed something!
+**Table of Contents**
+
+ - [Getting started](#getting-started)
+ - [How you can help](#how-you-can-help)
+ - [Filing an issue](#filing-an-issue)
+ - [Getting paid](#getting-paid)
+ - [Code of Conduct](#code-of-conduct)
+ - [Commit message guidelines](#commit-message-guidelines)
+ - [Questions?](#questions)
 
 
-## Getting started with development
+## Getting started
 
 To develop on ActivityWatch you'll first want to install from source. To do so, follow [the guide in the documentation](https://activitywatch.readthedocs.io/en/latest/installing-from-source.html).
 
@@ -19,35 +27,86 @@ If you want some code examples for how to write watchers or other types of clien
 
 There are many ways to contribute to ActivityWatch:
 
- - Help with testing by being an early user and reporting bugs.
- - Help with one of the issues labeled [`help wanted`](https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22), these are especially suited for new contributors.
- - Help write documentation.
- - Help build the ecosystem.
+ - Work on issues labeled [`good first issue`][good first issue] or [`help wanted`][help wanted], these are especially suited for new contributors.
+ - Fix [`bugs`][bugs].
+ - Implement new features.
+   - Look among the [requested features][requested features] on the forum.
+   - Talk to us in the issues or on [our Discord server][discord] to get help on how to proceed.
+ - Write documentation.
+ - Build the ecosystem.
    - Examples: New watchers, tools to analyze data, tools to import data from other sources, etc.
- - Help fix bugs.
-   - See the issues in this repo.
- - Help implement new features.
-   - Want to start working on a new feature? Find the appropriate subrepo, if any, and see if there is anything that needs doing.
 
-Most of the above will get you up on our [contributor stats page](http://activitywatch.net/contributors/) as thanks!
+If you're interested in what's next for ActivityWatch, have a look at our [roadmap][roadmap] and [milestones][milestones].
+
+Most of the above will get you up on our [contributor stats page][contributors] as thanks!
+
+[good first issue]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[help wanted]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
+[bugs]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22bugs%22
+[milestones]: https://github.com/ActivityWatch/activitywatch/milestones
+[roadmap]: https://github.com/orgs/ActivityWatch/projects/2
+[requested features]: https://forum.activitywatch.net/c/features
+[contributors]: http://activitywatch.net/contributors/
 
 
 ## Filing an issue
 
 Thanks for wanting to help out with squashing bugs and more by filing an issue.
 
-There are a few things you might consider when filing your issue:
+When filing an issue, it's important to use an [issue template](https://github.com/ActivityWatch/activitywatch/issues/new/choose). This ensures that we have the information we need to understand the issue, so we don't have to ask for tons of follow-up questions, so we can fix the issue faster!
 
- - Which version of ActivityWatch are you running? 
-   - NOTE: There is currently no good way to find this out, sorry about that.
- - What made the issue/bug appear? (steps to reproduce)
- - Include a logfile
-   - Log files can be found in different places, depending on platform:
-     - macOS: `~/Library/Logs/activitywatch`
-     - Linux: `~/.cache/activitywatch/log`
-     - Windows: `C:\Users\<USERNAME>\AppData\Local\activitywatch\activitywatch\Logs`
+
+## Getting paid
+
+We're experimenting with paying our contributors using funds we've raised from donations and grants. 
+
+The idea is you track your work with ActivityWatch (and ensure it gets categorized correctly), then you modify the [working_hours.py](https://github.com/ActivityWatch/aw-client/blob/master/examples/working_hours.py) script to use your category rule and generate a report of time worked per day and the matching events.
+
+If you've contributed to ActivityWatch (for a minimum of 10h) and want to get paid for your time, contact us!
+
+You can read more about this experiment on [the forum](https://forum.activitywatch.net/t/getting-paid-with-activitywatch/986) and in [the issues](https://github.com/ActivityWatch/activitywatch/issues/458).
+
+
+## Code of Conduct
+
+We have a Code of Conduct that we expect all contributors to follow, you can find it in [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
+
+
+## Commit message guidelines
+
+When writing commit messages try to follow [Conventional Commits](https://www.conventionalcommits.org/). It is not a strict requirement (to minimize overhead for new contributors) but it is encouraged.
+
+The format is: 
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+Where `type` can be one of: `feat, fix, chore, ci, docs, style, refactor, perf, test`
+
+Examples:
+
+```
+ - feat: added ability to sort by duration
+ - fix: fixes incorrect week number (#407)
+ - docs: improved query documentation 
+```
+
+This guideline was adopted in [issue #391](https://github.com/ActivityWatch/activitywatch/issues/391).
 
 
 ## Questions?
 
-If you have any questions, post on [the forum](https://forum.activitywatch.net/) or email one of the maintainers at: [erik@bjareho.lt](mailto:erik@bjareho.lt).
+If you have any questions, you can:
+
+ - Talk to us on our [Discord server][discord]
+ - Post on [the forum][forum] or [GitHub Discussions][github discussions].
+ - (as a last resort/if needed) Email one of the maintainers at: [erik@bjareho.lt](mailto:erik@bjareho.lt)
+
+[forum]: https://forum.activitywatch.net
+[github discussions]: https://github.com/ActivityWatch/activitywatch/discussions
+[discord]: https://discord.gg/vDskV9q

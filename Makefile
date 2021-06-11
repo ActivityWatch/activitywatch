@@ -20,10 +20,6 @@ SHELL := /usr/bin/env bash
 #  - Installs all the Python modules
 #  - Builds the web UI and bundles it with aw-server
 #
-# Arguments:
-#  - `DEV=true` makes all `pip install` commands run with `--editable`.
-#    Removes the need to reinstall Python packages when working on them.
-#
 # Tips:
 #  - Set the environment variable `PIP_USER=true` for pip to install all Python
 #    packages as user packages (same as `pip install --user <pkg>`). This makes
@@ -35,18 +31,22 @@ build:
 		git submodule update --init --recursive; \
 	fi
 #
-	make --directory=aw-core build DEV=$(DEV)
-	make --directory=aw-client build DEV=$(DEV)
-	make --directory=aw-server build DEV=$(DEV)
-	make --directory=aw-watcher-afk build DEV=$(DEV)
-	make --directory=aw-watcher-window build DEV=$(DEV)
-	make --directory=aw-server-rust build
-	make --directory=aw-qt build DEV=$(DEV)
+#	needed due to https://github.com/pypa/setuptools/issues/1963
+#	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
+	pip install 'setuptools>49.1.1'
+#
+	make --directory=aw-core build
+	make --directory=aw-client build
+	make --directory=aw-watcher-afk build
+	make --directory=aw-watcher-window build
+	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
+	make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI)
+	make --directory=aw-qt build
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
-	make --directory=aw-client build DEV=$(DEV)
-	make --directory=aw-core build DEV=$(DEV)
+	make --directory=aw-client build
+	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
-	python3 -c "import aw_server; print(aw_server.__version__)"
+	python -c "import aw_server; print(aw_server.__version__)"
 
 
 # Install
@@ -68,27 +68,6 @@ update:
 	git pull
 	git submodule update --init --recursive
 	make build
-
-# Update (bleeding edge)
-# ------
-#
-# Pulls the latest version, updates all the submodules, then runs `make build`.
-update-edge:
-	git pull
-	git submodule update --init --recursive
-	git submodule foreach -v --recursive "echo 'test' $$(pwd); git checkout master; git pull origin master"
-	make build
-
-create-pipenv:
-	# pipenv --python 3.6
-	#pipenv install --skip-lock -r aw-core/requirements.txt
-	#pipenv install --skip-lock -r aw-core/requirements-dev.txt --dev
-	#pipenv install --skip-lock -r aw-server/requirements.txt
-	#pipenv install --skip-lock -r aw-client/requirements.txt
-	#pipenv install --skip-lock -r aw-watcher-afk/requirements.txt
-	pipenv install --skip-lock -r aw-watcher-window/requirements.txt
-	pipenv install --skip-lock -r aw-qt/requirements.txt
-
 
 
 lint:
@@ -170,7 +149,7 @@ package:
 	cp -r aw-server/dist/aw-server dist/activitywatch
 #
 	make --directory=aw-server-rust package
-	mkdir dist/activitywatch/aw-server-rust
+	mkdir -p dist/activitywatch/aw-server-rust
 	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
 #
 	make --directory=aw-qt package
@@ -193,3 +172,9 @@ clean_all: clean
 	make --directory=aw-server clean
 	make --directory=aw-watcher-afk clean
 	make --directory=aw-watcher-window clean
+	make --directory=aw-server-rust clean
+
+clean-auto:
+	rm -rIv **/aw-server-rust/target
+	rm -rIv **/aw-android/mobile/build
+	rm -rIfv **/node_modules

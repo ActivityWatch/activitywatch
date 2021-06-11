@@ -1,0 +1,24 @@
+name: Greetings
+
+on: [issues, pull_request]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: >
+          Hi there!
+
+          As you're new to this repo, please make sure you've used an appropriate [issue template](https://github.com/ActivityWatch/activitywatch/issues/new/choose) and searched for duplicates (it helps us focus on actual development!).
+          We'd also like to suggest that you read our [contribution guidelines](https://github.com/ActivityWatch/activitywatch/blob/master/CONTRIBUTING.md) and our [code of conduct](https://github.com/ActivityWatch/activitywatch/blob/master/CODE_OF_CONDUCT.md).
+
+          Thanks a bunch for opening your first issue! 🙏
+        pr-message: >
+          Congratulations on opening your first pull request to this repo!
+
+          We'll get back to you as soon as possible. In the meantime, please make sure you've read our [contribution guidelines](https://github.com/ActivityWatch/activitywatch/blob/master/CONTRIBUTING.md).
+
+          Thanks for contributing!

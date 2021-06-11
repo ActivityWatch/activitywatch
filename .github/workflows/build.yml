@@ -1,0 +1,122 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: ${{ matrix.os }}, py-${{ matrix.python_version }}, node-${{ matrix.node_version }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
+    env:
+      RELEASE: false
+      # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
+      MACOSX_DEPLOYMENT_TARGET: 10.14
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, windows-latest, macOS-latest]
+        python_version: [3.7]
+        node_version: [12]
+        experimental: [false]
+        include:
+          - os: ubuntu-18.04
+            python_version: 3.8
+            node_version: 12
+            experimental: true
+          - os: ubuntu-18.04
+            python_version: 3.9
+            node_version: 12
+            experimental: true
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    # Needed for `git describe --tags --abbrev=0` to work (used for getting the latest version tag)
+    - name: Fetch full git history
+      run: git fetch --prune --unshallow --tags
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_version }}
+    - name: Set up Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node_version }}
+    - name: Set up Rust nightly
+      uses: actions-rs/toolchain@v1
+      id: toolchain
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
+    - name: Get npm cache dir
+      id: npm-cache-dir
+      run: |
+        echo "::set-output name=dir::$(npm config get cache)"
+    - uses: actions/cache@v1
+      name: Cache npm
+      env:
+        cache-name: node
+      with:
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+    - name: Cache cargo build
+      uses: actions/cache@v1
+      if: runner.os != 'macOS'  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      env:
+        cache-name: cargo-build-target
+      with:
+        path: aw-server-rust/target
+        # key needs to contain rustc_hash due to https://github.com/ActivityWatch/aw-server-rust/issues/180
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          choco install innosetup
+        fi
+        pip install poetry virtualenv
+    - name: Build
+      shell: bash
+      run: |
+        python -m virtualenv venv
+        source venv/bin/activate || source venv/Scripts/activate
+        poetry install
+        make build
+    - name: Run tests
+      shell: bash
+      run: |
+        source venv/bin/activate || source venv/Scripts/activate
+        make test
+    # Don't run integration tests on Windows, doesn't work for some reason
+    - name: Run integration tests
+      if: "!startsWith(runner.os, 'windows')"
+      run: |
+        source venv/bin/activate || source venv/Scripts/activate
+        make test-integration
+    - name: Package
+      shell: bash
+      run: |
+        source venv/bin/activate || source venv/Scripts/activate
+        poetry install  # run again to ensure we have the correct version of PyInstaller
+        make package
+    - name: Package dmg
+      if: startsWith(runner.os, 'macOS')
+      run: |
+        source venv/bin/activate
+        make dist/ActivityWatch.dmg;
+        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
+    - name: Upload packages
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: builds-${{ runner.os }}-py${{ matrix.python_version }}
+        path: dist/activitywatch-*.*
+
