@@ -114,7 +114,7 @@ aw_watcher_window_a = Analysis(
     pathex=[],
     binaries=None,
     datas=[
-        (aww_location / "aw_watcher_window/printAppTitle.scpt", "aw_watcher_window")
+        (aww_location / "aw_watcher_window/printAppStatus.jxa", "aw_watcher_window")
     ],
     hiddenimports=[],
     hookspath=[],
