@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "activitywatch"
-version = "0.9.0"
+version = "0.11.0"
 description = ""
 authors = ["Erik Bjäreholt <erik@bjareho.lt>"]
 license = "MPL-2.0"
