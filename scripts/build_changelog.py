@@ -48,7 +48,8 @@ class Commit:
         return s
 
     def parse_type(self) -> Optional[Tuple[str, str]]:
-        match = re.search(r"^(\w+)(\((.+)\))?:", self.msg)
+        # Needs to handle '!' indicating breaking change
+        match = re.search(r"^(\w+)(\((.+)\))?[!]?:", self.msg)
         if match:
             type = match.group(1)
             subtype = match.group(3)
@@ -115,7 +116,9 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     for line in summary_bundle.split("\n"):
         if line:
             commit = Commit(
-                id=line.split(" ")[0], msg=" ".join(line.split(" ")[1:]), repo=dirname,
+                id=line.split(" ")[0],
+                msg=" ".join(line.split(" ")[1:]),
+                repo=dirname,
             )
 
             entry = f"\n - {commit.format()}"
@@ -150,6 +153,10 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
             continue
         if header.strip():
             out += "\n"
+            if len(header.split(" ")) < 4:
+                # Submodule may have been deleted
+                continue
+
             _, name, commitrange, count = header.split(" ")
             name = name.strip(".").strip("/")
 
@@ -163,7 +170,7 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
 
 def build(filter_types=["build", "ci", "tests"]):
     # prev_release = run("git describe --tags --abbrev=0").strip()
-    prev_release = "v0.9.2"
+    prev_release = "v0.10.0"
     output = summary_repo(
         ".", commitrange=f"{prev_release}...master", filter_types=filter_types
     )
