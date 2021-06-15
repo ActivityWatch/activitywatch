@@ -68,7 +68,9 @@ function build_setup() {
         exit 1
     fi
 
-    env AW_VERSION=$version "$innosetupdir/iscc.exe" scripts/package/activitywatch-setup.iss
+    # Windows installer version should not include 'v' prefix, see: https://github.com/microsoft/winget-pkgs/pull/17564
+    version_no_prefix="$(echo $version | sed -e 's/^v//')"
+    env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/activitywatch-setup.iss
     mv dist/activitywatch-setup.exe dist/$filename
     echo "Setup built!"
 }
