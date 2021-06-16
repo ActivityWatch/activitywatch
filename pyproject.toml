@@ -6,7 +6,7 @@ authors = ["Erik Bjäreholt <erik@bjareho.lt>"]
 license = "MPL-2.0"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 # Installing them from here won't work
 #aw-core = {path = "aw-core"}
 #aw-client = {path = "aw-client"}
