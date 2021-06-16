@@ -80,7 +80,22 @@ jobs:
     - name: Install APT dependencies
       shell: bash
       if: "startsWith(runner.os, 'linux')"
-      run: sudo apt-get install -y qt5-default libfontconfig1 libxcb1
+      run: |
+          sudo apt-get install -y \
+            qt5-default \
+            libfontconfig1 \
+            libxcb1 \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxfixes-dev \
+            libxft-dev \
+            libxi-dev \
+            libxrandr-dev \
+            libxrender-dev 
+
     - name: Install dependencies
       shell: bash
       run: |
