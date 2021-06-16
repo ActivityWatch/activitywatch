@@ -21,14 +21,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, windows-latest, macOS-latest]
-        python_version: [3.7]
+        python_version: [3.8]
         node_version: [12]
         experimental: [false]
         include:
-          - os: ubuntu-18.04
-            python_version: 3.8
-            node_version: 12
-            experimental: true
           - os: ubuntu-18.04
             python_version: 3.9
             node_version: 12
