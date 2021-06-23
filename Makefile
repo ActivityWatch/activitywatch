@@ -129,8 +129,8 @@ dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
-	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
-	pyinstaller --clean --noconfirm --windowed aw.spec
+	# 2021-06-23: Needs develop branch PyInstaller (has better macOS support, signing, etc)
+	pyinstaller --clean --noconfirm --windowed --codesign-identity 'XM9GC3SUL2' aw.spec
 
 package:
 	mkdir -p dist/activitywatch

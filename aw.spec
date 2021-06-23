@@ -17,6 +17,9 @@ current_release = subprocess.run(
 ).stdout.strip()
 print("bundling activitywatch version " + current_release)
 
+entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
+codesign_identity = "XM9GC3SUL2"
+
 aw_core_path = Path(os.path.dirname(aw_core.__file__))
 restx_path = Path(os.path.dirname(flask_restx.__file__))
 
@@ -153,6 +156,7 @@ aww_exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    codesign_identity=codesign_identity,
 )
 aww_coll = COLLECT(
     aww_exe,
@@ -174,6 +178,7 @@ awa_exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    codesign_identity=codesign_identity,
 )
 awa_coll = COLLECT(
     awa_exe,
@@ -196,6 +201,7 @@ aws_exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    codesign_identity=codesign_identity,
 )
 aws_coll = COLLECT(
     aws_exe,
@@ -218,6 +224,7 @@ awq_exe = EXE(
     upx=True,
     icon=icon,
     console=False if platform.system() == "Windows" else True,
+    codesign_identity=codesign_identity,
 )
 awq_coll = COLLECT(
     awq_exe,
@@ -237,11 +244,17 @@ if platform.system() == "Darwin":
         aws_coll,
         name="ActivityWatch.app",
         icon=icon,
-        bundle_identifier="ActivityWatch",
+        bundle_identifier="net.activitywatch.ActivityWatch",
+        # Not respected?
+        codesign_identity=codesign_identity,
+        entitlements_file=entitlements_file,
+        version=current_release.lstrip('v'),
         info_plist={
             "CFBundleExecutable": "MacOS/aw-qt",
             "CFBundleIconFile": "logo.icns",
-            # TODO: Get the right version here
-            "CFBundleShortVersionString": current_release,
+            # This could be set to a more specific version string (including the commit id, for example)
+            "CFBundleVersion": current_release.lstrip('v'),
+            # Replaced by the 'version' kwarg above
+            #"CFBundleShortVersionString": current_release.lstrip('v'),
         },
     )
