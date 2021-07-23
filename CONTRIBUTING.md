@@ -20,7 +20,7 @@ To develop on ActivityWatch you'll first want to install from source. To do so, 
 
 You might then want to read about the [architecture](https://activitywatch.readthedocs.io/en/latest/architecture.html) and the [data model](https://activitywatch.readthedocs.io/en/latest/buckets-and-events.html).
 
-If you want some code examples for how to write watchers or other types of clients, see the [documentation for writing watchers](https://activitywatch.readthedocs.io/en/latest/writing-watchers.html).
+If you want some code examples for how to write watchers or other types of clients, see the [documentation for writing watchers](https://docs.activitywatch.net/en/latest/examples/writing-watchers.html).
 
 
 ## How you can help
