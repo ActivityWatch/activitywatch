@@ -20,12 +20,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         python_version: [3.8]
         node_version: [12]
         experimental: [false]
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-latest
             python_version: 3.9
             node_version: 12
             experimental: true
