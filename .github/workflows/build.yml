@@ -24,11 +24,11 @@ jobs:
         python_version: [3.8]
         node_version: [16]
         experimental: [false]
-        include:
-          - os: ubuntu-latest
-            python_version: 3.9
-            node_version: 16
-            experimental: true
+        #include:
+        #  - os: ubuntu-latest
+        #    python_version: 3.9
+        #    node_version: 16
+        #    experimental: true
     steps:
     - uses: actions/checkout@v2
       with:
