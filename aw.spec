@@ -250,6 +250,7 @@ if platform.system() == "Darwin":
         entitlements_file=entitlements_file,
         version=current_release.lstrip('v'),
         info_plist={
+            "NSPrincipalClass": "NSApplication",
             "CFBundleExecutable": "MacOS/aw-qt",
             "CFBundleIconFile": "logo.icns",
             # This could be set to a more specific version string (including the commit id, for example)

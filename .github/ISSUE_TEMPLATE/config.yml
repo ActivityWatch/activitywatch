@@ -12,7 +12,7 @@ contact_links:
     url: https://forum.activitywatch.net/
     about: The preferred place for general discussion about ActivityWatch
   - name: "\U0001F4AD Discussion (on GitHub Discussions)"
-    url: https://forum.activitywatch.net/
+    url: https://github.com/ActivityWatch/activitywatch/discussions
     about: We're testing it out (but the forum is still the preferred place).
   - name: "\U0001F4AC Chat with us on Discord"
     url: https://discord.gg/dctJK6USjK

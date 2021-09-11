@@ -20,9 +20,8 @@ mypy = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-benchmark = "*"
-#pyinstaller = "4.3"
-# Need latest PyInstaller for macOS signing stuff
-pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
+pyinstaller = "^4.5.1"
+#pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
 psutil = "^5.7.0"
 pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
 pefile = {version = "^2019.4.18", platform = "win32"}
