@@ -1,26 +1,26 @@
 [[package]]
-category = "dev"
-description = "Python graph (network) package"
 name = "altgraph"
+version = "0.17"
+description = "Python graph (network) package"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "0.17"
 
 [[package]]
-category = "dev"
-description = "Atomic file writes."
 name = "atomicwrites"
+version = "1.4.0"
+description = "Atomic file writes."
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "1.4.0"
 
 [[package]]
-category = "dev"
-description = "Classes Without Boilerplate"
 name = "attrs"
+version = "21.2.0"
+description = "Classes Without Boilerplate"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "21.2.0"
 
 [package.extras]
 dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit"]
@@ -29,58 +29,58 @@ tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)"
 tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins"]
 
 [[package]]
-category = "dev"
-description = "Cross-platform colored terminal text."
 name = "colorama"
+version = "0.4.4"
+description = "Cross-platform colored terminal text."
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "0.4.4"
 
 [[package]]
-category = "dev"
-description = "Code coverage measurement for Python"
 name = "coverage"
+version = "5.5"
+description = "Code coverage measurement for Python"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
-version = "5.5"
 
 [package.extras]
 toml = ["toml"]
 
 [[package]]
-category = "dev"
-description = "Clean single-source support for Python 3 and 2"
 name = "future"
+version = "0.18.2"
+description = "Clean single-source support for Python 3 and 2"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "0.18.2"
 
 [[package]]
-category = "dev"
-description = "iniconfig: brain-dead simple config-ini parsing"
 name = "iniconfig"
+version = "1.1.1"
+description = "iniconfig: brain-dead simple config-ini parsing"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "1.1.1"
 
 [[package]]
-category = "dev"
-description = "Mach-O header analysis and editing"
 name = "macholib"
+version = "1.15.1"
+description = "Mach-O header analysis and editing"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "1.14"
 
 [package.dependencies]
 altgraph = ">=0.15"
 
 [[package]]
-category = "dev"
-description = "Optional static typing for Python"
 name = "mypy"
+version = "0.910"
+description = "Optional static typing for Python"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
-version = "0.910"
 
 [package.dependencies]
 mypy-extensions = ">=0.4.3,<0.5.0"
@@ -92,80 +92,81 @@ dmypy = ["psutil (>=4.0)"]
 python2 = ["typed-ast (>=1.4.0,<1.5.0)"]
 
 [[package]]
-category = "dev"
-description = "Experimental type system extensions for programs checked with the mypy typechecker."
 name = "mypy-extensions"
+version = "0.4.3"
+description = "Experimental type system extensions for programs checked with the mypy typechecker."
+category = "dev"
 optional = false
 python-versions = "*"
-version = "0.4.3"
 
 [[package]]
-category = "dev"
-description = "Core utilities for Python packages"
 name = "packaging"
+version = "21.0"
+description = "Core utilities for Python packages"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
-version = "21.0"
 
 [package.dependencies]
 pyparsing = ">=2.0.2"
 
 [[package]]
-category = "dev"
-description = "Python PE parsing module"
 name = "pefile"
+version = "2019.4.18"
+description = "Python PE parsing module"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "2019.4.18"
 
 [package.dependencies]
 future = "*"
 
 [[package]]
-category = "dev"
-description = "plugin and hook calling mechanisms for python"
 name = "pluggy"
+version = "1.0.0"
+description = "plugin and hook calling mechanisms for python"
+category = "dev"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.13.1"
+python-versions = ">=3.6"
 
 [package.extras]
 dev = ["pre-commit", "tox"]
+testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
-category = "dev"
-description = "Cross-platform lib for process and system monitoring in Python."
 name = "psutil"
+version = "5.8.0"
+description = "Cross-platform lib for process and system monitoring in Python."
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "5.8.0"
 
 [package.extras]
 test = ["ipaddress", "mock", "unittest2", "enum34", "pywin32", "wmi"]
 
 [[package]]
-category = "dev"
-description = "library with cross-python path, ini-parsing, io, code, log facilities"
 name = "py"
+version = "1.10.0"
+description = "library with cross-python path, ini-parsing, io, code, log facilities"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "1.10.0"
 
 [[package]]
-category = "dev"
-description = "Get CPU info with pure Python 2 & 3"
 name = "py-cpuinfo"
+version = "8.0.0"
+description = "Get CPU info with pure Python 2 & 3"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "8.0.0"
 
 [[package]]
-category = "dev"
-description = "PyInstaller bundles a Python application and all its dependencies into a single package."
 name = "pyinstaller"
+version = "4.5.1"
+description = "PyInstaller bundles a Python application and all its dependencies into a single package."
+category = "dev"
 optional = false
 python-versions = ">=3.6"
-version = "4.5.1"
 
 [package.dependencies]
 altgraph = "*"
@@ -179,28 +180,28 @@ encryption = ["tinyaes (>=1.0.0)"]
 hook_testing = ["pytest (>=2.7.3)", "execnet (>=1.5.0)", "psutil"]
 
 [[package]]
-category = "dev"
-description = "Community maintained hooks for PyInstaller"
 name = "pyinstaller-hooks-contrib"
+version = "2021.3"
+description = "Community maintained hooks for PyInstaller"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "2021.2"
 
 [[package]]
-category = "dev"
-description = "Python parsing module"
 name = "pyparsing"
+version = "2.4.7"
+description = "Python parsing module"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "2.4.7"
 
 [[package]]
-category = "dev"
-description = "pytest: simple powerful testing with Python"
 name = "pytest"
+version = "6.2.5"
+description = "pytest: simple powerful testing with Python"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
-version = "6.2.4"
 
 [package.dependencies]
 atomicwrites = {version = ">=1.0", markers = "sys_platform == \"win32\""}
@@ -208,7 +209,7 @@ attrs = ">=19.2.0"
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
 iniconfig = "*"
 packaging = "*"
-pluggy = ">=0.12,<1.0.0a1"
+pluggy = ">=0.12,<2.0"
 py = ">=1.8.2"
 toml = "*"
 
@@ -216,12 +217,12 @@ toml = "*"
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
-category = "dev"
-description = "A ``pytest`` fixture for benchmarking code. It will group the tests into rounds that are calibrated to the chosen timer."
 name = "pytest-benchmark"
+version = "3.4.1"
+description = "A ``pytest`` fixture for benchmarking code. It will group the tests into rounds that are calibrated to the chosen timer."
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "3.4.1"
 
 [package.dependencies]
 py-cpuinfo = "*"
@@ -233,12 +234,12 @@ elasticsearch = ["elasticsearch"]
 histogram = ["pygal", "pygaljs"]
 
 [[package]]
-category = "dev"
-description = "Pytest plugin for measuring coverage."
 name = "pytest-cov"
+version = "2.12.1"
+description = "Pytest plugin for measuring coverage."
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.12.1"
 
 [package.dependencies]
 coverage = ">=5.2.1"
@@ -249,33 +250,33 @@ toml = "*"
 testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtualenv"]
 
 [[package]]
-category = "dev"
-description = ""
 name = "pywin32-ctypes"
+version = "0.2.0"
+description = ""
+category = "dev"
 optional = false
 python-versions = "*"
-version = "0.2.0"
 
 [[package]]
-category = "dev"
-description = "Python Library for Tom's Obvious, Minimal Language"
 name = "toml"
+version = "0.10.2"
+description = "Python Library for Tom's Obvious, Minimal Language"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "0.10.2"
 
 [[package]]
-category = "dev"
-description = "Backported and Experimental Type Hints for Python 3.5+"
 name = "typing-extensions"
+version = "3.10.0.2"
+description = "Backported and Experimental Type Hints for Python 3.5+"
+category = "dev"
 optional = false
 python-versions = "*"
-version = "3.10.0.0"
 
 [metadata]
-content-hash = "5bd36261166e0d6768ade0bd999d337f71f43490880e994bf3770142d977f3a3"
 lock-version = "1.1"
 python-versions = "^3.8"
+content-hash = "5bd36261166e0d6768ade0bd999d337f71f43490880e994bf3770142d977f3a3"
 
 [metadata.files]
 altgraph = [
@@ -356,8 +357,8 @@ iniconfig = [
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
 macholib = [
-    {file = "macholib-1.14-py2.py3-none-any.whl", hash = "sha256:c500f02867515e6c60a27875b408920d18332ddf96b4035ef03beddd782d4281"},
-    {file = "macholib-1.14.tar.gz", hash = "sha256:0c436bc847e7b1d9bda0560351bf76d7caf930fb585a828d13608839ef42c432"},
+    {file = "macholib-1.15.1-py2.py3-none-any.whl", hash = "sha256:3781768cdbc8c7996cbf0c61844e80e715f870385358b17602b1c9c1eba9f48e"},
+    {file = "macholib-1.15.1.tar.gz", hash = "sha256:96ce0efeea6adadda0e20bc2366314646483b5504119c2212b24838cf0cb80b1"},
 ]
 mypy = [
     {file = "mypy-0.910-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:a155d80ea6cee511a3694b108c4494a39f42de11ee4e61e72bc424c490e46457"},
@@ -396,8 +397,8 @@ pefile = [
     {file = "pefile-2019.4.18.tar.gz", hash = "sha256:a5d6e8305c6b210849b47a6174ddf9c452b2888340b8177874b862ba6c207645"},
 ]
 pluggy = [
-    {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
-    {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
+    {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
+    {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
 psutil = [
     {file = "psutil-5.8.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:0066a82f7b1b37d334e68697faba68e5ad5e858279fd6351c8ca6024e8d6ba64"},
@@ -446,16 +447,16 @@ pyinstaller = [
     {file = "pyinstaller-4.5.1.tar.gz", hash = "sha256:30733baaf8971902286a0ddf77e5499ac5f7bf8e7c39163e83d4f8c696ef265e"},
 ]
 pyinstaller-hooks-contrib = [
-    {file = "pyinstaller-hooks-contrib-2021.2.tar.gz", hash = "sha256:7f5d0689b30da3092149fc536a835a94045ac8c9f0e6dfb23ac171890f5ea8f2"},
-    {file = "pyinstaller_hooks_contrib-2021.2-py2.py3-none-any.whl", hash = "sha256:57964f93eb69255c49159ffdf052aae893feed223b0f69773dfd010ca6c569d9"},
+    {file = "pyinstaller-hooks-contrib-2021.3.tar.gz", hash = "sha256:169b09802a19f83593114821d6ba0416a05c7071ef0ca394f7bfb7e2c0c916c8"},
+    {file = "pyinstaller_hooks_contrib-2021.3-py2.py3-none-any.whl", hash = "sha256:a52bc3834281266bbf77239cfc9521923336ca622f44f90924546ed6c6d3ad5e"},
 ]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
 ]
 pytest = [
-    {file = "pytest-6.2.4-py3-none-any.whl", hash = "sha256:91ef2131a9bd6be8f76f1f08eac5c5317221d6ad1e143ae03894b862e8976890"},
-    {file = "pytest-6.2.4.tar.gz", hash = "sha256:50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b"},
+    {file = "pytest-6.2.5-py3-none-any.whl", hash = "sha256:7310f8d27bc79ced999e760ca304d69f6ba6c6649c0b60fb0e04a4a77cacc134"},
+    {file = "pytest-6.2.5.tar.gz", hash = "sha256:131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89"},
 ]
 pytest-benchmark = [
     {file = "pytest-benchmark-3.4.1.tar.gz", hash = "sha256:40e263f912de5a81d891619032983557d62a3d85843f9a9f30b98baea0cd7b47"},
@@ -474,7 +475,7 @@ toml = [
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
 ]
 typing-extensions = [
-    {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
-    {file = "typing_extensions-3.10.0.0-py3-none-any.whl", hash = "sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84"},
-    {file = "typing_extensions-3.10.0.0.tar.gz", hash = "sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342"},
+    {file = "typing_extensions-3.10.0.2-py2-none-any.whl", hash = "sha256:d8226d10bc02a29bcc81df19a26e56a9647f8b0a6d4a83924139f4a8b01f17b7"},
+    {file = "typing_extensions-3.10.0.2-py3-none-any.whl", hash = "sha256:f1d25edafde516b146ecd0613dabcc61409817af4766fbbcfb8d1ad4ec441a34"},
+    {file = "typing_extensions-3.10.0.2.tar.gz", hash = "sha256:49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e"},
 ]
