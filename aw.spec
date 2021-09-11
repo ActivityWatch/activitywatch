@@ -238,10 +238,11 @@ if platform.system() == "Darwin":
         name="ActivityWatch.app",
         icon=icon,
         bundle_identifier="ActivityWatch",
+        # TODO: Get the right version here
+        version=current_release,
         info_plist={
+            "NSPrincipalClass": "NSApplication",
             "CFBundleExecutable": "MacOS/aw-qt",
             "CFBundleIconFile": "logo.icns",
-            # TODO: Get the right version here
-            "CFBundleShortVersionString": current_release,
         },
     )
