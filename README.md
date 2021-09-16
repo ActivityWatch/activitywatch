@@ -34,7 +34,7 @@
 
 <p align="center">
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/current%20budget-%2487%2Fmo%20from%2040%20supporters-red.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/budget-%2487%2Fmo%20from%2040%20supporters-orange.svg" />
   </a>
 
   <br>
