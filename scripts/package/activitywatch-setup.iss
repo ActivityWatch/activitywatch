@@ -30,6 +30,7 @@ PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#DistDir}
 OutputBaseFilename=activitywatch-setup
 SetupIconFile="{#RootDir}\aw-qt\media\logo\logo.ico"
+UninstallDisplayName={#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma
 SolidCompression=yes
