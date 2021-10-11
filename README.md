@@ -172,7 +172,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 
-## About this repository
+### About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
 
