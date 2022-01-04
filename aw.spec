@@ -157,6 +157,7 @@ aww_exe = EXE(
     upx=True,
     console=True,
     codesign_identity=codesign_identity,
+    entitlements_file=entitlements_file,
 )
 aww_coll = COLLECT(
     aww_exe,
@@ -179,6 +180,7 @@ awa_exe = EXE(
     upx=True,
     console=True,
     codesign_identity=codesign_identity,
+    entitlements_file=entitlements_file,
 )
 awa_coll = COLLECT(
     awa_exe,
@@ -202,6 +204,7 @@ aws_exe = EXE(
     upx=True,
     console=True,
     codesign_identity=codesign_identity,
+    entitlements_file=entitlements_file,
 )
 aws_coll = COLLECT(
     aws_exe,
@@ -225,6 +228,7 @@ awq_exe = EXE(
     icon=icon,
     console=False if platform.system() == "Windows" else True,
     codesign_identity=codesign_identity,
+    entitlements_file=entitlements_file,
 )
 awq_coll = COLLECT(
     awq_exe,
@@ -245,14 +249,12 @@ if platform.system() == "Darwin":
         name="ActivityWatch.app",
         icon=icon,
         bundle_identifier="net.activitywatch.ActivityWatch",
-        # Not respected?
-        codesign_identity=codesign_identity,
-        entitlements_file=entitlements_file,
         version=current_release.lstrip('v'),
         info_plist={
             "NSPrincipalClass": "NSApplication",
             "CFBundleExecutable": "MacOS/aw-qt",
-            "CFBundleIconFile": "logo.icns",
+            "CFBundlpaseIconFile": "logo.icns",
+            "NSAppleEventsUsageDescription": "Please grant access to use Apple Events",
             # This could be set to a more specific version string (including the commit id, for example)
             "CFBundleVersion": current_release.lstrip('v'),
             # Replaced by the 'version' kwarg above
