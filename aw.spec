@@ -156,7 +156,6 @@ aww_exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    codesign_identity=codesign_identity,
     entitlements_file=entitlements_file,
 )
 aww_coll = COLLECT(
@@ -179,7 +178,6 @@ awa_exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    codesign_identity=codesign_identity,
     entitlements_file=entitlements_file,
 )
 awa_coll = COLLECT(
@@ -203,7 +201,6 @@ aws_exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    codesign_identity=codesign_identity,
     entitlements_file=entitlements_file,
 )
 aws_coll = COLLECT(
@@ -227,7 +224,6 @@ awq_exe = EXE(
     upx=True,
     icon=icon,
     console=False if platform.system() == "Windows" else True,
-    codesign_identity=codesign_identity,
     entitlements_file=entitlements_file,
 )
 awq_coll = COLLECT(
