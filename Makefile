@@ -46,7 +46,7 @@ build:
 	make --directory=aw-client build
 	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
-	python -c "import aw_server; print(aw_server.__version__)"
+	python3 -c "import aw_server; print(aw_server.__version__)"
 
 
 # Install
