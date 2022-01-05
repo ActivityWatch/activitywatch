@@ -40,13 +40,21 @@ build:
 	make --directory=aw-watcher-afk build
 	make --directory=aw-watcher-window build
 	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
-	make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI)
+ifndef SKIP_SERVER_RUST  # Skip building aw-server-rust if SKIP_SERVER_RUST is defined
+	echo 'Looking for rust...'
+	if (which cargo); then \
+		echo 'Rust found!'; \
+		make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI); \
+	else \
+		echo 'Rust not found, skipping aw-server-rust!'; \
+	fi
+endif
 	make --directory=aw-qt build
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
-	python -c "import aw_server; print(aw_server.__version__)"
+	python3 -c "import aw_server; print(aw_server.__version__)"
 
 
 # Install
@@ -145,11 +153,11 @@ package:
 #
 	make --directory=aw-server package
 	cp -r aw-server/dist/aw-server dist/activitywatch
-#
+ifndef SKIP_SERVER_RUST
 	make --directory=aw-server-rust package
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
-#
+endif
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
 # Remove problem-causing binaries

@@ -34,7 +34,7 @@
 
 <p align="center">
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/current%20budget-%2437%2Fmo%20from%2015%20supporters-red.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/budget-%2487%2Fmo%20from%2040%20supporters-orange.svg" />
   </a>
 
   <br>
@@ -154,12 +154,10 @@ We have a plan to address all of these and we're well on our way. See the table 
 
 |               | Windows            | macOS              | Linux              | Android            | iOS                 |
 | ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:-------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | [WIP][android]     |:x:                  |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |:x:                  |
 | Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
 | ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
-
-[android]: https://github.com/ActivityWatch/activitywatch/issues/6
 
 ##### Tracking
 

@@ -94,10 +94,14 @@ def commit_linkify(commitid: str, repo: str) -> str:
     return f"[`{commitid}`](https://github.com/ActivityWatch/{repo}/commit/{commitid})"
 
 
-def wrap_details(title, body):
-    out = f"\n\n<details><summary><b>{title}</b></summary>\n<p>\n"
-    out += body
-    out += "\n\n</p></details>"
+def wrap_details(title, body, wraplines=5):
+    """Wrap lines into a <details> element if body is longer than `wraplines`"""
+    out = f"\n\n### {title}"
+    if body.count("\n") > wraplines:
+        out += "\n<details><summary>Click to expand</summary>"
+    out += f"\n<p>{body}\n</p>\n"
+    if body.count("\n") > wraplines:
+        out += "</details>"
     return out
 
 
@@ -170,9 +174,10 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
 
 def build(filter_types=["build", "ci", "tests"]):
     # prev_release = run("git describe --tags --abbrev=0").strip()
-    prev_release = "v0.10.0"
+    prev_release = "v0.11.0"
+    next_release = "master"
     output = summary_repo(
-        ".", commitrange=f"{prev_release}...master", filter_types=filter_types
+        ".", commitrange=f"{prev_release}...{next_release}", filter_types=filter_types
     )
     print(output)
 
