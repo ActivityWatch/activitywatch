@@ -152,8 +152,9 @@ package:
 #
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
-# Remove problem-causing binaries, see https://github.com/ActivityWatch/activitywatch/issues/161
-	rm -f dist/activitywatch/libdrm.so.2
+# Remove problem-causing binaries
+	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
+	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
 # Remove unecessary files
 	rm -rf dist/activitywatch/pytz
 # Builds zips and setups
