@@ -1,6 +1,6 @@
 appleid="<name@domain.com>" # Email address used for Apple ID
 password="<secret_2FA_password>" # See apps-specific password https://support.apple.com/en-us/HT204397
-teamid="<WWDRTeamID>" # Team idenitifer (if single developer, then set to developer identifier)
+teamid="XM9GC3SUL2" # Team idenitifer (if single developer, then set to developer identifier)
 bundleid=net.activitywatch.ActivityWatch # Match aw.spec
 app=dist/ActivityWatch.app
 dmg=dist/ActivityWatch.dmg

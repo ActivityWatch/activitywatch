@@ -249,7 +249,7 @@ if platform.system() == "Darwin":
         info_plist={
             "NSPrincipalClass": "NSApplication",
             "CFBundleExecutable": "MacOS/aw-qt",
-            "CFBundlpaseIconFile": "logo.icns",
+            "CFBundleIconFile": "logo.icns",
             "NSAppleEventsUsageDescription": "Please grant access to use Apple Events",
             # This could be set to a more specific version string (including the commit id, for example)
             "CFBundleVersion": current_release.lstrip('v'),
