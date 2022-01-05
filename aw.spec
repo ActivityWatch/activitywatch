@@ -18,8 +18,8 @@ current_release = subprocess.run(
 print("bundling activitywatch version " + current_release)
 
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
-codesign_identity = os.environ.get("APPLE_TEAMID")
-assert codesign_identity, "Environment variable APPLE_TEAMID not set"
+codesign_identity = os.environ.get("APPLE_PERSONAL_ID")
+assert codesign_identity, "Environment variable APPLE_PERSONAL_ID not set"
 
 aw_core_path = Path(os.path.dirname(aw_core.__file__))
 restx_path = Path(os.path.dirname(flask_restx.__file__))
@@ -158,6 +158,7 @@ aww_exe = EXE(
     upx=True,
     console=True,
     entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 aww_coll = COLLECT(
     aww_exe,
@@ -180,6 +181,7 @@ awa_exe = EXE(
     upx=True,
     console=True,
     entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 awa_coll = COLLECT(
     awa_exe,
@@ -203,6 +205,7 @@ aws_exe = EXE(
     upx=True,
     console=True,
     entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 aws_coll = COLLECT(
     aws_exe,
@@ -226,6 +229,7 @@ awq_exe = EXE(
     icon=icon,
     console=False if platform.system() == "Windows" else True,
     entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 awq_coll = COLLECT(
     awq_exe,
