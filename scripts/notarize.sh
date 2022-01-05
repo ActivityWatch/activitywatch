@@ -1,9 +1,9 @@
 #!/bin/bash
 
-appleid=$APPLE_EMAIL # Email address used for Apple ID
+applemail=$APPLE_EMAIL # Email address used for Apple ID
 password=$APPLE_PASSWORD # See apps-specific password https://support.apple.com/en-us/HT204397
-teamid=$APPLE_TEAMID # Team idenitifer (if single developer, then set to developer identifier)
-keychain_profile="activitywatch-$APPLE_TEAMID"  # name of the keychain profile to use
+teamid=$APPLE_TEAM_ID # Team idenitifer (if single developer, then set to developer identifier)
+keychain_profile="activitywatch-$APPLE_PERSONAL_ID"  # name of the keychain profile to use
 bundleid=net.activitywatch.ActivityWatch # Match aw.spec
 app=dist/ActivityWatch.app
 dmg=dist/ActivityWatch.dmg
@@ -12,7 +12,7 @@ dmg=dist/ActivityWatch.dmg
 run_notarytool() {
     dist=$1
     # Setup the credentials for notarization
-    xcrun notarytool store-credentials $keychain_profile --apple-id $appleid --team-id $teamid --password $password
+    xcrun notarytool store-credentials $keychain_profile --apple-id $applemail --team-id $teamid --password $password
     # Notarize and wait
     echo "Notarization: starting for $dist"
     echo "Notarization: in progress for $dist"
@@ -23,13 +23,13 @@ run_notarytool() {
 run_altool() {
     dist=$1
     # Setup the credentials for notarization
-    xcrun altool --store-password-in-keychain-item $keychain_profile -u $appleid -p $password
+    xcrun altool --store-password-in-keychain-item $keychain_profile -u $applemail -p $password
     # Notarize and wait
     echo "Notarization: starting for $dist"
-    upload=$(xcrun altool --notarize-app -t osx -f $dist --primary-bundle-id $bundleid -u $appleid --password "@keychain:$keychain_profile")
+    upload=$(xcrun altool --notarize-app -t osx -f $dist --primary-bundle-id $bundleid -u $applemail --password "@keychain:$keychain_profile")
     uuid = $(/usr/libexec/PlistBuddy -c "Print :notarization-upload:RequestUUID" $upload)
     while true; do 
-        req=$(xcrun altool --notarization-info $uuid -u $appleid -p $password --output-format xml)
+        req=$(xcrun altool --notarization-info $uuid -u $applemail -p $password --output-format xml)
         status=$(/usr/libexec/PlistBuddy -c "Print :notarization-info:Status" $req)
         if [ $status != "in progress" ]; then 
             break

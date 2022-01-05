@@ -146,7 +146,8 @@ jobs:
       env:
         APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-        APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+        APPLE_PERSONAL_ID: ${{ secrets.APPLE_TEAMID }} # APPLE_PERSONAL_ID == APPLE_TEAM_ID for personal accounts
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAMID }}
 
     - name: Upload packages
       uses: actions/upload-artifact@v2-preview
