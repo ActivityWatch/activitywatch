@@ -18,8 +18,8 @@ current_release = subprocess.run(
 print("bundling activitywatch version " + current_release)
 
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
-codesign_identity = os.environ.get("APPLE_PERSONAL_ID")
-assert codesign_identity, "Environment variable APPLE_PERSONAL_ID not set"
+codesign_identity = os.environ.get("APPLE_PERSONALID")
+assert codesign_identity, "Environment variable APPLE_PERSONALID not set"
 
 aw_core_path = Path(os.path.dirname(aw_core.__file__))
 restx_path = Path(os.path.dirname(flask_restx.__file__))

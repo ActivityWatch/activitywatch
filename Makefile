@@ -138,7 +138,7 @@ dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	pip install dmgbuild
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
-	codesign --verbose -s ${APPLE_PERSONAL_ID} dist/ActivityWatch.dmg
+	codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
 
 dist/notarize:
 	./scripts/notarize.sh

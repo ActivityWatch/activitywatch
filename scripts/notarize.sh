@@ -2,8 +2,8 @@
 
 applemail=$APPLE_EMAIL # Email address used for Apple ID
 password=$APPLE_PASSWORD # See apps-specific password https://support.apple.com/en-us/HT204397
-teamid=$APPLE_TEAM_ID # Team idenitifer (if single developer, then set to developer identifier)
-keychain_profile="activitywatch-$APPLE_PERSONAL_ID"  # name of the keychain profile to use
+teamid=$APPLE_TEAMID # Team idenitifer (if single developer, then set to developer identifier)
+keychain_profile="activitywatch-$APPLE_PERSONALID"  # name of the keychain profile to use
 bundleid=net.activitywatch.ActivityWatch # Match aw.spec
 app=dist/ActivityWatch.app
 dmg=dist/ActivityWatch.dmg
