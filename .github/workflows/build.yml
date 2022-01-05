@@ -116,24 +116,33 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test
+
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
       if: "!startsWith(runner.os, 'windows')"
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test-integration
+
     - name: Package
       shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
         make package
+
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
       run: |
         source venv/bin/activate
         make dist/ActivityWatch.dmg;
+        make dist/notarize
         mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
+      env:
+        APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+
     - name: Upload packages
       uses: actions/upload-artifact@v2-preview
       with:

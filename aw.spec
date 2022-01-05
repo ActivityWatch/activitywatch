@@ -18,7 +18,8 @@ current_release = subprocess.run(
 print("bundling activitywatch version " + current_release)
 
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
-codesign_identity = "XM9GC3SUL2"
+codesign_identity = os.environ.get("APPLE_TEAMID")
+assert codesign_identity, "Environment variable APPLE_TEAMID not set"
 
 aw_core_path = Path(os.path.dirname(aw_core.__file__))
 restx_path = Path(os.path.dirname(flask_restx.__file__))
@@ -245,15 +246,15 @@ if platform.system() == "Darwin":
         name="ActivityWatch.app",
         icon=icon,
         bundle_identifier="net.activitywatch.ActivityWatch",
-        version=current_release.lstrip('v'),
+        version=current_release.lstrip("v"),
         info_plist={
             "NSPrincipalClass": "NSApplication",
             "CFBundleExecutable": "MacOS/aw-qt",
             "CFBundleIconFile": "logo.icns",
             "NSAppleEventsUsageDescription": "Please grant access to use Apple Events",
             # This could be set to a more specific version string (including the commit id, for example)
-            "CFBundleVersion": current_release.lstrip('v'),
+            "CFBundleVersion": current_release.lstrip("v"),
             # Replaced by the 'version' kwarg above
-            #"CFBundleShortVersionString": current_release.lstrip('v'),
+            # "CFBundleShortVersionString": current_release.lstrip('v'),
         },
     )
