@@ -133,18 +133,15 @@ aw-qt/media/logo/logo.icns:
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
-	pyinstaller --clean --noconfirm --windowed --codesign-identity $$APPLE_TEAMID aw.spec
-
-dist/notarize:
-	./scripts/notarize.sh
+	pyinstaller --clean --noconfirm --windowed aw.spec
 
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	pip install dmgbuild
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
-# Don't try to run this outside CI, it causes messes in your macos keychain
-codesign-dmg: dist/ActivityWatch.dmg
-	./scripts/ci/import-macos-p12.sh
-	codesign --verbose -s ActivityWatch --deep dist/ActivityWatch.dmg
+	codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+
+dist/notarize:
+	./scripts/notarize.sh
 
 package:
 	mkdir -p dist/activitywatch
