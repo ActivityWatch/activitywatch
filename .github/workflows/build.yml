@@ -135,9 +135,14 @@ jobs:
       if: startsWith(runner.os, 'macOS')
       run: |
         source venv/bin/activate
-        make dist/ActivityWatch.dmg;
+        make dist/ActivityWatch.dmg
+
+        brew install akeru-inc/tap/xcnotary
+        xcnotary precheck dist/ActivityWatch.app
+        xcnotary precheck dist/ActivityWatch.dmg
+
         make dist/notarize
-        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
+        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
       env:
         APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
