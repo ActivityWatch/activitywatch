@@ -135,6 +135,7 @@ jobs:
       if: startsWith(runner.os, 'macOS')
       run: |
         source venv/bin/activate
+        ./scripts/ci/import-macos-p12.sh
         make dist/ActivityWatch.dmg
         # Run prechecks
         brew install akeru-inc/tap/xcnotary
