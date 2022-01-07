@@ -84,8 +84,8 @@ script:
  - "poetry install"  # install pyinstaller again since it gets uninstalled for some reason
  - "make package"
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+     ./scripts/ci/import-macos-p12.sh
      make dist/ActivityWatch.dmg;
-     make codesign-dmg;
      mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
    fi
 
