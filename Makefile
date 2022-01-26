@@ -132,13 +132,16 @@ aw-qt/media/logo/logo.icns:
 	rm -R build/MyIcon.iconset
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
+dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
+	pyinstaller --clean --noconfirm --windowed aw.spec
+
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
+	# NOTE: This does not codesign the dmg, that is done in the CI config
 	pip install dmgbuild
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
 
-dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
-	pip install git+git://github.com/pyinstaller/pyinstaller.git@55c8855d9db0fa596ceb28505f3ee2f402ecd4da
-	pyinstaller --clean --noconfirm --windowed aw.spec
+dist/notarize:
+	./scripts/notarize.sh
 
 package:
 	mkdir -p dist/activitywatch
@@ -158,8 +161,9 @@ ifndef SKIP_SERVER_RUST
 endif
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
-# Remove problem-causing binaries, see https://github.com/ActivityWatch/activitywatch/issues/161
-	rm -f dist/activitywatch/libdrm.so.2
+# Remove problem-causing binaries
+	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
+	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
 # Remove unecessary files
 	rm -rf dist/activitywatch/pytz
 # Builds zips and setups

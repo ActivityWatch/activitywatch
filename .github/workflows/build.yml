@@ -116,24 +116,49 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test
+
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
       if: "!startsWith(runner.os, 'windows')"
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test-integration
+
     - name: Package
       shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
         make package
+
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
       run: |
+        # Load certificates
+        # TODO: Only load key & sign if env vars for signing exists
+        ./scripts/ci/import-macos-p12.sh
+
+        # Build .app and .dmg
         source venv/bin/activate
-        make dist/ActivityWatch.dmg;
-        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg;
+        make dist/ActivityWatch.dmg
+        codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+
+        # Run prechecks
+        brew install akeru-inc/tap/xcnotary
+        xcnotary precheck dist/ActivityWatch.app
+        xcnotary precheck dist/ActivityWatch.dmg
+
+        # Notarize
+        make dist/notarize
+        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
+      env:
+        APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }} # APPLE_PERSONAL_ID == APPLE_TEAM_ID for personal accounts
+        APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+        CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
+        CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
+
     - name: Upload packages
       uses: actions/upload-artifact@v2-preview
       with:

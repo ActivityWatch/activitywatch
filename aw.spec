@@ -17,6 +17,10 @@ current_release = subprocess.run(
 ).stdout.strip()
 print("bundling activitywatch version " + current_release)
 
+entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
+codesign_identity = os.environ.get("APPLE_PERSONALID")
+assert codesign_identity, "Environment variable APPLE_PERSONALID not set"
+
 aw_core_path = Path(os.path.dirname(aw_core.__file__))
 restx_path = Path(os.path.dirname(flask_restx.__file__))
 
@@ -153,6 +157,8 @@ aww_exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 aww_coll = COLLECT(
     aww_exe,
@@ -174,6 +180,8 @@ awa_exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 awa_coll = COLLECT(
     awa_exe,
@@ -196,6 +204,8 @@ aws_exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 aws_coll = COLLECT(
     aws_exe,
@@ -218,6 +228,8 @@ awq_exe = EXE(
     upx=True,
     icon=icon,
     console=False if platform.system() == "Windows" else True,
+    entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
 )
 awq_coll = COLLECT(
     awq_exe,
@@ -237,12 +249,16 @@ if platform.system() == "Darwin":
         aws_coll,
         name="ActivityWatch.app",
         icon=icon,
-        bundle_identifier="ActivityWatch",
-        # TODO: Get the right version here
-        version=current_release,
+        bundle_identifier="net.activitywatch.ActivityWatch",
+        version=current_release.lstrip("v"),
         info_plist={
             "NSPrincipalClass": "NSApplication",
             "CFBundleExecutable": "MacOS/aw-qt",
             "CFBundleIconFile": "logo.icns",
+            "NSAppleEventsUsageDescription": "Please grant access to use Apple Events",
+            # This could be set to a more specific version string (including the commit id, for example)
+            "CFBundleVersion": current_release.lstrip("v"),
+            # Replaced by the 'version' kwarg above
+            # "CFBundleShortVersionString": current_release.lstrip('v'),
         },
     )
