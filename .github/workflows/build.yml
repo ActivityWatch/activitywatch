@@ -134,9 +134,12 @@ jobs:
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
       run: |
-        source venv/bin/activate
+        # Load certificates
+        # TODO: Only load key & sign if env vars for signing exists
         ./scripts/ci/import-macos-p12.sh
-        make dist/ActivityWatch.dmg
+        # Build .app and .dmg
+        source venv/bin/activate
+        make dist/ActivityWatch.dmg   # this also codesigns
         # Run prechecks
         brew install akeru-inc/tap/xcnotary
         xcnotary precheck dist/ActivityWatch.app
@@ -149,6 +152,8 @@ jobs:
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }} # APPLE_PERSONAL_ID == APPLE_TEAM_ID for personal accounts
         APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+        CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
+        CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
     - name: Upload packages
       uses: actions/upload-artifact@v2-preview
