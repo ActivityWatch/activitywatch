@@ -137,13 +137,17 @@ jobs:
         # Load certificates
         # TODO: Only load key & sign if env vars for signing exists
         ./scripts/ci/import-macos-p12.sh
+
         # Build .app and .dmg
         source venv/bin/activate
-        make dist/ActivityWatch.dmg   # this also codesigns
+        make dist/ActivityWatch.dmg
+        codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+
         # Run prechecks
         brew install akeru-inc/tap/xcnotary
         xcnotary precheck dist/ActivityWatch.app
         xcnotary precheck dist/ActivityWatch.dmg
+
         # Notarize
         make dist/notarize
         mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg

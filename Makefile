@@ -136,10 +136,9 @@ dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 	pyinstaller --clean --noconfirm --windowed aw.spec
 
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
+	# NOTE: This does not codesign the dmg, that is done in the CI config
 	pip install dmgbuild
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
-	# TODO: Uncomment when keys are detected in CI
-	#codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
 
 dist/notarize:
 	./scripts/notarize.sh
