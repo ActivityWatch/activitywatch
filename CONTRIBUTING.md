@@ -28,7 +28,7 @@ If you want some code examples for how to write watchers or other types of clien
 There are many ways to contribute to ActivityWatch:
 
  - Work on issues labeled [`good first issue`][good first issue] or [`help wanted`][help wanted], these are especially suited for new contributors.
- - Fix [`bugs`][bug].
+ - Fix [`bugs`][bugs].
  - Implement new features.
    - Look among the [requested features][requested features] on the forum.
    - Talk to us in the issues or on [our Discord server][discord] to get help on how to proceed.
@@ -42,7 +42,7 @@ Most of the above will get you up on our [contributor stats page][contributors] 
 
 [good first issue]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [help wanted]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
-[bug]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3A+bug%22
+[bugs]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3A+bug%22
 [milestones]: https://github.com/ActivityWatch/activitywatch/milestones
 [roadmap]: https://github.com/orgs/ActivityWatch/projects/2
 [requested features]: https://forum.activitywatch.net/c/features
