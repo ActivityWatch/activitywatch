@@ -79,6 +79,7 @@ jobs:
       shell: bash
       if: "startsWith(runner.os, 'linux')"
       run: |
+          sudo apt-get update
           # Unsure which of these are actually necessary...
           sudo apt-get install -y \
             qt5-default \
