@@ -57,6 +57,9 @@
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
   </a>
+  <a href="https://discord.gg/vDskV9q">
+    <img title="Discord" src="https://img.shields.io/discord/755040852727955476" />
+  </a>
 </p>
 
 <!--
