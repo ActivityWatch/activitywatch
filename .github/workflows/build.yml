@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        python_version: [3.8]
+        python_version: [3.8.9]
         node_version: [16]
         experimental: [false]
         #include:
