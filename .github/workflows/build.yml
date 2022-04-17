@@ -16,7 +16,7 @@ jobs:
     env:
       RELEASE: false
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
-      MACOSX_DEPLOYMENT_TARGET: 10.14
+      MACOSX_DEPLOYMENT_TARGET: 10.9
     strategy:
       fail-fast: false
       matrix:
@@ -37,9 +37,17 @@ jobs:
     - name: Fetch full git history
       run: git fetch --prune --unshallow --tags
     - name: Set up Python
+      if: matrix.os != 'macOS-latest'
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
+    # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
+    - name: Set up Python for macOS
+      if: matrix.os == 'macOS-latest'
+      run: |
+        curl https://www.python.org/ftp/python/${{ matrix.python_version }}/python-${{ matrix.python_version }}-macosx10.9.pkg -o "python.pkg"
+        sudo installer -pkg python.pkg -target /
+        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
     - name: Set up Node
       uses: actions/setup-node@v1
       with:
@@ -104,11 +112,19 @@ jobs:
         if [ "$RUNNER_OS" == "Windows" ]; then
           choco install innosetup
         fi
-        pip install poetry virtualenv
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          pip3 install poetry virtualenv
+        else
+          pip install poetry virtualenv
+        fi
     - name: Build
       shell: bash
       run: |
-        python -m virtualenv venv
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          python3 -m virtualenv venv
+        else
+          python -m virtualenv venv
+        fi
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
         make build
