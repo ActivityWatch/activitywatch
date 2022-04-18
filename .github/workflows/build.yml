@@ -21,7 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        python_version: [3.8.9]
+        python_version: [3.8]
+        macosx_python_version: [3.8.9]
         node_version: [16]
         experimental: [false]
         #include:
@@ -45,9 +46,9 @@ jobs:
     - name: Set up Python for macOS
       if: matrix.os == 'macOS-latest'
       run: |
-        curl https://www.python.org/ftp/python/${{ matrix.python_version }}/python-${{ matrix.python_version }}-macosx10.9.pkg -o "python.pkg"
+        curl https://www.python.org/ftp/python/${{ matrix.macosx_python_version }}/python-${{ matrix.macosx_python_version }}-macosx10.9.pkg -o "python.pkg"
         sudo installer -pkg python.pkg -target /
-        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
+        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.macosx_python_version }}/bin" >> $GITHUB_PATH
     - name: Set up Node
       uses: actions/setup-node@v1
       with:
