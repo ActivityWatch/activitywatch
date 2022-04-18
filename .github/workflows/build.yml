@@ -48,7 +48,7 @@ jobs:
       run: |
         curl https://www.python.org/ftp/python/${{ matrix.macosx_python_version }}/python-${{ matrix.macosx_python_version }}-macosx10.9.pkg -o "python.pkg"
         sudo installer -pkg python.pkg -target /
-        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.macosx_python_version }}/bin" >> $GITHUB_PATH
+        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
     - name: Set up Node
       uses: actions/setup-node@v1
       with:
