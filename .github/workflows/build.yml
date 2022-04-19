@@ -114,12 +114,18 @@ jobs:
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           choco install innosetup
+          pip install poetry virtualenv
+        else
+          pip3 install poetry virtualenv
         fi
-        pip3 install poetry virtualenv
     - name: Build
       shell: bash
       run: |
-        python3 -m virtualenv venv
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          python -m virtualenv venv
+        else
+          python3 -m virtualenv venv
+        fi
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
         make build
