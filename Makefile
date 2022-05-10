@@ -133,7 +133,7 @@ aw-qt/media/logo/logo.icns:
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
-	pyinstaller --clean --noconfirm --windowed aw.spec
+	pyinstaller --clean --noconfirm aw.spec
 
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	# NOTE: This does not codesign the dmg, that is done in the CI config
@@ -165,7 +165,7 @@ endif
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
 # These should be provided by the distro itself
-# Had to be removed due to otherwise causing the error: 
+# Had to be removed due to otherwise causing the error:
 #   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
 	rm -f dist/activitywatch/libfontconfig.so.1
 	rm -f dist/activitywatch/libfreetype.so.6
