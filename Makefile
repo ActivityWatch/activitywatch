@@ -169,7 +169,7 @@ endif
 #   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
 	rm -f dist/activitywatch/libfontconfig.so.1
 	rm -f dist/activitywatch/libfreetype.so.6
-# Remove unecessary files
+# Remove unnecessary files
 	rm -rf dist/activitywatch/pytz
 # Builds zips and setups
 	bash scripts/package/package-all.sh
