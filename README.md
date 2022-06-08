@@ -101,8 +101,8 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<span><img src="https://activitywatch.net/img/screenshot-v0.9.3-activity.png"   width="100%"></span>
-<span><img src="https://activitywatch.net/img/screenshot-v0.8.0b9-timeline.png" width="100%"></span>
+<span><img src="https://activitywatch.net/img/screenshots/screenshot-v0.9.3-activity.png"   width="45%"></span>
+<span><img src="https://activitywatch.net/img/screenshots/screenshot-v0.8.0b9-timeline.png" width="50%"></span>
 
 You can find more (and newer) screenshots on [the website](https://activitywatch.net/screenshots/).
 
@@ -206,6 +206,10 @@ There are lots of other watchers for ActivityWatch which can track more types of
 
  - `aw-core` - core library, provides no runnable modules
  - `aw-client` - client library, useful when writing watchers
+
+### Folder structure
+
+<span><img src="https://raw.githubusercontent.com/ActivityWatch/activitywatch/master/diagram.svg" width="60%"></span>
 
 ## Contributing
 
