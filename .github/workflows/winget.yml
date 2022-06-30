@@ -10,3 +10,4 @@ jobs:
         with:
           identifier: ActivityWatch.ActivityWatch
           token: ${{ secrets.WINGET_TOKEN }}
+          fork-user: ActivityWatchBot
