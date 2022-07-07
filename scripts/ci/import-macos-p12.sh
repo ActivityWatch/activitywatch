@@ -1,4 +1,7 @@
 #!/bin/sh
+
+set -e
+
 # Source: https://www.update.rocks/blog/osx-signing-with-travis/
 export KEY_CHAIN=build.keychain
 export CERTIFICATE_P12=aw_certificate.p12
