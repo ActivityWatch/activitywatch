@@ -14,7 +14,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
-      RELEASE: false
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.9
     strategy:
@@ -30,17 +29,26 @@ jobs:
         #    node_version: 16
         #    experimental: true
     steps:
+
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
+
     # Needed for `git describe --tags --abbrev=0` to work (used for getting the latest version tag)
     - name: Fetch full git history
       run: git fetch --prune --unshallow --tags
+
+    # Only build in release mode on the master branch (longer build times)
+    - name: Set RELEASE
+      run: |
+        echo "RELEASE=${{ github.ref_name == 'master' }}" >> $GITHUB_ENV
+
     - name: Set up Python
       if: matrix.os != 'macOS-latest'
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
+
     # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
     - name: Set up Python for macOS
       if: matrix.os == 'macOS-latest'
@@ -51,10 +59,12 @@ jobs:
       env:
         # Add the patch number to the Python version (for FTP download link)
         PYTHON_VERSION: ${{ matrix.python_version }}.9
+
     - name: Set up Node
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node_version }}
+
     - name: Set up Rust nightly
       uses: actions-rs/toolchain@v1
       id: toolchain
@@ -62,10 +72,12 @@ jobs:
         profile: minimal
         toolchain: nightly
         override: true
+
     - name: Get npm cache dir
       id: npm-cache-dir
       run: |
         echo "::set-output name=dir::$(npm config get cache)"
+
     - uses: actions/cache@v1
       name: Cache npm
       env:
@@ -75,6 +87,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
+
     - name: Cache cargo build
       uses: actions/cache@v1
       if: runner.os != 'macOS'  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
@@ -116,6 +129,7 @@ jobs:
           choco install innosetup
         fi
         pip3 install poetry virtualenv
+
     - name: Build
       shell: bash
       run: |
@@ -123,6 +137,7 @@ jobs:
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
         make build
+
     - name: Run tests
       shell: bash
       run: |
