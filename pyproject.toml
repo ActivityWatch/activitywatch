@@ -20,11 +20,11 @@ mypy = "*"
 pytest = "^6.0"
 pytest-cov = "*"
 pytest-benchmark = "*"
-pyinstaller = "^5.0"
+pyinstaller = "^5.2"
 #pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
-psutil = "^5.7.0"
-pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
-pefile = {version = "^2019.4.18", platform = "win32"}
+psutil = "*"
+pywin32-ctypes = {version = "*", platform = "win32"}
+pefile = {version = "*", platform = "win32"}
 
 # Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
 #setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
