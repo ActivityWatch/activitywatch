@@ -7,13 +7,12 @@ license = "MPL-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.8,<3.11"
-# Installing them from here won't work
-#aw-core = {path = "aw-core"}
-#aw-client = {path = "aw-client"}
-#aw-watcher-afk = {path = "aw-watcher-afk"}
-#aw-watcher-window = {path = "aw-watcher-window"}
-#aw-server = {path = "aw-server"}
-#aw-qt = {path = "aw-qt"}
+aw-core = {path = "aw-core", develop = true}
+aw-client = {path = "aw-client", develop = true}
+aw-watcher-afk = {path = "aw-watcher-afk", develop = true}
+aw-watcher-window = {path = "aw-watcher-window", develop = true}
+aw-server = {path = "aw-server", develop = true}
+aw-qt = {path = "aw-qt", develop = true}
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
