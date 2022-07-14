@@ -4,15 +4,33 @@ Script that outputs a changelog for the repository in the current directory and 
 
 Manual actions needed to clean up for changelog:
  - Reorder modules in a logical order (aw-webui, aw-server, aw-server-rust, aw-watcher-window, aw-watcher-afk, ...)
- - Add the "bundle repo" notice to the main ActivityWatch repo.
+ - Remove duplicate aw-webui entries
 """
 
 import shlex
 import re
 import argparse
+import os
+from time import sleep
 from typing import Optional, Tuple, List
 from subprocess import run as _run, STDOUT, PIPE
 from dataclasses import dataclass
+from collections import defaultdict
+
+import requests
+
+# preferred repository order
+repo_order = [
+    "activitywatch",
+    "aw-server",
+    "aw-server-rust",
+    "aw-webui",
+    "aw-watcher-afk",
+    "aw-watcher-window",
+    "aw-qt",
+    "aw-core",
+    "aw-client",
+]
 
 
 class CommitMsg:
@@ -106,6 +124,9 @@ def wrap_details(title, body, wraplines=5):
     return out
 
 
+contributor_emails = set()
+
+
 def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     if commitrange.endswith("0000000"):
         # Happens when a submodule has been removed
@@ -117,12 +138,20 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     fixes = ""
     misc = ""
 
-    summary_bundle = run(f"git log {commitrange} --oneline --no-decorate", cwd=path)
+    # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
+    summary_bundle = run(
+        f"git log {commitrange} --no-decorate --pretty=format:'%h%x09%an%x09%ae%x09%s'",
+        cwd=path,
+    )
     for line in summary_bundle.split("\n"):
         if line:
+            _id, _author, email, msg = line.split("\t")
+            # will add author email to contributor list
+            # the `contributor_emails` is global and collected later
+            contributor_emails.add(email)
             commit = Commit(
-                id=line.split(" ")[0],
-                msg=" ".join(line.split(" ")[1:]),
+                id=_id,
+                msg=msg,
                 repo=dirname,
             )
 
@@ -150,14 +179,12 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     summary_subrepos = run(
         f"git submodule summary {commitrange.split('...')[0]}", cwd=path
     )
-    for s in summary_subrepos.split("\n\n"):
-        lines = s.split("\n")
-        header = lines[0]
+    subrepos = {}
+    for header, *_ in [s.split("\n") for s in summary_subrepos.split("\n\n")]:
         if header.startswith("fatal: not a git repository"):
             # Happens when a submodule has been removed
             continue
         if header.strip():
-            out += "\n"
             if len(header.split(" ")) < 4:
                 # Submodule may have been deleted
                 continue
@@ -165,15 +192,61 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
             _, name, commitrange, count = header.split(" ")
             name = name.strip(".").strip("/")
 
-            output = summary_repo(
+            subrepos[name] = summary_repo(
                 f"{path}/{name}", commitrange, filter_types=filter_types
             )
-            out += output
+
+    # pick subrepos in repo_order, and remove from dict
+    for name in repo_order:
+        if name in subrepos:
+            out += "\n"
+            out += subrepos[name]
+            del subrepos[name]
+
+    # add remaining repos
+    for name, output in subrepos.items():
+        out += "\n"
+        out += output
 
     return out
 
 
-def build(filter_types=["build", "ci", "tests"]):
+# FIXME: Doesn't work, messy af, just gonna have to remove the aw-webui section by hand
+def remove_duplicates(s: List[str], minlen=10, only_sections=True) -> List[str]:
+    """
+    Removes the longest sequence of repeated elements (they don't have to be adjacent), if sequence if longer than `minlen`.
+    Preserves order of elements.
+    """
+    if len(s) < minlen:
+        return s
+    out = []
+    longest: List[str] = []
+    for i in range(len(s)):
+        if i == 0 or s[i] not in out:
+            # Not matching any previous line,
+            # so add longest and new line to output, and reset longest
+            if len(longest) < minlen:
+                out.extend(longest)
+            else:
+                duplicate = "\n".join(longest)
+                print(f"Removing duplicate '{duplicate[:80]}...'")
+            out.append(s[i])
+            longest = []
+        else:
+            # Matches a previous line, so add to longest
+            # If longest is empty and only_sections is True, check that the line is a section start
+            if only_sections:
+                if not longest and s[i].startswith("#"):
+                    longest.append(s[i])
+                else:
+                    out.append(s[i])
+            else:
+                longest.append(s[i])
+
+    return out
+
+
+def build(filter_types=["build", "ci", "tests", "test"]):
     prev_release = run("git describe --tags --abbrev=0").strip()
     next_release = "master"
 
@@ -186,21 +259,112 @@ def build(filter_types=["build", "ci", "tests"]):
         "--output", default="changelog.md", help="Path to output changelog"
     )
     args = parser.parse_args()
-    args.range
 
-    output = summary_repo(".", commitrange=args.range, filter_types=filter_types)
+    since, until = args.range.split("...")
 
-    output = f"""
+    # provides a commit summary for the repo and subrepos, recursively looking up subrepos
+    # NOTE: this must be done *before* `get_all_contributors` is called,
+    #       as the latter relies on summary_repo looking up all users and storing in a global.
+    output_changelog = summary_repo(
+        ".", commitrange=args.range, filter_types=filter_types
+    )
+
+    output_changelog = f"""
 # Changelog
 
-Changes since {args.range.split('...', 1)[0]}
+Changes since {since}
 
-{output}
+{output_changelog}
     """.strip()
 
+    usernames = get_all_contributors()
+    output_contributors = f"""# Contributors
+
+The following people have contributed to this release:
+
+{', '.join(('@' + username for username in usernames))}"""
+
+    output = f"""# {until}"""
+    output += "\n\n"
+    output += f"This is the release notes for the {until} release.".strip()
+    output += "\n\n"
+    output += output_contributors.strip() + "\n\n"
+    output += output_changelog.strip() + "\n\n"
+
+    output = output.replace("# activitywatch", "# activitywatch (bundle repo)")
     with open(args.output, "w") as f:
         f.write(output)
     print(f"Wrote {len(output.splitlines())} lines to {args.output}")
+
+
+def get_all_contributors():
+    # TODO: Merge with contributor-stats?
+    filename = "changelog_contributors.md"
+
+    # mapping from username to one or more emails
+    usernames = defaultdict(set)
+
+    # some hardcoded ones that don't resolve...
+    usernames["iloveitaly"] = {"iloveitaly@gmail.com"}
+    usernames["kewde"] = {"kewde@particl.io"}
+    usernames["victorwinberg"] = {"kewde@particl.iovictor.m.winberg@gmail.com"}
+
+    # read existing contributors, to avoid extra calls to the GitHub API
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            s = f.read()
+        for line in s.split("\n"):
+            if not line:
+                continue
+            username, *emails = line.split("\t")
+            for email in emails:
+                usernames[username].add(email)
+        print(f"Read {len(usernames)} contributors from {filename}")
+
+    resolved_emails = set(
+        email for email_set in usernames.values() for email in email_set
+    )
+    for email in contributor_emails:
+        if email in resolved_emails:
+            continue
+        if "users.noreply.github.com" in email:
+            username = email.split("@")[0]
+            if "+" in username:
+                username = username.split("+")[1]
+            # TODO: Verify username is valid using the GitHub API
+            print(f"Contributor: @{username}")
+            usernames[username].add(email)
+        else:
+            try:
+                resp = requests.get(
+                    f"https://api.github.com/search/users?q={email}+in%3Aemail"
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                if data["total_count"] == 0:
+                    print("No match for email:", email)
+                    continue
+                if data["total_count"] >= 0:
+                    username = data["items"][0]["login"]
+                    print(f"Contributor: @{username}  (by email: {email})")
+                    usernames[username].add(email)
+                if data["total_count"] > 1:
+                    print(f"Multiple matches for email: {email}")
+            except requests.exceptions.RequestException as e:
+                print(f"Error: {e}")
+            finally:
+                # Just to respect API limits...
+                sleep(5)
+
+    with open(filename, "w") as f:
+        for username, email_set in usernames.items():
+            emails_str = "\t".join(email_set)
+            f.write(f"{username}\t{emails_str}")
+            f.write("\n")
+
+    print(f"Wrote {len(usernames)} contributors to {filename}")
+
+    return usernames.keys()
 
 
 if __name__ == "__main__":
