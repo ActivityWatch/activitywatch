@@ -307,7 +307,7 @@ def get_all_contributors():
     # some hardcoded ones that don't resolve...
     usernames["iloveitaly"] = {"iloveitaly@gmail.com"}
     usernames["kewde"] = {"kewde@particl.io"}
-    usernames["victorwinberg"] = {"kewde@particl.iovictor.m.winberg@gmail.com"}
+    usernames["victorwinberg"] = {"victor.m.winberg@gmail.com"}
 
     # read existing contributors, to avoid extra calls to the GitHub API
     if os.path.exists(filename):
@@ -324,9 +324,8 @@ def get_all_contributors():
     resolved_emails = set(
         email for email_set in usernames.values() for email in email_set
     )
-    for email in contributor_emails:
-        if email in resolved_emails:
-            continue
+    unresolved_emails = contributor_emails - resolved_emails
+    for email in unresolved_emails:
         if "users.noreply.github.com" in email:
             username = email.split("@")[0]
             if "+" in username:
@@ -344,7 +343,7 @@ def get_all_contributors():
                 if data["total_count"] == 0:
                     print("No match for email:", email)
                     continue
-                if data["total_count"] >= 0:
+                if data["total_count"] >= 1:
                     username = data["items"][0]["login"]
                     print(f"Contributor: @{username}  (by email: {email})")
                     usernames[username].add(email)
