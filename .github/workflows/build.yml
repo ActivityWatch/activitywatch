@@ -198,8 +198,34 @@ jobs:
         name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
 
+  release_notes:
+    runs-on: ubuntu-latest
+    #if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      # Needed for `git describe --tags --abbrev=0` to work
+      - name: Fetch full git history
+        run: git fetch --prune --unshallow --tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.10.5"
+      - name: Generate release notes
+        run: |
+          # TODO: Use smart range (last stable if stable, last any if beta)
+          ./scripts/build_changelog.py --range v0.12.0b2...HEAD
+      - name: Upload release notes
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog
+          path: changelog.md
+
   release:
-    needs: build
+    needs: [build, release_notes]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -210,8 +236,9 @@ jobs:
           path: dist
 
       # TODO: Build and include release notes
+      # TODO: Publish as pre-release if tag is a rc/beta/alpha ("unclean" version)
+      # TODO: Publish as draft if tag isn't a valid version (v.*)
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/activitywatch-*.*
-
