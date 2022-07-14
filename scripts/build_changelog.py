@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 """
 Script that outputs a changelog for the repository in the current directory and its submodules.
 
@@ -11,13 +11,17 @@ import shlex
 import re
 import argparse
 import os
+import logging
 from time import sleep
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict
 from subprocess import run as _run, STDOUT, PIPE
 from dataclasses import dataclass
 from collections import defaultdict
 
 import requests
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # preferred repository order
 repo_order = [
@@ -78,8 +82,8 @@ class Commit:
 
     @property
     def type(self) -> Optional[str]:
-        type, _ = self.parse_type() or (None, None)
-        return type
+        _type, _ = self.parse_type() or (None, None)
+        return _type
 
     @property
     def subtype(self) -> Optional[str]:
@@ -87,8 +91,8 @@ class Commit:
         return subtype
 
     def type_str(self) -> str:
-        type, subtype = self.parse_type() or (None, None)
-        return f"{type}" + (f"({subtype})" if subtype else "")
+        _type, subtype = self.parse_type() or (None, None)
+        return f"{_type}" + (f"({subtype})" if subtype else "")
 
     def format(self) -> str:
         commit_link = commit_linkify(self.id, self.repo) if self.id else ""
@@ -97,6 +101,7 @@ class Commit:
 
 
 def run(cmd, cwd=".") -> str:
+    logger.debug(f"Running in {cwd}: {cmd}")
     p = _run(shlex.split(cmd), stdout=PIPE, stderr=STDOUT, encoding="utf8", cwd=cwd)
     if p.returncode != 0:
         print(p.stdout)
@@ -190,6 +195,10 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
                 continue
 
             _, name, commitrange, count = header.split(" ")
+            count = count.strip().lstrip("(").rstrip("):")
+            logger.info(
+                f"Found {name}, looking up range: {commitrange} ({count} commits)"
+            )
             name = name.strip(".").strip("/")
 
             subrepos[name] = summary_repo(
@@ -201,6 +210,7 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
         if name in subrepos:
             out += "\n"
             out += subrepos[name]
+            logger.info(f"{name:12} length: \t{len(subrepos[name])}")
             del subrepos[name]
 
     # add remaining repos
@@ -266,6 +276,7 @@ def build(filter_types=["build", "ci", "tests", "test"]):
     # provides a commit summary for the repo and subrepos, recursively looking up subrepos
     # NOTE: this must be done *before* `get_all_contributors` is called,
     #       as the latter relies on summary_repo looking up all users and storing in a global.
+    logger.info("Generating commit summary")
     output_changelog = summary_repo(
         ".", commitrange=args.range, filter_types=filter_types
     )
@@ -310,19 +321,73 @@ See the [getting started guide in the documentation](https://docs.activitywatch.
     print(f"Wrote {len(output.splitlines())} lines to {args.output}")
 
 
-def get_all_contributors():
+def _resolve_email(email: str) -> Optional[str]:
+    if "users.noreply.github.com" in email:
+        username = email.split("@")[0]
+        if "+" in username:
+            username = username.split("+")[1]
+        # TODO: Verify username is valid using the GitHub API
+        print(f"Contributor: @{username}")
+        return username
+    else:
+        resp = None
+        backoff = 0
+        max_backoff = 2
+        while resp is None:
+            if backoff >= max_backoff:
+                logger.warning(f"Backed off {max_backoff} times, giving up")
+                break
+            try:
+                logger.info(f"Sending request for {email}")
+                _resp = requests.get(
+                    f"https://api.github.com/search/users?q={email}+in%3Aemail"
+                )
+                _resp.raise_for_status()
+                resp = _resp
+                backoff = 0
+            # if rate limit exceeded, back off
+            except requests.exceptions.RequestException as e:
+                if isinstance(e, requests.exceptions.HTTPError):
+                    if e.response.status_code == 403:
+                        logger.warning("Rate limit exceeded, backing off...")
+                        backoff += 1
+                        sleep(3)
+                        continue
+                else:
+                    raise e
+            finally:
+                # Just to respect API limits...
+                sleep(1)
+
+        if resp:
+            data = resp.json()
+            if data["total_count"] == 0:
+                logger.info(f"No match for email: {email}")
+            if data["total_count"] > 1:
+                logger.warning(f"Multiple matches for email: {email}")
+            if data["total_count"] >= 1:
+                username = data["items"][0]["login"]
+                logger.info(f"Contributor: @{username}  (by email: {email})")
+                return username
+    return None
+
+
+def get_all_contributors() -> set[str]:
     # TODO: Merge with contributor-stats?
-    filename = "changelog_contributors.md"
+    logger.info("Getting all contributors")
+
+    # We will commit this file, to act as a cache (preventing us from querying GitHub API every time)
+    filename = "scripts/changelog_contributors.csv"
 
     # mapping from username to one or more emails
-    usernames = defaultdict(set)
+    usernames: Dict[str, set] = defaultdict(set)
 
     # some hardcoded ones, some that don't resolve...
-    usernames["erikbjare"] = {"erik.bjareholt@gmail.com", "erik@bjareho.lt"}
-    usernames["iloveitaly"] = {"iloveitaly@gmail.com"}
-    usernames["kewde"] = {"kewde@particl.io"}
-    usernames["victorwinberg"] = {"victor.m.winberg@gmail.com"}
-    usernames["NicoWeio"] = {"nico.weio@gmail.com"}
+    usernames["erikbjare"] |= {"erik.bjareholt@gmail.com", "erik@bjareho.lt"}
+    usernames["iloveitaly"] |= {"iloveitaly@gmail.com"}
+    usernames["kewde"] |= {"kewde@particl.io"}
+    usernames["victorwinberg"] |= {"victor.m.winberg@gmail.com"}
+    usernames["NicoWeio"] |= {"nico.weio@gmail.com"}
 
     # read existing contributors, to avoid extra calls to the GitHub API
     if os.path.exists(filename):
@@ -334,51 +399,34 @@ def get_all_contributors():
             username, *emails = line.split("\t")
             for email in emails:
                 usernames[username].add(email)
-        print(f"Read {len(usernames)} contributors from {filename}")
+        logger.info(f"Read {len(usernames)} contributors from {filename}")
 
     resolved_emails = set(
         email for email_set in usernames.values() for email in email_set
     )
     unresolved_emails = contributor_emails - resolved_emails
     for email in unresolved_emails:
-        if "users.noreply.github.com" in email:
-            username = email.split("@")[0]
-            if "+" in username:
-                username = username.split("+")[1]
-            # TODO: Verify username is valid using the GitHub API
-            print(f"Contributor: @{username}")
-            usernames[username].add(email)
-        else:
-            try:
-                resp = requests.get(
-                    f"https://api.github.com/search/users?q={email}+in%3Aemail"
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                if data["total_count"] == 0:
-                    print("No match for email:", email)
-                    continue
-                if data["total_count"] >= 1:
-                    username = data["items"][0]["login"]
-                    print(f"Contributor: @{username}  (by email: {email})")
-                    usernames[username].add(email)
-                if data["total_count"] > 1:
-                    print(f"Multiple matches for email: {email}")
-            except requests.exceptions.RequestException as e:
-                print(f"Error: {e}")
-            finally:
-                # Just to respect API limits...
-                sleep(1)
+        username_opt = _resolve_email(email)
+        if username_opt:
+            usernames[username_opt].add(email)
 
     with open(filename, "w") as f:
-        for username, email_set in usernames.items():
-            emails_str = "\t".join(email_set)
+        for username, email_set in sorted(usernames.items()):
+            emails_str = "\t".join(sorted(email_set))
             f.write(f"{username}\t{emails_str}")
             f.write("\n")
 
-    print(f"Wrote {len(usernames)} contributors to {filename}")
+    logger.info(f"Wrote {len(usernames)} contributors to {filename}")
 
-    return usernames.keys()
+    email_to_username = {
+        email: username for username, emails in usernames.items() for email in emails
+    }
+
+    return set(
+        email_to_username[email]
+        for email in contributor_emails
+        if email in email_to_username
+    )
 
 
 if __name__ == "__main__":

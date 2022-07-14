@@ -21,12 +21,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]  # disabled for testing purposes: windows-latest, macOS-latest
+        os: [ubuntu-20.04, windows-latest, macOS-latest]
         python_version: [3.8]
         node_version: [16]
+        rust: [true]
+        skip_webui: [false]
         experimental: [false]
-        rust: [false]
-        skip_webui: [true]
 
         #include:
         #  - os: ubuntu-latest
@@ -38,10 +38,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
-
-    # Needed for `git describe --tags --abbrev=0` to work (used for getting the latest version tag)
-    - name: Fetch full git history
-      run: git fetch --prune --unshallow --tags
+        fetch-depth: 0  # fetch all branches and tags
 
     # Only build in release mode on the master branch (longer build times)
     - name: Set RELEASE
@@ -214,21 +211,36 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
+          fetch-depth: 0  # fetch all branches and tags
 
-      # Needed for `git describe --tags --abbrev=0` to work
-      - name: Fetch full git history
-        run: git fetch --prune --unshallow --tags
+      - uses: nowsprinting/check-version-format-action@v2
+        id: version
+        with:
+          prefix: 'v'
+
+      - name: Echo version
+        run: |
+          echo "${{ steps.version.outputs.full }} (stable: ${{ steps.version.outputs.is_stable }})"
 
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
           python-version: "3.10.5"
+
+      - name: Install deps
+        run: |
+          pip install requests
+
+      # TODO: Use smart range (last stable if stable, last any if beta)
       - name: Generate release notes
         run: |
-          # TODO: Use smart range (last stable if stable, last any if beta)
-          ./scripts/build_changelog.py --range v0.12.0b2...HEAD
-          # TODO: Move rename build_changelog and move into there
+          ./scripts/build_changelog.py --range "v0.11.0...${{ steps.version.outputs.full }}"
+
+      # TODO: Move rename build_changelog and move into there
+      - name: Rename
+        run: |
           mv changelog.md release_notes.md
+
       - name: Upload release notes
         uses: actions/upload-artifact@v3
         with:
@@ -263,4 +275,4 @@ jobs:
           draft: true
           files: dist/*/activitywatch-*.*
           body_path: dist/release_notes/release_notes.md
-          prerelease: ${{ !steps.versions.outputs.is_stable }}
+          prerelease: ${{ !steps.version.outputs.is_stable }}
