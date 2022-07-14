@@ -248,7 +248,7 @@ jobs:
 
       - name: Display structure of downloaded files
         run: ls -R
-        working-directory: path/to/artifact
+        working-directory: dist
 
       # detect if version tag is stable/beta
       - uses: nowsprinting/check-version-format-action@v2
