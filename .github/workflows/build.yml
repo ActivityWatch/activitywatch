@@ -98,7 +98,7 @@ jobs:
 
     - name: Cache cargo build
       uses: actions/cache@v1
-      if: ${{ matrix.rust }} && (runner.os != 'macOS')  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      if: ${{ matrix.rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
@@ -151,7 +151,7 @@ jobs:
       shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
-        make test
+        make test SKIP_SERVER_RUST=${{ !matrix.rust }}
 
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
@@ -165,7 +165,7 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
-        make package
+        make package SKIP_SERVER_RUST=${{ !matrix.rust }}
 
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
