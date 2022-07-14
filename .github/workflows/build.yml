@@ -25,7 +25,8 @@ jobs:
         python_version: [3.8]
         node_version: [16]
         experimental: [false]
-        rust: [true]
+        rust: [false]
+        skip_webui: [true]
 
         #include:
         #  - os: ubuntu-latest
@@ -142,7 +143,7 @@ jobs:
         python3 -m virtualenv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
-        make build SKIP_WEBUI=true
+        make build SKIP_WEBUI=${{ matrix.skip_webui }}
 
     - name: Run tests
       shell: bash
