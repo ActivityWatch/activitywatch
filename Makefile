@@ -39,7 +39,6 @@ build:
 	make --directory=aw-client build
 	make --directory=aw-watcher-afk build
 	make --directory=aw-watcher-window build
-	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
 ifndef SKIP_SERVER_RUST  # Skip building aw-server-rust if SKIP_SERVER_RUST is defined
 	echo 'Looking for rust...'
 	if (which cargo); then \
@@ -48,14 +47,17 @@ ifndef SKIP_SERVER_RUST  # Skip building aw-server-rust if SKIP_SERVER_RUST is d
 	else \
 		echo 'Rust not found, skipping aw-server-rust!'; \
 	fi
+else
+	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
 endif
 	make --directory=aw-qt build
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
+ifdef SKIP_SERVER_RUST
 #	Needed to ensure that the server has the correct version set
 	python -c "import aw_server; print(aw_server.__version__)"
-
+endif
 
 # Install
 # -------
@@ -95,7 +97,7 @@ lint:
 #
 # Uninstalls all the Python modules.
 uninstall:
-	modules=$$(pip3 list --format=legacy | grep 'aw-' | grep -o '^aw-[^ ]*'); \
+	modules=$$(pip3 list --format=columns | grep 'aw-' | grep -o '^aw-[^ ]*'); \
 	for module in $$modules; do \
 		echo "Uninstalling $$module"; \
 		pip3 uninstall -y $$module; \
