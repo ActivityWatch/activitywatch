@@ -193,8 +193,25 @@ jobs:
         CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
     - name: Upload packages
-      uses: actions/upload-artifact@v2-preview
+      uses: actions/upload-artifact@v3
       with:
         name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      # Will download all artifacts to path
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      # TODO: Build and include release notes
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/activitywatch-*.*
 
