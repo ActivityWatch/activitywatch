@@ -40,9 +40,11 @@ build:
 	make --directory=aw-watcher-afk build
 	make --directory=aw-watcher-window build
 	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
-ifndef SKIP_SERVER_RUST  # Skip building aw-server-rust if SKIP_SERVER_RUST is defined
-	echo 'Looking for rust...'
-	if (which cargo); then \
+ifeq ($(SKIP_SERVER_RUST),true)  # Skip building aw-server-rust if SKIP_SERVER_RUST is true
+	@echo "Skipping aw-server-rust build"
+else
+	@echo 'Looking for rust...'
+	@if (which cargo); then \
 		echo 'Rust found!'; \
 		make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI); \
 	else \
