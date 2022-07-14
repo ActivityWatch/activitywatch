@@ -261,6 +261,7 @@ def build(filter_types=["build", "ci", "tests", "test"]):
     args = parser.parse_args()
 
     since, until = args.range.split("...")
+    tag = until
 
     # provides a commit summary for the repo and subrepos, recursively looking up subrepos
     # NOTE: this must be done *before* `get_all_contributors` is called,
@@ -277,16 +278,28 @@ Changes since {since}
 {output_changelog}
     """.strip()
 
-    usernames = get_all_contributors()
+    usernames = sorted(get_all_contributors())
     output_contributors = f"""# Contributors
 
-The following people have contributed to this release:
+Thanks to all the contributors to this release ❤️
 
 {', '.join(('@' + username for username in usernames))}"""
 
-    output = f"""# {until}"""
+    output = f"""# {tag}"""
     output += "\n\n"
-    output += f"This is the release notes for the {until} release.".strip()
+    output += f"This is the release notes for version {tag} of ActivityWatch.".strip()
+    output += "\n\n"
+    output += """# Installation
+
+See the [getting started guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
+    """.strip()
+    output += "\n\n"
+    output += f"""# Downloads
+
+ - [**Windows**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
+ - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
+ - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
+ """.strip()
     output += "\n\n"
     output += output_contributors.strip() + "\n\n"
     output += output_changelog.strip() + "\n\n"
@@ -304,10 +317,12 @@ def get_all_contributors():
     # mapping from username to one or more emails
     usernames = defaultdict(set)
 
-    # some hardcoded ones that don't resolve...
+    # some hardcoded ones, some that don't resolve...
+    usernames["erikbjare"] = {"erik.bjareholt@gmail.com", "erik@bjareho.lt"}
     usernames["iloveitaly"] = {"iloveitaly@gmail.com"}
     usernames["kewde"] = {"kewde@particl.io"}
     usernames["victorwinberg"] = {"victor.m.winberg@gmail.com"}
+    usernames["NicoWeio"] = {"nico.weio@gmail.com"}
 
     # read existing contributors, to avoid extra calls to the GitHub API
     if os.path.exists(filename):
@@ -353,7 +368,7 @@ def get_all_contributors():
                 print(f"Error: {e}")
             finally:
                 # Just to respect API limits...
-                sleep(5)
+                sleep(1)
 
     with open(filename, "w") as f:
         for username, email_set in usernames.items():

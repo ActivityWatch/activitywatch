@@ -3,6 +3,8 @@ name: Build
 on:
   push:
     branches: [ master ]
+    tags:
+      - v*
   pull_request:
     branches: [ master ]
   #release:
@@ -19,10 +21,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-latest, macOS-latest]
+        os: [ubuntu-20.04]  # disabled for testing purposes: windows-latest, macOS-latest
         python_version: [3.8]
         node_version: [16]
         experimental: [false]
+        rust: [true]
+
         #include:
         #  - os: ubuntu-latest
         #    python_version: 3.9
@@ -66,6 +70,7 @@ jobs:
         node-version: ${{ matrix.node_version }}
 
     - name: Set up Rust nightly
+      if: ${{ matrix.rust }}
       uses: actions-rs/toolchain@v1
       id: toolchain
       with:
@@ -90,7 +95,7 @@ jobs:
 
     - name: Cache cargo build
       uses: actions/cache@v1
-      if: runner.os != 'macOS'  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      if: ${{ matrix.rust }} && (runner.os != 'macOS')  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
@@ -99,6 +104,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+
     - name: Install APT dependencies
       shell: bash
       if: "startsWith(runner.os, 'linux')"
@@ -136,7 +142,7 @@ jobs:
         python3 -m virtualenv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
-        make build
+        make build SKIP_WEBUI=true
 
     - name: Run tests
       shell: bash
@@ -198,9 +204,9 @@ jobs:
         name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
 
-  release_notes:
+  release-notes:
     runs-on: ubuntu-latest
-    #if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
     steps:
       - uses: actions/checkout@v2
         with:
@@ -218,15 +224,17 @@ jobs:
         run: |
           # TODO: Use smart range (last stable if stable, last any if beta)
           ./scripts/build_changelog.py --range v0.12.0b2...HEAD
+          # TODO: Move rename build_changelog and move into there
+          mv changelog.md release_notes.md
       - name: Upload release notes
         uses: actions/upload-artifact@v3
         with:
-          name: changelog
-          path: changelog.md
+          name: release_notes
+          path: release_notes.md
 
   release:
-    needs: [build, release_notes]
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build, release-notes]
+    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
     runs-on: ubuntu-latest
     steps:
       # Will download all artifacts to path
@@ -235,10 +243,21 @@ jobs:
         with:
           path: dist
 
-      # TODO: Build and include release notes
-      # TODO: Publish as pre-release if tag is a rc/beta/alpha ("unclean" version)
-      # TODO: Publish as draft if tag isn't a valid version (v.*)
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: path/to/artifact
+
+      # detect if version tag is stable/beta
+      - uses: nowsprinting/check-version-format-action@v2
+        id: version
+        with:
+          prefix: 'v'
+
+      # create a release
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/activitywatch-*.*
+          draft: true
+          files: dist/*/activitywatch-*.*
+          body_path: dist/release_notes/release_notes.md
+          prerelease: ${{ !steps.versions.outputs.is_stable }}
