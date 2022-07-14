@@ -66,6 +66,7 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python_version }}.9
 
     - name: Set up Node
+      if: ${{ !matrix.skip_webui }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node_version }}
@@ -86,6 +87,7 @@ jobs:
 
     - uses: actions/cache@v1
       name: Cache npm
+      if: ${{ !matrix.skip_webui }}
       env:
         cache-name: node
       with:
