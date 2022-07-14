@@ -9,6 +9,7 @@ Manual actions needed to clean up for changelog:
 
 import shlex
 import re
+import argparse
 from typing import Optional, Tuple, List
 from subprocess import run as _run, STDOUT, PIPE
 from dataclasses import dataclass
@@ -99,7 +100,7 @@ def wrap_details(title, body, wraplines=5):
     out = f"\n\n### {title}"
     if body.count("\n") > wraplines:
         out += "\n<details><summary>Click to expand</summary>"
-    out += f"\n<p>{body}\n</p>\n"
+    out += f"\n<p>\n\n{body.strip()}\n\n</p>\n"
     if body.count("\n") > wraplines:
         out += "</details>"
     return out
@@ -140,7 +141,7 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
             if "Misc" in name or "Fixes" in name:
                 out += wrap_details(title, entries)
             else:
-                out += f"\n\n#### {title}"
+                out += f"\n\n### {title}"
                 out += entries
 
     # NOTE: For now, these TODOs can be manually fixed for each changelog.
@@ -173,13 +174,33 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
 
 
 def build(filter_types=["build", "ci", "tests"]):
-    # prev_release = run("git describe --tags --abbrev=0").strip()
-    prev_release = "v0.11.0"
+    prev_release = run("git describe --tags --abbrev=0").strip()
     next_release = "master"
-    output = summary_repo(
-        ".", commitrange=f"{prev_release}...{next_release}", filter_types=filter_types
+
+    parser = argparse.ArgumentParser(description="Generate changelog from git history")
+    parser.add_argument(
+        "--range", default=f"{prev_release}...{next_release}", help="Git commit range"
     )
-    print(output)
+    parser.add_argument("--path", default=".", help="Path to git repo")
+    parser.add_argument(
+        "--output", default="changelog.md", help="Path to output changelog"
+    )
+    args = parser.parse_args()
+    args.range
+
+    output = summary_repo(".", commitrange=args.range, filter_types=filter_types)
+
+    output = f"""
+# Changelog
+
+Changes since {args.range.split('...', 1)[0]}
+
+{output}
+    """.strip()
+
+    with open(args.output, "w") as f:
+        f.write(output)
+    print(f"Wrote {len(output.splitlines())} lines to {args.output}")
 
 
 if __name__ == "__main__":
