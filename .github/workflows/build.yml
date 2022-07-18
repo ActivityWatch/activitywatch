@@ -231,10 +231,10 @@ jobs:
         run: |
           pip install requests
 
-      # TODO: Use smart range (last stable if stable, last any if beta)
       - name: Generate release notes
         run: |
-          ./scripts/build_changelog.py --range "v0.11.0...${{ steps.version.outputs.full }}"
+          LAST_RELEASE=`STABLE_ONLY=${{ steps.version.output.is_stable }} ./scripts/get_latest_release.sh`
+          ./scripts/build_changelog.py --range "$LAST_RELEASE...${{ steps.version.outputs.full }}"
 
       # TODO: Move rename build_changelog and move into there
       - name: Rename
