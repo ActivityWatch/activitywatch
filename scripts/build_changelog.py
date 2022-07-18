@@ -1,18 +1,40 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 """
 Script that outputs a changelog for the repository in the current directory and its submodules.
 
 Manual actions needed to clean up for changelog:
  - Reorder modules in a logical order (aw-webui, aw-server, aw-server-rust, aw-watcher-window, aw-watcher-afk, ...)
- - Add the "bundle repo" notice to the main ActivityWatch repo.
+ - Remove duplicate aw-webui entries
 """
 
 import shlex
 import re
 import argparse
-from typing import Optional, Tuple, List
+import os
+import logging
+from time import sleep
+from typing import Optional, Tuple, List, Dict
 from subprocess import run as _run, STDOUT, PIPE
 from dataclasses import dataclass
+from collections import defaultdict
+
+import requests
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# preferred repository order
+repo_order = [
+    "activitywatch",
+    "aw-server",
+    "aw-server-rust",
+    "aw-webui",
+    "aw-watcher-afk",
+    "aw-watcher-window",
+    "aw-qt",
+    "aw-core",
+    "aw-client",
+]
 
 
 class CommitMsg:
@@ -60,8 +82,8 @@ class Commit:
 
     @property
     def type(self) -> Optional[str]:
-        type, _ = self.parse_type() or (None, None)
-        return type
+        _type, _ = self.parse_type() or (None, None)
+        return _type
 
     @property
     def subtype(self) -> Optional[str]:
@@ -69,8 +91,8 @@ class Commit:
         return subtype
 
     def type_str(self) -> str:
-        type, subtype = self.parse_type() or (None, None)
-        return f"{type}" + (f"({subtype})" if subtype else "")
+        _type, subtype = self.parse_type() or (None, None)
+        return f"{_type}" + (f"({subtype})" if subtype else "")
 
     def format(self) -> str:
         commit_link = commit_linkify(self.id, self.repo) if self.id else ""
@@ -79,6 +101,7 @@ class Commit:
 
 
 def run(cmd, cwd=".") -> str:
+    logger.debug(f"Running in {cwd}: {cmd}")
     p = _run(shlex.split(cmd), stdout=PIPE, stderr=STDOUT, encoding="utf8", cwd=cwd)
     if p.returncode != 0:
         print(p.stdout)
@@ -106,6 +129,9 @@ def wrap_details(title, body, wraplines=5):
     return out
 
 
+contributor_emails = set()
+
+
 def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     if commitrange.endswith("0000000"):
         # Happens when a submodule has been removed
@@ -117,12 +143,20 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     fixes = ""
     misc = ""
 
-    summary_bundle = run(f"git log {commitrange} --oneline --no-decorate", cwd=path)
+    # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
+    summary_bundle = run(
+        f"git log {commitrange} --no-decorate --pretty=format:'%h%x09%an%x09%ae%x09%s'",
+        cwd=path,
+    )
     for line in summary_bundle.split("\n"):
         if line:
+            _id, _author, email, msg = line.split("\t")
+            # will add author email to contributor list
+            # the `contributor_emails` is global and collected later
+            contributor_emails.add(email)
             commit = Commit(
-                id=line.split(" ")[0],
-                msg=" ".join(line.split(" ")[1:]),
+                id=_id,
+                msg=msg,
                 repo=dirname,
             )
 
@@ -150,30 +184,79 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     summary_subrepos = run(
         f"git submodule summary {commitrange.split('...')[0]}", cwd=path
     )
-    for s in summary_subrepos.split("\n\n"):
-        lines = s.split("\n")
-        header = lines[0]
+    subrepos = {}
+    for header, *_ in [s.split("\n") for s in summary_subrepos.split("\n\n")]:
         if header.startswith("fatal: not a git repository"):
             # Happens when a submodule has been removed
             continue
         if header.strip():
-            out += "\n"
             if len(header.split(" ")) < 4:
                 # Submodule may have been deleted
                 continue
 
             _, name, commitrange, count = header.split(" ")
+            count = count.strip().lstrip("(").rstrip("):")
+            logger.info(
+                f"Found {name}, looking up range: {commitrange} ({count} commits)"
+            )
             name = name.strip(".").strip("/")
 
-            output = summary_repo(
+            subrepos[name] = summary_repo(
                 f"{path}/{name}", commitrange, filter_types=filter_types
             )
-            out += output
+
+    # pick subrepos in repo_order, and remove from dict
+    for name in repo_order:
+        if name in subrepos:
+            out += "\n"
+            out += subrepos[name]
+            logger.info(f"{name:12} length: \t{len(subrepos[name])}")
+            del subrepos[name]
+
+    # add remaining repos
+    for name, output in subrepos.items():
+        out += "\n"
+        out += output
 
     return out
 
 
-def build(filter_types=["build", "ci", "tests"]):
+# FIXME: Doesn't work, messy af, just gonna have to remove the aw-webui section by hand
+def remove_duplicates(s: List[str], minlen=10, only_sections=True) -> List[str]:
+    """
+    Removes the longest sequence of repeated elements (they don't have to be adjacent), if sequence if longer than `minlen`.
+    Preserves order of elements.
+    """
+    if len(s) < minlen:
+        return s
+    out = []
+    longest: List[str] = []
+    for i in range(len(s)):
+        if i == 0 or s[i] not in out:
+            # Not matching any previous line,
+            # so add longest and new line to output, and reset longest
+            if len(longest) < minlen:
+                out.extend(longest)
+            else:
+                duplicate = "\n".join(longest)
+                print(f"Removing duplicate '{duplicate[:80]}...'")
+            out.append(s[i])
+            longest = []
+        else:
+            # Matches a previous line, so add to longest
+            # If longest is empty and only_sections is True, check that the line is a section start
+            if only_sections:
+                if not longest and s[i].startswith("#"):
+                    longest.append(s[i])
+                else:
+                    out.append(s[i])
+            else:
+                longest.append(s[i])
+
+    return out
+
+
+def build(filter_types=["build", "ci", "tests", "test"]):
     prev_release = run("git describe --tags --abbrev=0").strip()
     next_release = "master"
 
@@ -186,21 +269,164 @@ def build(filter_types=["build", "ci", "tests"]):
         "--output", default="changelog.md", help="Path to output changelog"
     )
     args = parser.parse_args()
-    args.range
 
-    output = summary_repo(".", commitrange=args.range, filter_types=filter_types)
+    since, until = args.range.split("...")
+    tag = until
 
-    output = f"""
+    # provides a commit summary for the repo and subrepos, recursively looking up subrepos
+    # NOTE: this must be done *before* `get_all_contributors` is called,
+    #       as the latter relies on summary_repo looking up all users and storing in a global.
+    logger.info("Generating commit summary")
+    output_changelog = summary_repo(
+        ".", commitrange=args.range, filter_types=filter_types
+    )
+
+    output_changelog = f"""
 # Changelog
 
-Changes since {args.range.split('...', 1)[0]}
+Changes since {since}
 
-{output}
+{output_changelog}
     """.strip()
 
+    usernames = sorted(get_all_contributors())
+    output_contributors = f"""# Contributors
+
+Thanks to all the contributors to this release ❤️
+
+{', '.join(('@' + username for username in usernames))}"""
+
+    output = f"""# {tag}"""
+    output += "\n\n"
+    output += f"This is the release notes for version {tag} of ActivityWatch.".strip()
+    output += "\n\n"
+    output += """# Installation
+
+See the [getting started guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
+    """.strip()
+    output += "\n\n"
+    output += f"""# Downloads
+
+ - [**Windows**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
+ - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
+ - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
+ """.strip()
+    output += "\n\n"
+    output += output_contributors.strip() + "\n\n"
+    output += output_changelog.strip() + "\n\n"
+
+    output = output.replace("# activitywatch", "# activitywatch (bundle repo)")
     with open(args.output, "w") as f:
         f.write(output)
     print(f"Wrote {len(output.splitlines())} lines to {args.output}")
+
+
+def _resolve_email(email: str) -> Optional[str]:
+    if "users.noreply.github.com" in email:
+        username = email.split("@")[0]
+        if "+" in username:
+            username = username.split("+")[1]
+        # TODO: Verify username is valid using the GitHub API
+        print(f"Contributor: @{username}")
+        return username
+    else:
+        resp = None
+        backoff = 0
+        max_backoff = 2
+        while resp is None:
+            if backoff >= max_backoff:
+                logger.warning(f"Backed off {max_backoff} times, giving up")
+                break
+            try:
+                logger.info(f"Sending request for {email}")
+                _resp = requests.get(
+                    f"https://api.github.com/search/users?q={email}+in%3Aemail"
+                )
+                _resp.raise_for_status()
+                resp = _resp
+                backoff = 0
+            # if rate limit exceeded, back off
+            except requests.exceptions.RequestException as e:
+                if isinstance(e, requests.exceptions.HTTPError):
+                    if e.response.status_code == 403:
+                        logger.warning("Rate limit exceeded, backing off...")
+                        backoff += 1
+                        sleep(3)
+                        continue
+                else:
+                    raise e
+            finally:
+                # Just to respect API limits...
+                sleep(1)
+
+        if resp:
+            data = resp.json()
+            if data["total_count"] == 0:
+                logger.info(f"No match for email: {email}")
+            if data["total_count"] > 1:
+                logger.warning(f"Multiple matches for email: {email}")
+            if data["total_count"] >= 1:
+                username = data["items"][0]["login"]
+                logger.info(f"Contributor: @{username}  (by email: {email})")
+                return username
+    return None
+
+
+def get_all_contributors() -> set[str]:
+    # TODO: Merge with contributor-stats?
+    logger.info("Getting all contributors")
+
+    # We will commit this file, to act as a cache (preventing us from querying GitHub API every time)
+    filename = "scripts/changelog_contributors.csv"
+
+    # mapping from username to one or more emails
+    usernames: Dict[str, set] = defaultdict(set)
+
+    # some hardcoded ones, some that don't resolve...
+    usernames["erikbjare"] |= {"erik.bjareholt@gmail.com", "erik@bjareho.lt"}
+    usernames["iloveitaly"] |= {"iloveitaly@gmail.com"}
+    usernames["kewde"] |= {"kewde@particl.io"}
+    usernames["victorwinberg"] |= {"victor.m.winberg@gmail.com"}
+    usernames["NicoWeio"] |= {"nico.weio@gmail.com"}
+
+    # read existing contributors, to avoid extra calls to the GitHub API
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            s = f.read()
+        for line in s.split("\n"):
+            if not line:
+                continue
+            username, *emails = line.split("\t")
+            for email in emails:
+                usernames[username].add(email)
+        logger.info(f"Read {len(usernames)} contributors from {filename}")
+
+    resolved_emails = set(
+        email for email_set in usernames.values() for email in email_set
+    )
+    unresolved_emails = contributor_emails - resolved_emails
+    for email in unresolved_emails:
+        username_opt = _resolve_email(email)
+        if username_opt:
+            usernames[username_opt].add(email)
+
+    with open(filename, "w") as f:
+        for username, email_set in sorted(usernames.items()):
+            emails_str = "\t".join(sorted(email_set))
+            f.write(f"{username}\t{emails_str}")
+            f.write("\n")
+
+    logger.info(f"Wrote {len(usernames)} contributors to {filename}")
+
+    email_to_username = {
+        email: username for username, emails in usernames.items() for email in emails
+    }
+
+    return set(
+        email_to_username[email]
+        for email in contributor_emails
+        if email in email_to_username
+    )
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@ name: Build
 on:
   push:
     branches: [ master ]
+    tags:
+      - v*
   pull_request:
     branches: [ master ]
   #release:
@@ -22,7 +24,10 @@ jobs:
         os: [ubuntu-20.04, windows-latest, macOS-latest]
         python_version: [3.8]
         node_version: [16]
+        rust: [true]
+        skip_webui: [false]
         experimental: [false]
+
         #include:
         #  - os: ubuntu-latest
         #    python_version: 3.9
@@ -33,10 +38,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
-
-    # Needed for `git describe --tags --abbrev=0` to work (used for getting the latest version tag)
-    - name: Fetch full git history
-      run: git fetch --prune --unshallow --tags
+        fetch-depth: 0  # fetch all branches and tags
 
     # Only build in release mode on the master branch (longer build times)
     - name: Set RELEASE
@@ -61,11 +63,13 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python_version }}.9
 
     - name: Set up Node
+      if: ${{ !matrix.skip_webui }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node_version }}
 
     - name: Set up Rust nightly
+      if: ${{ matrix.rust }}
       uses: actions-rs/toolchain@v1
       id: toolchain
       with:
@@ -80,6 +84,7 @@ jobs:
 
     - uses: actions/cache@v1
       name: Cache npm
+      if: ${{ !matrix.skip_webui }}
       env:
         cache-name: node
       with:
@@ -90,7 +95,7 @@ jobs:
 
     - name: Cache cargo build
       uses: actions/cache@v1
-      if: runner.os != 'macOS'  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      if: ${{ matrix.rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
@@ -99,6 +104,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+
     - name: Install APT dependencies
       shell: bash
       if: "startsWith(runner.os, 'linux')"
@@ -136,13 +142,13 @@ jobs:
         python3 -m virtualenv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
-        make build
+        make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ !matrix.rust }}
 
     - name: Run tests
       shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
-        make test
+        make test SKIP_SERVER_RUST=${{ !matrix.rust }}
 
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
@@ -156,7 +162,7 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
-        make package
+        make package SKIP_SERVER_RUST=${{ !matrix.rust }}
 
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
@@ -193,8 +199,80 @@ jobs:
         CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
     - name: Upload packages
-      uses: actions/upload-artifact@v2-preview
+      uses: actions/upload-artifact@v3
       with:
         name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
 
+  release-notes:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0  # fetch all branches and tags
+
+      - uses: nowsprinting/check-version-format-action@v2
+        id: version
+        with:
+          prefix: 'v'
+
+      - name: Echo version
+        run: |
+          echo "${{ steps.version.outputs.full }} (stable: ${{ steps.version.outputs.is_stable }})"
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.10.5"
+
+      - name: Install deps
+        run: |
+          pip install requests
+
+      # TODO: Use smart range (last stable if stable, last any if beta)
+      - name: Generate release notes
+        run: |
+          ./scripts/build_changelog.py --range "v0.11.0...${{ steps.version.outputs.full }}"
+
+      # TODO: Move rename build_changelog and move into there
+      - name: Rename
+        run: |
+          mv changelog.md release_notes.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v3
+        with:
+          name: release_notes
+          path: release_notes.md
+
+  release:
+    needs: [build, release-notes]
+    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
+    runs-on: ubuntu-latest
+    steps:
+      # Will download all artifacts to path
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: dist
+
+      # detect if version tag is stable/beta
+      - uses: nowsprinting/check-version-format-action@v2
+        id: version
+        with:
+          prefix: 'v'
+
+      # create a release
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: dist/*/activitywatch-*.*
+          body_path: dist/release_notes/release_notes.md
+          prerelease: ${{ !steps.version.outputs.is_stable }}

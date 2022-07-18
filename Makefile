@@ -40,9 +40,11 @@ build:
 	make --directory=aw-watcher-afk build
 	make --directory=aw-watcher-window build
 	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
-ifndef SKIP_SERVER_RUST  # Skip building aw-server-rust if SKIP_SERVER_RUST is defined
-	echo 'Looking for rust...'
-	if (which cargo); then \
+ifeq ($(SKIP_SERVER_RUST),true)  # Skip building aw-server-rust if SKIP_SERVER_RUST is true
+	@echo "Skipping aw-server-rust build"
+else
+	@echo 'Looking for rust...'
+	@if (which cargo); then \
 		echo 'Rust found!'; \
 		make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI); \
 	else \
@@ -105,8 +107,12 @@ test:
 	make --directory=aw-core test
 	make --directory=aw-client test
 	make --directory=aw-server test
-	make --directory=aw-server-rust test
 	make --directory=aw-qt test
+ifeq ($(SKIP_SERVER_RUST),true)  # Skip testing aw-server-rust if SKIP_SERVER_RUST is true
+	@echo "Skipping aw-server-rust test"
+else
+	make --directory=aw-server-rust test
+endif
 
 test-integration:
 	# TODO: Move "integration tests" to aw-client
@@ -154,7 +160,9 @@ package:
 #
 	make --directory=aw-server package
 	cp -r aw-server/dist/aw-server dist/activitywatch
-ifndef SKIP_SERVER_RUST
+ifeq ($(SKIP_SERVER_RUST),true)
+	@echo "Skipping aw-server-rust package"
+else
 	make --directory=aw-server-rust package
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
