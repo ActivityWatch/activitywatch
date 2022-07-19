@@ -40,10 +40,12 @@ jobs:
         submodules: 'recursive'
         fetch-depth: 0  # fetch all branches and tags
 
-    # Only build in release mode on the master branch (longer build times)
+    # Build in release mode if: (longer build times)
+    #  - on a tag (release)
+    #  - on the master branch (nightly)
     - name: Set RELEASE
       run: |
-        echo "RELEASE=${{ github.ref_name == 'master' }}" >> $GITHUB_ENV
+        echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
     - name: Set up Python
       if: matrix.os != 'macOS-latest'
@@ -63,7 +65,7 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python_version }}.9
 
     - name: Set up Node
-      if: ${{ !matrix.skip_webui }}
+      if: ${{ !(matrix.skip_webui == 'true') }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node_version }}
@@ -84,7 +86,7 @@ jobs:
 
     - uses: actions/cache@v1
       name: Cache npm
-      if: ${{ !matrix.skip_webui }}
+      if: ${{ !(matrix.skip_webui == 'true') }}
       env:
         cache-name: node
       with:
@@ -95,7 +97,7 @@ jobs:
 
     - name: Cache cargo build
       uses: actions/cache@v1
-      if: ${{ matrix.rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      if: ${{ (matrix.rust == 'true') && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
@@ -142,13 +144,13 @@ jobs:
         python3 -m virtualenv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
-        make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ !matrix.rust }}
+        make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ !(matrix.rust == 'true') }}
 
     - name: Run tests
       shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
-        make test SKIP_SERVER_RUST=${{ !matrix.rust }}
+        make test SKIP_SERVER_RUST=${{ !(matrix.rust == 'true') }}
 
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
@@ -162,7 +164,7 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
-        make package SKIP_SERVER_RUST=${{ !matrix.rust }}
+        make package SKIP_SERVER_RUST=${{ !(matrix.rust == 'true') }}
 
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
