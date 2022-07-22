@@ -292,13 +292,17 @@ Changes since {since}
     usernames = sorted(get_all_contributors())
     output_contributors = f"""# Contributors
 
-Thanks to all the contributors to this release ❤️
+Thanks to all those who contributed to this release:
 
 {', '.join(('@' + username for username in usernames))}"""
 
+    # Header starts here
+    logger.info("Building final output")
     output = f"""# {tag}"""
     output += "\n\n"
-    output += f"This is the release notes for version {tag} of ActivityWatch.".strip()
+    output += f"These are the release notes for ActivityWatch version {tag}.".strip()
+    output += "\n\n"
+    output += "**New to ActivityWatch?** Check out the [website](https://activitywatch.net) and the [README](https://github.com/ActivityWatch/activitywatch/blob/master/README.md)."
     output += "\n\n"
     output += """# Installation
 
