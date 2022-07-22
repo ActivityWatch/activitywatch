@@ -24,7 +24,7 @@ jobs:
         os: [ubuntu-20.04, windows-latest, macOS-latest]
         python_version: [3.8]
         node_version: [16]
-        rust: [true]
+        skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
 
@@ -65,13 +65,13 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python_version }}.9
 
     - name: Set up Node
-      if: ${{ !(matrix.skip_webui == 'true') }}
+      if: ${{ !matrix.skip_webui }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node_version }}
 
     - name: Set up Rust nightly
-      if: ${{ matrix.rust }}
+      if: ${{ !matrix.skip_rust }}
       uses: actions-rs/toolchain@v1
       id: toolchain
       with:
@@ -86,7 +86,7 @@ jobs:
 
     - uses: actions/cache@v1
       name: Cache npm
-      if: ${{ !(matrix.skip_webui == 'true') }}
+      if: ${{ !matrix.skip_webui }}
       env:
         cache-name: node
       with:
@@ -97,7 +97,7 @@ jobs:
 
     - name: Cache cargo build
       uses: actions/cache@v1
-      if: ${{ (matrix.rust == 'true') && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
@@ -144,13 +144,13 @@ jobs:
         python3 -m virtualenv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
-        make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ !(matrix.rust == 'true') }}
+        make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
     - name: Run tests
       shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
-        make test SKIP_SERVER_RUST=${{ !(matrix.rust == 'true') }}
+        make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
@@ -164,7 +164,7 @@ jobs:
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
-        make package SKIP_SERVER_RUST=${{ !(matrix.rust == 'true') }}
+        make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
     - name: Package dmg
       if: startsWith(runner.os, 'macOS')
