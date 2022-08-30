@@ -1,0 +1,6 @@
+**/*.pyc
+.*cache
+**/node_modules
+aw-server-rust/target
+aw-android
+./other
