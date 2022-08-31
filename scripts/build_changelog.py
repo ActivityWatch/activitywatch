@@ -123,7 +123,7 @@ def wrap_details(title, body, wraplines=5):
     out = f"\n\n### {title}"
     if body.count("\n") > wraplines:
         out += "\n<details><summary>Click to expand</summary>"
-    out += f"\n<p>\n\n{body.strip()}\n\n</p>\n"
+    out += f"\n<p>\n\n{body.rstrip()}\n\n</p>\n"
     if body.count("\n") > wraplines:
         out += "</details>"
     return out
@@ -137,7 +137,7 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
         # Happens when a submodule has been removed
         return ""
     dirname = run("bash -c 'basename $(pwd)'", cwd=path).strip()
-    out = f"\n## {dirname}"
+    out = f"\n## 📦 {dirname}"
 
     feats = ""
     fixes = ""
@@ -289,10 +289,10 @@ Changes since {since}
 {output_changelog}
     """.strip()
 
-    usernames = sorted(get_all_contributors())
+    usernames = sorted(get_all_contributors(), key=str.casefold)
     output_contributors = f"""# Contributors
 
-Thanks to all those who contributed to this release:
+Thanks to everyone who contributed to this release:
 
 {', '.join(('@' + username for username in usernames))}"""
 
