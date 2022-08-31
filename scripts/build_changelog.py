@@ -16,7 +16,7 @@ from time import sleep
 from typing import Optional, Tuple, List, Dict
 from subprocess import run as _run, STDOUT, PIPE
 from dataclasses import dataclass
-from collections import defaultdict
+from collections import Collection, defaultdict
 
 import requests
 
@@ -289,7 +289,11 @@ Changes since {since}
 {output_changelog}
     """.strip()
 
+    # Would ideally sort by number of commits or something, but that's tricky
     usernames = sorted(get_all_contributors(), key=str.casefold)
+    twitter_handles = get_twitter_of_ghusers(usernames)
+    print(", ".join("@" + handle for handle in twitter_handles.values() if handle))
+
     output_contributors = f"""# Contributors
 
 Thanks to everyone who contributed to this release:
@@ -431,6 +435,22 @@ def get_all_contributors() -> set[str]:
         for email in contributor_emails
         if email in email_to_username
     )
+
+
+def get_twitter_of_ghusers(ghusers: Collection[str]):
+    logger.info("Getting twitter of GitHub usernames")
+    twitter = {}
+    for username in ghusers:
+        try:
+            resp = requests.get(f"https://api.github.com/users/{username}")
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logger.warning(f"Failed to get twitter of {username}: {e}")
+            continue
+
+        twitter[username] = data["twitter_username"]
+    return twitter
 
 
 if __name__ == "__main__":
