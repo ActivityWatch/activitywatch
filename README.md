@@ -91,7 +91,7 @@
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
 
-We've worked towards this goal by creating a application for safe storage of the data on the users local machine and as well as a set of watchers which record data such as:
+We've worked towards this goal by creating an application for safe storage of the data on the user's local machine and as well as a set of watchers which record data such as:
 
  - Currently active application and the title of its window
  - Currently active browser tab and its title and URL
@@ -117,7 +117,7 @@ Interested in building from source? [There's a guide for that too](https://docs.
 
 ## Is this yet another time tracker?
 
-Yes, but we found that most time trackers lack in one or more important features.
+Yes, but we found that most time trackers lack one or more important features.
 
 **Common dealbreakers:**
 
@@ -179,7 +179,7 @@ For a complete list of the things ActivityWatch can track, [see the page on *wat
 
 ## About this repository
 
-This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
+This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). Its primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
 
 ### Server
 
@@ -198,9 +198,9 @@ The webapp includes:
 
 ### Watchers
 
-ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and it's window title.
+ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and its window title.
 
-There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which tracks spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
+There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 
