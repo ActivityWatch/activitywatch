@@ -60,6 +60,7 @@ jobs:
         curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
         sudo installer -pkg python.pkg -target /
         echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
+        "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
       env:
         # Add the patch number to the Python version (for FTP download link)
         PYTHON_VERSION: ${{ matrix.python_version }}.9
