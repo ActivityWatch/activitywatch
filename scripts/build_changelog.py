@@ -16,7 +16,8 @@ from time import sleep
 from typing import Optional, Tuple, List, Dict
 from subprocess import run as _run, STDOUT, PIPE
 from dataclasses import dataclass
-from collections import Collection, defaultdict
+from collections import defaultdict
+from collections.abc import Collection
 
 import requests
 
