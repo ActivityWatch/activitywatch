@@ -17,7 +17,7 @@ python = "^3.8,<3.11"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
-pytest = "^6.0"
+pytest = "^7.0"
 pytest-cov = "*"
 pytest-benchmark = "*"
 pyinstaller = "^5.2"
