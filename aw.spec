@@ -81,6 +81,7 @@ aw_qt_a = Analysis(
     binaries=[(aw_server_rust_bin, ".")] if not skip_rust else [],
     datas=[
         (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
+        (aw_qt_location / "media", "aw_qt/media"),
     ]
     + ([(aw_server_rust_webui, "aw_server_rust/static")] if not skip_rust else []),
     hiddenimports=[],
@@ -130,7 +131,14 @@ aw_watcher_afk_a = Analysis(
 aw_watcher_window_a = Analysis(
     [aww_location / "aw_watcher_window/__main__.py"],
     pathex=[],
-    binaries=None,
+    binaries=[
+        (
+            aww_location / "aw_watcher_window/aw-watcher-window-macos",
+            "aw_watcher_window",
+        )
+    ]
+    if platform.system() == "Darwin"
+    else [],
     datas=[
         (aww_location / "aw_watcher_window/printAppStatus.jxa", "aw_watcher_window")
     ],
