@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, windows-latest, macOS-12]
-        python_version: [3.8]
+        python_version: [3.9]
         node_version: [16]
         skip_rust: [false]
         skip_webui: [false]
@@ -63,7 +63,7 @@ jobs:
         "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
       env:
         # Add the patch number to the Python version (for FTP download link)
-        PYTHON_VERSION: ${{ matrix.python_version }}.9
+        PYTHON_VERSION: ${{ matrix.python_version }}.13
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
