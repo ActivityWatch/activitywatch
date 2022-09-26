@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-latest, macOS-latest]
+        os: [ubuntu-20.04, windows-latest, macOS-12]
         python_version: [3.8]
         node_version: [16]
         skip_rust: [false]
@@ -48,14 +48,14 @@ jobs:
         echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
     - name: Set up Python
-      if: matrix.os != 'macOS-latest'
+      if: runner.os != 'macOS'
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
 
     # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
     - name: Set up Python for macOS
-      if: matrix.os == 'macOS-latest'
+      if: runner.os == 'macOS'
       run: |
         curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
         sudo installer -pkg python.pkg -target /
@@ -109,7 +109,7 @@ jobs:
 
     - name: Install APT dependencies
       shell: bash
-      if: "startsWith(runner.os, 'linux')"
+      if: runner.os == 'Linux'
       run: |
           sudo apt-get update
           # Unsure which of these are actually necessary...
@@ -154,7 +154,7 @@ jobs:
 
     # Don't run integration tests on Windows, doesn't work for some reason
     - name: Run integration tests
-      if: "!startsWith(runner.os, 'windows')"
+      if: runner.os != 'Windows'
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test-integration
@@ -167,7 +167,7 @@ jobs:
         make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
     - name: Package dmg
-      if: startsWith(runner.os, 'macOS')
+      if: runner.os == 'macOS'
       run: |
         # Load certificates
         # Only load key & sign if env vars for signing exists
