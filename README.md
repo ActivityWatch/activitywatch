@@ -71,7 +71,7 @@
 
 *Do you want to receive email updates on major announcements?*<br>
 ***[Signup for the newsletter](http://eepurl.com/cTU6QX)!***
-
+ 
 <details>
  <summary>Table of Contents</summary>
 
