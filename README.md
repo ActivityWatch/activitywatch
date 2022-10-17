@@ -33,11 +33,6 @@
 </p>
 
 <p align="center">
-  <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/budget-%2487%2Fmo%20from%2040%20supporters-orange.svg" />
-  </a>
-
-  <br>
 
   <a href="https://github.com/ActivityWatch/activitywatch/actions?query=branch%3Amaster">
     <img title="Build Status GitHub" src="https://github.com/ActivityWatch/activitywatch/workflows/Build/badge.svg?branch=master" />
@@ -59,6 +54,15 @@
   </a>
   <a href="https://discord.gg/vDskV9q">
     <img title="Discord" src="https://img.shields.io/discord/755040852727955476" />
+  </a>
+
+  <br>
+
+  <a href="https://activitywatch.net/donate/">
+    <img title="Donated" src="https://img.shields.io/badge/budget-%24201%2Fmo%20from%2040%20supporters-orange.svg" />
+  </a>
+  <a href="https://doi.org/10.5281/zenodo.4957165">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.4957165.svg" />
   </a>
 </p>
 
@@ -91,7 +95,7 @@
 
 The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
 
-We've worked towards this goal by creating a application for safe storage of the data on the users local machine and as well as a set of watchers which record data such as:
+We've worked towards this goal by creating an application for safe storage of the data on the user's local machine and as well as a set of watchers which record data such as:
 
  - Currently active application and the title of its window
  - Currently active browser tab and its title and URL
@@ -101,8 +105,10 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<span><img src="https://activitywatch.net/img/screenshot-v0.9.3-activity.png"   width="100%"></span>
-<span><img src="https://activitywatch.net/img/screenshot-v0.8.0b9-timeline.png" width="100%"></span>
+<span><img src="https://activitywatch.net/img/screenshots/screenshot-v0.9.3-activity.png"   width="45%"></span>
+<span><img src="https://activitywatch.net/img/screenshots/screenshot-v0.8.0b9-timeline.png" width="50%"></span>
+
+You can find more (and newer) screenshots on [the website](https://activitywatch.net/screenshots/).
 
 
 ## Installation & Usage
@@ -115,7 +121,7 @@ Interested in building from source? [There's a guide for that too](https://docs.
 
 ## Is this yet another time tracker?
 
-Yes, but we found that most time trackers lack in one or more important features.
+Yes, but we found that most time trackers lack one or more important features.
 
 **Common dealbreakers:**
 
@@ -177,7 +183,7 @@ For a complete list of the things ActivityWatch can track, [see the page on *wat
 
 ## About this repository
 
-This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). It's primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
+This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). Its primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
 
 ### Server
 
@@ -196,14 +202,18 @@ The webapp includes:
 
 ### Watchers
 
-ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and it's window title.
+ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and its window title.
 
-There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which tracks spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
+There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 
  - `aw-core` - core library, provides no runnable modules
  - `aw-client` - client library, useful when writing watchers
+
+### Folder structure
+
+<span><img src="https://raw.githubusercontent.com/ActivityWatch/activitywatch/master/diagram.svg" width="60%"></span>
 
 ## Contributing
 

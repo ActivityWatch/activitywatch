@@ -4,10 +4,12 @@
 import os
 import platform
 import subprocess
-import aw_core
-import flask_restx
 import shlex
 from pathlib import Path
+
+import flask_restx
+
+import aw_core
 
 current_release = subprocess.run(
     shlex.split("git describe --tags --abbrev=0"),
@@ -18,8 +20,8 @@ current_release = subprocess.run(
 print("bundling activitywatch version " + current_release)
 
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
-codesign_identity = os.environ.get("APPLE_PERSONALID")
-if codesign_identity is None:
+codesign_identity = os.environ.get("APPLE_PERSONALID", "").strip()
+if not codesign_identity:
     print("Environment variable APPLE_PERSONALID not set. Releases won't be signed.")
 
 aw_core_path = Path(os.path.dirname(aw_core.__file__))
@@ -49,6 +51,11 @@ if platform.system() == "Windows":
     pyqt_path = os.path.dirname(PyQt5.__file__)
     extra_pathex.append(pyqt_path + "\\Qt\\bin")
 
+skip_rust = False
+if not aw_server_rust_bin.exists():
+    skip_rust = True
+    print("Skipping Rust build because aw-server-rust binary not found.")
+
 aw_server_a = Analysis(
     ["aw-server/__main__.py"],
     pathex=[],
@@ -71,11 +78,12 @@ aw_server_a = Analysis(
 aw_qt_a = Analysis(
     [aw_qt_location / "aw_qt/__main__.py"],
     pathex=[] + extra_pathex,
-    binaries=[(aw_server_rust_bin, ".")],
+    binaries=[(aw_server_rust_bin, ".")] if not skip_rust else [],
     datas=[
         (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
-        (aw_server_rust_webui, "aw_server_rust/static"),
-    ],
+        (aw_qt_location / "media", "aw_qt/media"),
+    ]
+    + ([(aw_server_rust_webui, "aw_server_rust/static")] if not skip_rust else []),
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
@@ -123,7 +131,14 @@ aw_watcher_afk_a = Analysis(
 aw_watcher_window_a = Analysis(
     [aww_location / "aw_watcher_window/__main__.py"],
     pathex=[],
-    binaries=None,
+    binaries=[
+        (
+            aww_location / "aw_watcher_window/aw-watcher-window-macos",
+            "aw_watcher_window",
+        )
+    ]
+    if platform.system() == "Darwin"
+    else [],
     datas=[
         (aww_location / "aw_watcher_window/printAppStatus.jxa", "aw_watcher_window")
     ],

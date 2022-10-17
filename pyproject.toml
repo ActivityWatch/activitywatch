@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "activitywatch"
 version = "0.12.0"
-description = ""
-authors = ["Erik Bjäreholt <erik@bjareho.lt>"]
+description = "The free and open-source automated time tracker. Cross-platform, extensible, privacy-focused."
+authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho.lt>"]
 license = "MPL-2.0"
 
 [tool.poetry.dependencies]
@@ -17,14 +17,14 @@ python = "^3.8,<3.11"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
-pytest = "^6.0"
+pytest = "^7.0"
 pytest-cov = "*"
 pytest-benchmark = "*"
-pyinstaller = "^4.7"
+pyinstaller = "^5.2"
 #pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
-psutil = "^5.7.0"
-pywin32-ctypes = {version = "^0.2.0", platform = "win32"}
-pefile = {version = "^2019.4.18", platform = "win32"}
+psutil = "*"
+pywin32-ctypes = {version = "*", platform = "win32"}
+pefile = {version = "*", platform = "win32"}
 
 # Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
 #setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
