@@ -8,9 +8,10 @@ How to Contribute
  - [Getting started](#getting-started)
  - [How you can help](#how-you-can-help)
  - [Filing an issue](#filing-an-issue)
- - [Getting paid](#getting-paid)
  - [Code of Conduct](#code-of-conduct)
  - [Commit message guidelines](#commit-message-guidelines)
+ - [Getting paid](#getting-paid)
+ - [Claiming GitPOAP](#claiming-gitpoap)
  - [Questions?](#questions)
 
 
@@ -56,17 +57,6 @@ Thanks for wanting to help out with squashing bugs and more by filing an issue.
 When filing an issue, it's important to use an [issue template](https://github.com/ActivityWatch/activitywatch/issues/new/choose). This ensures that we have the information we need to understand the issue, so we don't have to ask for tons of follow-up questions, so we can fix the issue faster!
 
 
-## Getting paid
-
-We're experimenting with paying our contributors using funds we've raised from donations and grants. 
-
-The idea is you track your work with ActivityWatch (and ensure it gets categorized correctly), then you modify the [working_hours.py](https://github.com/ActivityWatch/aw-client/blob/master/examples/working_hours.py) script to use your category rule and generate a report of time worked per day and the matching events.
-
-If you've contributed to ActivityWatch (for a minimum of 10h) and want to get paid for your time, contact us!
-
-You can read more about this experiment on [the forum](https://forum.activitywatch.net/t/getting-paid-with-activitywatch/986) and in [the issues](https://github.com/ActivityWatch/activitywatch/issues/458).
-
-
 ## Code of Conduct
 
 We have a Code of Conduct that we expect all contributors to follow, you can find it in [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
@@ -97,6 +87,28 @@ Examples:
 ```
 
 This guideline was adopted in [issue #391](https://github.com/ActivityWatch/activitywatch/issues/391).
+
+
+## Getting paid
+
+We're experimenting with paying our contributors using funds we've raised from donations and grants. 
+
+The idea is you track your work with ActivityWatch (and ensure it gets categorized correctly), then you modify the [working_hours.py](https://github.com/ActivityWatch/aw-client/blob/master/examples/working_hours.py) script to use your category rule and generate a report of time worked per day and the matching events.
+
+If you've contributed to ActivityWatch (for a minimum of 10h) and want to get paid for your time, contact us!
+
+You can read more about this experiment on [the forum](https://forum.activitywatch.net/t/getting-paid-with-activitywatch/986) and in [the issues](https://github.com/ActivityWatch/activitywatch/issues/458).
+
+
+## Claiming GitPOAP
+
+If you've contributed a commit to ActivityWatch, you are eligible to claim a GitPOAP on Ethereum. You can read about it here: https://twitter.com/ActivityWatchIt/status/1584454595467612160
+
+The one for 2022 looks like this:
+
+<a href="https://www.gitpoap.io/gh/ActivityWatch/activitywatch">
+  <img src="https://assets.poap.xyz/gitpoap-2022-activitywatch-contributor-2022-logo-1663695908409.png" width="256px">
+</a>
 
 
 ## Questions?
