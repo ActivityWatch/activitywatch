@@ -5,7 +5,7 @@
   <br>
   All in a secure way where <i>you control the data</i>.
 </p>
-
+ 
 <p align="center">
 
   <a href="https://twitter.com/ActivityWatchIt">
