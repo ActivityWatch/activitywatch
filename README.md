@@ -16,7 +16,7 @@
   </a>
 
   <br>
-
+ 
   <b>
     <a href="https://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
