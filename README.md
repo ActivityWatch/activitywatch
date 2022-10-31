@@ -15,7 +15,7 @@
     <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
   </a>
 
-  <br>
+  <br> 
  
   <b> 
     <a href="https://activitywatch.net/">Website</a>
