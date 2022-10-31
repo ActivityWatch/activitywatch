@@ -4,7 +4,7 @@
   <b>Records what you do</b> so that you can <i>know how you've spent your time</i>.
   <br> 
   All in a secure way where <i>you control the data</i>.
-</p>
+</p> 
  
 <p align="center">
 
