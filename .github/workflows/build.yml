@@ -186,7 +186,7 @@ jobs:
 
           # Run prechecks
           brew install akeru-inc/tap/xcnotary
-          #xcnotary precheck dist/ActivityWatch.app
+          xcnotary precheck dist/ActivityWatch.app
           xcnotary precheck dist/ActivityWatch.dmg
 
           # Notarize
