@@ -186,11 +186,11 @@ jobs:
 
           # Run prechecks
           brew install akeru-inc/tap/xcnotary
-          xcnotary precheck dist/ActivityWatch.app
+          #xcnotary precheck dist/ActivityWatch.app
           xcnotary precheck dist/ActivityWatch.dmg
 
           # Notarize
-          #make dist/notarize
+          make dist/notarize
         fi
         mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
       env:
