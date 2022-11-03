@@ -32,7 +32,8 @@ Description: Open source time tracker
 
 echo $debianControlFile > $PKGDIR/DEBIAN/control
 # The entire opt directory (should) consist of dist/activitywatch/*
-cp -r dist/activitywatch/* $PKGDIR/opt/
+mkdir $PKGDIR/opt/activitywatch/
+cp -r dist/activitywatch/* $PKGDIR/opt/activitywatch/
 
 # Hard link duplicated libraries
 # (I have no idea what this is for)
@@ -41,7 +42,6 @@ jdupes -L -r -S -Xsize-:1K $PKGDIR/opt/
 sudo chown -R root:root $PKGDIR
 
 # Prepare the .desktop file
-sudo cp aw-qt/resources/aw-qt.desktop $PKGDIR/opt/activitywatch/aw-qt.desktop
 sudo sed -i 's!Exec=aw-qt!Exec=/opt/activitywatch/aw-qt!' $PKGDIR/opt/activitywatch/aw-qt.desktop
 sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/etc/xdg/autostart
 
