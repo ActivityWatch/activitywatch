@@ -32,8 +32,8 @@ Description: Open source time tracker
 
 echo $debianControlFile > $PKGDIR/DEBIAN/control
 # The entire opt directory (should) consist of dist/activitywatch/*
-mkdir $PKGDIR/opt/activitywatch/
-cp -r dist/activitywatch/* $PKGDIR/opt/activitywatch/
+
+cp -r dist/activitywatch/ $PKGDIR/opt/
 
 # Hard link duplicated libraries
 # (I have no idea what this is for)
