@@ -201,6 +201,11 @@ jobs:
         CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
         CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
+    - name: Package deb
+      if: runner.os == 'ubuntu-latest'
+      run: |
+        ./scripts/ci/package-deb.sh
+
     - name: Upload packages
       uses: actions/upload-artifact@v3
       with:
