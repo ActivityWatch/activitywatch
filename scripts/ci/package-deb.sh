@@ -1,4 +1,6 @@
 set -e
+# Verbose commands for CI verification
+set -x
 
 VERSION=$(scripts/package/getversion.sh)
 # Slice off the "v" from the tag, which is probably guaranteed
@@ -17,7 +19,7 @@ mkdir -p $PKGDIR/DEBIAN
 mkdir -p $PKGDIR/opt
 mkdir -p $PKGDIR/etc/xdg/autostart
 
-# DEBIAN/control metafile. Could make this an explicit file, but 
+# DEBIAN/control metafile. Could make this an explicit file, but
 # keeping it here opens for shoving VERSION_NUM directly in as a
 # variable.
 # It's a convenience. Nothing more, nothing less.
@@ -31,6 +33,8 @@ Description: Open source time tracker
  https://github.com/ActivityWatch/activitywatch"
 
 echo $debianControlFile > $PKGDIR/DEBIAN/control
+# Verify the file content
+cat $PKGDIR/DEBIAN/control
 # The entire opt directory (should) consist of dist/activitywatch/*
 
 cp -r dist/activitywatch/ $PKGDIR/opt/
