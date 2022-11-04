@@ -24,7 +24,7 @@ mkdir -p $PKGDIR/etc/xdg/autostart
 # While storing the control file in a variable here, dumping it in a file is so unnecessarily
 # complicated that it's easier to just dump move and sed.
 cp ./scripts/package/deb/control $PKGDIR/DEBIAN/control
-sed -i "s/SCRIPT_VERSION_HERE/${VERSION}" $PKGDIR/DEBIAN/control
+sed -i "s/SCRIPT_VERSION_HERE/${VERSION}/" $PKGDIR/DEBIAN/control
 
 # Verify the file content
 cat $PKGDIR/DEBIAN/control
