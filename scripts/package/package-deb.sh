@@ -25,13 +25,13 @@ mkdir -p $PKGDIR/etc/xdg/autostart
 # keeping it here opens for shoving VERSION_NUM directly in as a
 # variable.
 # It's a convenience. Nothing more, nothing less.
-debianControlFile="Package: activitywatch
-Architecture: amd64
-Maintainer: Erik Bjäreholt <erik@bjareho.lt>
-Depends:
-Priority: optional
-Version: ${VERSION_NUM}
-Description: Open source time tracker
+debianControlFile="Package: activitywatch\n
+Architecture: amd64\n
+Maintainer: Erik Bjäreholt <erik@bjareho.lt>\n
+Depends:\n
+Priority: optional\n
+Version: ${VERSION_NUM}\n
+Description: Open source time tracker\n
  https://github.com/ActivityWatch/activitywatch"
 
 echo $debianControlFile > $PKGDIR/DEBIAN/control
