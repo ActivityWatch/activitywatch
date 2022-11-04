@@ -43,3 +43,4 @@ sudo sed -i 's!Exec=aw-qt!Exec=/opt/activitywatch/aw-qt!' $PKGDIR/opt/activitywa
 sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/etc/xdg/autostart
 
 dpkg-deb --build $PKGDIR
+mv activitywatch_${VERSION_NUM} dist/activitywatch-${VERSION}-linux-x86_64.deb
