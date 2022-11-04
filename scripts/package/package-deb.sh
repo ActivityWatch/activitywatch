@@ -34,7 +34,7 @@ Version: ${VERSION_NUM}\n
 Description: Open source time tracker\n
  https://github.com/ActivityWatch/activitywatch"
 
-echo $debianControlFile > $PKGDIR/DEBIAN/control
+echo -e $debianControlFile > $PKGDIR/DEBIAN/control
 # Verify the file content
 cat $PKGDIR/DEBIAN/control
 # The entire opt directory (should) consist of dist/activitywatch/*
