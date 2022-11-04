@@ -205,7 +205,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         # The entire process is deferred to a shell file for consistency.
-        ./scripts/ci/package-deb.sh
+        ./scripts/package/package-deb.sh
 
     - name: Upload packages
       uses: actions/upload-artifact@v3

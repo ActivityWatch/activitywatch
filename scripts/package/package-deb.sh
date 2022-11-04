@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 set -e
 # Verbose commands for CI verification
 set -x
