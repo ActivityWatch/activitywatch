@@ -21,20 +21,11 @@ mkdir -p $PKGDIR/DEBIAN
 mkdir -p $PKGDIR/opt
 mkdir -p $PKGDIR/etc/xdg/autostart
 
-# DEBIAN/control metafile. Could make this an explicit file, but
-# keeping it here opens for shoving VERSION_NUM directly in as a
-# variable.
-# It's a convenience. Nothing more, nothing less.
-debianControlFile="Package: activitywatch\n
-Architecture: amd64\n
-Maintainer: Erik Bjäreholt <erik@bjareho.lt>\n
-Depends:\n
-Priority: optional\n
-Version: ${VERSION_NUM}\n
-Description: Open source time tracker\n
- https://github.com/ActivityWatch/activitywatch"
+# While storing the control file in a variable here, dumping it in a file is so unnecessarily
+# complicated that it's easier to just dump move and sed.
+cp ./scripts/package/deb/control $PKGDIR/DEBIAN/control
+sed -i "s/SCRIPT_VERSION_HERE/${VERSION}" $PKGDIR/DEBIAN/control
 
-echo -e $debianControlFile > $PKGDIR/DEBIAN/control
 # Verify the file content
 cat $PKGDIR/DEBIAN/control
 # The entire opt directory (should) consist of dist/activitywatch/*
