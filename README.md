@@ -202,9 +202,12 @@ The webapp includes:
 
 ### Watchers
 
-ActivityWatch comes pre-installed with two watchers, `aw-watcher-afk` which logs the presence/absence of user activity from keyboard and mouse input and `aw-watcher-window` which logs the currently active application and its window title.
+ActivityWatch comes pre-installed with two watchers:
 
-There are lots of other watchers for ActivityWatch which can track more types of activity such as `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
+ - `aw-watcher-afk` tracks the user active/inactive state from keyboard and mouse input
+ - `aw-watcher-window` tracks the currently active application and its window title.
+
+There are lots of other watchers for ActivityWatch which can track more types of activity. Like `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding, and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 
