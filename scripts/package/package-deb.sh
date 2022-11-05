@@ -13,7 +13,7 @@ echo $VERSION_NUM
 PKGDIR="activitywatch_$VERSION_NUM"
 
 # Package tools
-sudo apt install sed jdupes wget
+sudo apt-get install sed jdupes wget
 
 if [ -d "PKGDIR" ]; then
     sudo rm -rf $PKGDIR
