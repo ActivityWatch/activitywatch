@@ -115,6 +115,7 @@ jobs:
           sudo apt-get update
           # Unsure which of these are actually necessary...
           sudo apt-get install -y \
+            appstream \
             qt5-default \
             qtwayland5 \
             libqt5x11extras5 \
@@ -200,6 +201,24 @@ jobs:
         APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
         CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
         CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
+    
+    - name: Package AppImage
+      if: startsWith(runner.os, 'linux')
+      run: |
+        ZIP_FILE=`ls ./dist/ -1 |grep zip`
+        unzip ./dist/$ZIP_FILE
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
+        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x appimagetool-x86_64.AppImage
+        echo '#!/bin/sh
+        DIR="$(dirname "$(readlink -f "${0}")")"
+        "${DIR}"/aw-qt'>activitywatch/AppRun
+        chmod a+x ./activitywatch/AppRun
+        ./linuxdeploy-x86_64.AppImage --appdir activitywatch --executable ./activitywatch/aw-qt --output appimage --desktop-file ./activitywatch/aw-qt.desktop --icon-file ./activitywatch/aw-server-rust/static/static/logo.png --icon-filename activitywatch
+        APPIMAGE_FILE=`ls -1 |grep AppImage|grep -i ActivityWatch`
+        cp -v $APPIMAGE_FILE ./dist/activitywatch-linux-x86_64.AppImage
+
 
     - name: Upload packages
       uses: actions/upload-artifact@v3
