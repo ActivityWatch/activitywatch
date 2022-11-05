@@ -12,7 +12,7 @@
     <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
   </a>
   <a href="https://github.com/ActivityWatch/activitywatch">
-    <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
+    <img title="Star on GitHub"  src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
   </a>
 
   <br>  
