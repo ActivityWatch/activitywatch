@@ -220,6 +220,12 @@ jobs:
         cp -v $APPIMAGE_FILE ./dist/activitywatch-linux-x86_64.AppImage
 
 
+    - name: Package deb
+      if: runner.os == 'Linux'
+      run: |
+        # The entire process is deferred to a shell file for consistency.
+        ./scripts/package/package-deb.sh
+
     - name: Upload packages
       uses: actions/upload-artifact@v3
       with:
