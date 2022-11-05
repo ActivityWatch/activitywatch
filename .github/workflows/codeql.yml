@@ -20,11 +20,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ python ]
+        language: [ python, javascript ]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+            submodules: recursive
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
