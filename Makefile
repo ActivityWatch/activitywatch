@@ -40,11 +40,9 @@ build:
 	make --directory=aw-watcher-afk build
 	make --directory=aw-watcher-window build
 	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
-ifeq ($(SKIP_SERVER_RUST),true)  # Skip building aw-server-rust if SKIP_SERVER_RUST is true
-	@echo "Skipping aw-server-rust build"
-else
-	@echo 'Looking for rust...'
-	@if (which cargo); then \
+ifndef SKIP_SERVER_RUST  # Skip building aw-server-rust if SKIP_SERVER_RUST is defined
+	echo 'Looking for rust...'
+	if (which cargo); then \
 		echo 'Rust found!'; \
 		make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI); \
 	else \
@@ -107,12 +105,8 @@ test:
 	make --directory=aw-core test
 	make --directory=aw-client test
 	make --directory=aw-server test
-	make --directory=aw-qt test
-ifeq ($(SKIP_SERVER_RUST),true)  # Skip testing aw-server-rust if SKIP_SERVER_RUST is true
-	@echo "Skipping aw-server-rust test"
-else
 	make --directory=aw-server-rust test
-endif
+	make --directory=aw-qt test
 
 test-integration:
 	# TODO: Move "integration tests" to aw-client
@@ -139,7 +133,7 @@ aw-qt/media/logo/logo.icns:
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
-	pyinstaller --clean --noconfirm aw.spec
+	pyinstaller --clean --noconfirm --windowed aw.spec
 
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	# NOTE: This does not codesign the dmg, that is done in the CI config
@@ -160,9 +154,7 @@ package:
 #
 	make --directory=aw-server package
 	cp -r aw-server/dist/aw-server dist/activitywatch
-ifeq ($(SKIP_SERVER_RUST),true)
-	@echo "Skipping aw-server-rust package"
-else
+ifndef SKIP_SERVER_RUST
 	make --directory=aw-server-rust package
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
@@ -173,11 +165,11 @@ endif
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
 # These should be provided by the distro itself
-# Had to be removed due to otherwise causing the error:
+# Had to be removed due to otherwise causing the error: 
 #   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
 	rm -f dist/activitywatch/libfontconfig.so.1
 	rm -f dist/activitywatch/libfreetype.so.6
-# Remove unnecessary files
+# Remove unecessary files
 	rm -rf dist/activitywatch/pytz
 # Builds zips and setups
 	bash scripts/package/package-all.sh

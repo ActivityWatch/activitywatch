@@ -1,0 +1,156 @@
+#
+# Based on: https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
+#
+
+environment:
+  global:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\scripts\\ci\\run_with_env.cmd"
+
+  matrix:
+    # Pre-installed Python versions, which Appveyor may upgrade to
+    # a later point release.
+    # See: http://www.appveyor.com/docs/installed-software#python
+
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "64"
+
+install:
+  # Enable long paths
+  - "./scripts/ci/enable_long_paths.bat"
+
+  # Clone submodules
+  - "git submodule update --init --recursive"
+
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          throw "There are newer queued builds for this pull request, failing early." }
+  - ECHO "Filesystem root:"
+  - ps: "ls \"C:/\""
+
+  - ECHO "Installed SDKs:"
+  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+
+  # Install Python (from the official .msi of http://python.org) and pip when
+  # not already installed.
+  - ps: if (-not(Test-Path($env:PYTHON))) { & scripts\ci\install_python.ps1 }
+
+  # Install Rust nightly and add it to PATH
+  - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - rustup-init -yv --default-toolchain nightly
+  - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+  - rustc -vV
+  - cargo -vV
+
+  # Required in order to get `make` to work
+  - "copy C:\\MinGW\\bin\\mingw32-make.exe C:\\MinGW\\bin\\make.exe"
+
+  # Use MinGW
+  - "SET PATH=C:\\MinGW\\bin;%PATH%"
+
+  # Use cygwin stuff for make, bash, etc.
+  # NOTE: Don't, better to use MinGW tooling
+  #- "SET PATH=C:\\cygwin\\bin;%PATH%"
+
+  # Prepend newly installed Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
+  # pyrcc5.exe can be found here:
+  #   C:\Users\erb\AppData\Roaming\Python\Python35\Scripts\pyrcc5.exe
+  - "SET PATH=%PYTHON%;%PATH%"
+  - "SET PATH=%PYTHON%\\Scripts;%PATH%"
+
+  # Create bin overrides dir and add it to path
+  - ps: "mkdir C:/bin-override/"
+  - "SET PATH=C:\\bin-override\\;%PATH%"
+
+  # FIXME: Created due to issue #51 (mypy issues on Appveyor)
+  - "copy .\\scripts\\nop.sh C:\\bin-override\\mypy"
+
+  # For debugging: Echo the path variable, one path per line
+  - ps: "$env:path.split(\";\")"
+  - ECHO "%PYTHON%"
+
+  # Check that we have the expected version and architecture for Python
+  - "%CMD_IN_ENV% python --version"
+  - "%CMD_IN_ENV% python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # Install node and npm
+  - ps: "./scripts/ci/install_node.ps1"
+  - "SET PATH=C:\\Program Files\\nodejs;%PATH%"
+
+  # Upgrade to the latest version of pip to avoid it displaying warnings
+  # about it being out of date.
+  # Disabled for same reason as specified here:
+  #  - https://github.com/ActivityWatch/aw-core/commit/e19ce9ea10912cf105859f97b8a7836dadd0fe58#diff-180360612c6b8c4ed830919bbb4dd459
+  - "%CMD_IN_ENV% python -m pip install --upgrade pip"
+
+  # Install poetry and virtualenv
+  - "%CMD_IN_ENV% python -m pip install --upgrade poetry virtualenv"
+
+  # Install innosetup
+  - "choco install innosetup"
+
+  # Create build virtualenv
+  - "virtualenv --clear venv"
+  - "venv\\Scripts\\activate.bat"
+
+  # Testing dependencies
+  - "%CMD_IN_ENV% poetry install"
+
+  # Build dependencies
+  # Don't install as user, since that puts the pyrcc5 script in a user-specific place
+  - "%CMD_IN_ENV% pip install --upgrade pyqt5"
+  - "%CMD_IN_ENV% powershell scripts\\ci\\install_pyhook.ps1"
+
+build_script:
+  # Build the compiled extension
+  - "%CMD_IN_ENV% make build"
+  - "%CMD_IN_ENV% make install"
+  #- "%CMD_IN_ENV% python setup.py build"
+
+test_script:
+  # Run the project tests
+  - "%CMD_IN_ENV% make test"
+  # Freezes in appveyor for whatever reason
+  # See: https://github.com/ActivityWatch/activitywatch/pull/56
+  #- "%CMD_IN_ENV% make test-integration"
+
+after_test:
+  # If tests are successful, create binary packages for the project.
+  #- "%CMD_IN_ENV% python setup.py bdist_wheel"
+  #- "%CMD_IN_ENV% python setup.py bdist_wininst"
+  #- "%CMD_IN_ENV% python setup.py bdist_msi"
+  #- ps: "ls dist"
+  - "%CMD_IN_ENV% poetry install"  # reinstall PyInstaller, because somehow its altgraph dependency gets uninstalled by poetry when installing previous packages
+  - "%CMD_IN_ENV% make package"
+
+artifacts:
+  # Archive the generated packages in the ci.appveyor.com build report.
+  - path: dist\*.zip
+  - path: dist\*.exe
+
+deploy:
+  # release: myproduct-v$(appveyor_build_version)  # optional
+  description: ''  # required to be non-null by the GitHub releases API
+  provider: GitHub
+  auth_token:
+    secure: fI8Ar/HiYNXcmeXQct/yzkKeEF4MHdYgP5/XL7uHKNs4lhPyUmT6GSltcLwkqk45
+  artifact: /.*\.(zip|exe)/
+  draft: true
+  prerelease: true
+  on:
+    appveyor_repo_tag: true        # deploy on tag push only
+    # branch: master                 # release from master branch only
+
+#on_success:
+#  - TODO: upload the content of dist/*.whl to a public wheelhouse

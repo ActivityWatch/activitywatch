@@ -15,7 +15,6 @@ htmlcov
 # Python
 *venv*
 __pycache__
-.python-version
 
 # Misc
 .*cache
