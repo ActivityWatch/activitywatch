@@ -30,5 +30,5 @@ pefile = {version = "*", platform = "win32"}
 #setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
