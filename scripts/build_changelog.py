@@ -137,6 +137,10 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     if commitrange.endswith("0000000"):
         # Happens when a submodule has been removed
         return ""
+    if commitrange.startswith("0000000"):
+        # Happens when a submodule has been added
+        commitrange = ""  # no range = all commits
+
     dirname = run("bash -c 'basename $(pwd)'", cwd=path).strip()
     out = f"\n## 📦 {dirname}"
 
