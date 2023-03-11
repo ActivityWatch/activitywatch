@@ -35,7 +35,7 @@ jobs:
         #    experimental: true
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
         fetch-depth: 0  # fetch all branches and tags
@@ -49,7 +49,7 @@ jobs:
 
     - name: Set up Python
       if: runner.os != 'macOS'
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python_version }}
 
@@ -138,12 +138,12 @@ jobs:
         if [ "$RUNNER_OS" == "Windows" ]; then
           choco install innosetup
         fi
-        pip3 install poetry virtualenv
+        pip3 install poetry==1.3.2
 
     - name: Build
       shell: bash
       run: |
-        python3 -m virtualenv venv
+        python3 -m venv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
         make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
