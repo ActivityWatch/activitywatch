@@ -3,16 +3,18 @@
 # Script that fetches the previous release (if current commit is a tag),
 # or the latest release, if current commit is not a tag.
 
-# If not stable only, then we return either the latest prerelease, or if none, the latest stable release
-RE='(?<=[/])v[0-9\.]+(a|b|rc)[0-9]+$'
+# If stable only, then we return the latest stable release, 
+# else, we will return the latest release, either stable or prerelease.
+RE_STABLE='(?<=[/])v[0-9\.]+$'
+RE_INCL_PRERELEASE='(?<=[/])v[0-9\.]+(a|b|rc)?[0-9]+$'
 
 # Get tag for this commit, if any
 TAG=$(git describe --tags --exact-match 2>/dev/null)
 
+RE=$RE_INCL_PRERELEASE
 if [ -n "$STABLE_ONLY" ]; then
     if [ "$STABLE_ONLY" = "true" ]; then
-        # If stable only, then we only want to return the latest stable version
-        RE='(?<=[/])v[0-9\.]+$'
+        RE=$RE_STABLE
     fi
 fi
 ALL_TAGS=`git for-each-ref --sort=creatordate --format '%(refname)' refs/tags`
