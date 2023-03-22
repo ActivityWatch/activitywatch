@@ -1,12 +1,14 @@
 name: Dependabot Auto-merge
 
-on:
-  workflow_run:
-    types:
-      - completed
-    workflows:
-      # List all required workflow names here.
-      - Build
+# Disabled due to permissions error: https://github.com/ridedott/merge-me-action/issues/1581
+
+#on:
+#  workflow_run:
+#    types:
+#      - completed
+#    workflows:
+#      # List all required workflow names here.
+#      - Build
 
 permissions:
   contents: write
