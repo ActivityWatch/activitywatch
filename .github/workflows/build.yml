@@ -67,7 +67,7 @@ jobs:
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node_version }}
 
