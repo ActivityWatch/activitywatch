@@ -2,13 +2,13 @@ name: Dependabot Auto-merge
 
 # Disabled due to permissions error: https://github.com/ridedott/merge-me-action/issues/1581
 
-#on:
-#  workflow_run:
-#    types:
-#      - completed
-#    workflows:
-#      # List all required workflow names here.
-#      - Build
+on:
+  workflow_run:
+    types:
+      - completed
+    workflows:
+      # List all required workflow names here.
+      - Build
 
 permissions:
   contents: write
@@ -18,9 +18,10 @@ jobs:
   auto_merge:
     name: Auto-merge
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' && github.actor == 'dependabot[bot]'
+    # TODO: Needs custom GITHUB_TOKEN secret set to a personal access token (from @ActivityWatchBot)
+    if: secrets.AWBOT_GH_TOKEN && github.event.workflow_run.conclusion == 'success' && github.actor == 'dependabot[bot]'
 
     steps:
       - uses: ridedott/merge-me-action@v2
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AWBOT_GH_TOKEN }}
