@@ -85,7 +85,7 @@ jobs:
       run: |
         echo "::set-output name=dir::$(npm config get cache)"
 
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       name: Cache npm
       if: ${{ !matrix.skip_webui }}
       env:
@@ -97,7 +97,7 @@ jobs:
           ${{ runner.os }}-${{ env.cache-name }}-
 
     - name: Cache cargo build
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
