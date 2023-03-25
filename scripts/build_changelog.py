@@ -7,17 +7,23 @@ Manual actions needed to clean up for changelog:
  - Remove duplicate aw-webui entries
 """
 
-import shlex
-import re
 import argparse
-import os
 import logging
-from time import sleep
-from typing import Optional, Tuple, List, Dict
-from subprocess import run as _run, STDOUT, PIPE
-from dataclasses import dataclass
+import os
+import re
+import shlex
 from collections import defaultdict
 from collections.abc import Collection
+from dataclasses import dataclass
+from subprocess import PIPE, STDOUT
+from subprocess import run as _run
+from time import sleep
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
 
 import requests
 
@@ -187,7 +193,7 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     # TODO: Fix issue where subsubmodules can appear twice (like aw-webui)
     # TODO: Use specific order (aw-webui should be one of the first, for example)
     summary_subrepos = run(
-        f"git submodule summary {commitrange.split('...')[0]}", cwd=path
+        f"git submodule summary --cached {commitrange.split('...')[0]}", cwd=path
     )
     subrepos = {}
     for header, *_ in [s.split("\n") for s in summary_subrepos.split("\n\n")]:
