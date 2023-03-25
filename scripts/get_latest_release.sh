@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: Merge with scripts/package/getversion.sh
+
 # Script that fetches the previous release (if current commit is a tag),
 # or the latest release, if current commit is not a tag.
 
