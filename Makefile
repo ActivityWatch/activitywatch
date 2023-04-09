@@ -51,7 +51,11 @@ else
 		echo 'Rust not found, skipping aw-server-rust!'; \
 	fi
 endif
+ifeq ($(SKIP_QT),true)
+	@echo "Skipping aw-qt build"
+else
 	make --directory=aw-qt build
+endif
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
@@ -167,8 +171,12 @@ else
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
 endif
+ifeq ($(SKIP_QT),true)
+	@echo "Skipping aw-qt package"
+else
 	make --directory=aw-qt package
 	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
+endif
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
