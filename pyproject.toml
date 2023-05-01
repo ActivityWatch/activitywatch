@@ -20,7 +20,7 @@ mypy = "*"
 pytest = "^7.0"
 pytest-cov = "*"
 pytest-benchmark = "*"
-pyinstaller = "^5.9"
+pyinstaller = "^5.10"
 #pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
 psutil = "*"
 pywin32-ctypes = {version = "*", platform = "win32"}
