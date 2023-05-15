@@ -5,7 +5,7 @@ updates:
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
