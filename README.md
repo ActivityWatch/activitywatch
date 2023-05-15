@@ -113,9 +113,9 @@ You can find more (and newer) screenshots on [the website](https://activitywatch
 
 ## Installation & Usage
 
-Downloads are available on our [releases page](https://github.com/ActivityWatch/activitywatch/releases).
+Downloads are available on the [releases page](https://github.com/ActivityWatch/activitywatch/releases).
 
-For instructions on how to get started, please see [our guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
+For instructions on how to get started, please see the [guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
 
 Interested in building from source? [There's a guide for that too](https://docs.activitywatch.net/en/latest/installing-from-source.html).
 
@@ -207,7 +207,7 @@ ActivityWatch comes pre-installed with two watchers:
  - `aw-watcher-afk` tracks the user active/inactive state from keyboard and mouse input
  - `aw-watcher-window` tracks the currently active application and its window title.
 
-There are lots of other watchers for ActivityWatch which can track more types of activity. Like `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding, and many more! [A full list of watchers can be found in our documentation here](https://docs.activitywatch.net/en/latest/watchers.html).
+There are lots of other watchers for ActivityWatch which can track more types of activity. Like `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding, and many more! A full list of watchers can be found in [the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 
