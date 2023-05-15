@@ -18,6 +18,9 @@ jobs:
     env:
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.9
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -33,8 +36,8 @@ jobs:
         #    python_version: 3.9
         #    node_version: 16
         #    experimental: true
-    steps:
 
+    steps:
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
@@ -83,7 +86,7 @@ jobs:
     - name: Get npm cache dir
       id: npm-cache-dir
       run: |
-        echo "::set-output name=dir::$(npm config get cache)"
+        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
     - uses: actions/cache@v3
       name: Cache npm
@@ -109,7 +112,6 @@ jobs:
           ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
     - name: Install APT dependencies
-      shell: bash
       if: runner.os == 'Linux'
       run: |
           sudo apt-get update
@@ -133,7 +135,6 @@ jobs:
             libxrender-dev
 
     - name: Install dependencies
-      shell: bash
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           choco install innosetup
@@ -141,7 +142,6 @@ jobs:
         pip3 install poetry==1.3.2
 
     - name: Build
-      shell: bash
       run: |
         python3 -m venv venv
         source venv/bin/activate || source venv/Scripts/activate
@@ -149,7 +149,6 @@ jobs:
         make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
     - name: Run tests
-      shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
@@ -162,7 +161,6 @@ jobs:
         make test-integration
 
     - name: Package
-      shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
