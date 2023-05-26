@@ -199,7 +199,7 @@ jobs:
         APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
         CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
         CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
-    
+
     - name: Package AppImage
       if: startsWith(runner.os, 'linux')
       run: |
@@ -262,7 +262,7 @@ jobs:
 
   release:
     needs: [build, release-notes]
-    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
+    if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
     runs-on: ubuntu-latest
     steps:
       # Will download all artifacts to path
