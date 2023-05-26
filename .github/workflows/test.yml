@@ -11,39 +11,47 @@ on:
 jobs:
   # an integration test designed to catch bugs triggered by updating (database migrations and such)
   upgrades:
-    name: upgrade from ${{ matrix.aw_server_old }} ${{ matrix.old_version }} ${{ matrix.aw_server_old_args }} to ${{ matrix.aw_server_new }} ${{ matrix.new_version }} ${{ matrix.aw_server_new_args }}
+    name: upgrade from ${{ matrix.aw_server_old }} ${{ matrix.aw_server_old_args }} to ${{ matrix.aw_server_new }} ${{ matrix.aw_server_new_args }}
     # needs: [build]
     #if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
     runs-on: ubuntu-latest
+    env:
+      old_version: 'v0.12.2'
+      new_version: 'v0.12.3b3'
     strategy:
       fail-fast: false
       matrix:
         aw_server_old: ['aw-server', 'aw-server-rust']
         aw_server_new: ['aw-server', 'aw-server-rust']
-        old_version: ['v0.12.2']
-        new_version: ['v0.12.3b3']
+        aw_server_old_args: ['']
+        aw_server_new_args: ['']
         include:
-          # python, peewee
+          # python, peewee (default)
           - aw_server_old: 'aw-server'
-            aw_server_old_args: "--storage peewee"
             aw_server_new: 'aw-server'
-            aw_server_new_args: "--storage peewee"
           # python, sqlite
           - aw_server_old: "aw-server"
-            aw_server_old_args: "--storage sqlite"
-            new_version: 'v0.12.3b3'
             aw_server_new: "aw-server"
+            aw_server_old_args: "--storage sqlite"
             aw_server_new_args: "--storage sqlite"
+            old_version: 'v0.12.2'
+            new_version: 'v0.12.3b3'
           # python, peewee to sqlite
           - aw_server_old: "aw-server"
-            aw_server_old_args: "--storage peewee"
             aw_server_new: "aw-server"
+            aw_server_old_args: "--storage peewee"
             aw_server_new_args: "--storage sqlite"
+            old_version: 'v0.12.2'
+            new_version: 'v0.12.3b3'
+        exclude:
+          # rust to python, not supported
+          - aw_server_old: 'aw-server-rust'
+            aw_server_new: 'aw-server'
 
     steps:
       # Will download all artifacts to path
       - name: Download build artifacts
-        if: ${{ matrix.new_version == 'this' }}
+        if: ${{ env.new_version == 'this' }}
         uses: actions/download-artifact@v3
         with:
           name: builds-Linux-py3.9
@@ -51,11 +59,11 @@ jobs:
 
       # Only used during testing, so we don't have to wait for the main build job
       - name: Download new ActivityWatch
-        if: ${{ matrix.new_version != 'this' }}
+        if: ${{ env.new_version != 'this' }}
         run: |
           mkdir dist
           pushd dist
-          wget -q https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.new_version }}/activitywatch-${{ matrix.new_version }}-linux-x86_64.zip
+          wget -q https://github.com/ActivityWatch/activitywatch/releases/download/${{ env.new_version }}/activitywatch-${{ env.new_version }}-linux-x86_64.zip
 
       - name: Install new & old ActivityWatch
         run: |
@@ -66,7 +74,7 @@ jobs:
           mv activitywatch/ aw-new
 
           # Old version
-          wget -q -O aw-old.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.old_version }}/activitywatch-${{ matrix.old_version }}-linux-x86_64.zip
+          wget -q -O aw-old.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ env.old_version }}/activitywatch-${{ env.old_version }}-linux-x86_64.zip
           unzip aw-old.zip
           mv activitywatch/ aw-old
 
@@ -77,22 +85,22 @@ jobs:
       - name: Run and test old server
         run: |
           bin=dist/aw-old/${{ matrix.aw_server_old }}/${{ matrix.aw_server_old }}
-          url="http://localhost:5666"
+          url="http://localhost:5600"
 
           # Check version
           $bin --version || true  # due to bug in old aw-server
 
-          # Run server in testing mode and log output
-          $bin --testing ${{ matrix.aw_server_old_args }} >> log-old.txt 2>&1 &
+          # Run server and log output
+          $bin ${{ matrix.aw_server_old_args }} >> log-old.txt 2>&1 &
           sleep 5  # wait for startup
 
           # Set server URL
 
           # Get server info
-          curl "$url/api/0/info"
+          curl "$url/api/0/info" --fail-with-body
 
           # Create bucket
-          curl -X 'POST' \
+          curl -X 'POST' --fail-with-body \
             "$url/api/0/buckets/aw-test" \
             -H 'accept: application/json' \
             -H 'Content-Type: application/json' \
@@ -124,13 +132,13 @@ jobs:
       - name: Run and test new server
         run: |
           bin=dist/aw-new/${{ matrix.aw_server_new }}/${{ matrix.aw_server_new }}
-          url="http://localhost:5666"
+          url="http://localhost:5600"
 
           # Check version
           $bin --version
 
-          # Run server in testing mode and log output
-          $bin --testing ${{ matrix.aw_server_new_args }} >> log-new.txt 2>&1 &
+          # Run server and log output
+          $bin ${{ matrix.aw_server_new_args }} >> log-new.txt 2>&1 &
           sleep 5  # wait for startup
 
           # Get server info
@@ -141,7 +149,7 @@ jobs:
 
           # Send a heartbeat
           timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          curl -X 'POST' \
+          curl -X 'POST' --fail-with-body \
             "$url/api/0/buckets/aw-test/heartbeat?pulsetime=60" \
             -H 'accept: application/json' \
             -H 'Content-Type: application/json' \
@@ -156,8 +164,9 @@ jobs:
           kill $!
 
       - name: Output logs
+        if: always()
         run: |
-          cat log-old.txt
+          cat log-old.txt || true
           echo "\n---\n"
-          cat log-new.txt
+          cat log-new.txt || true
 
