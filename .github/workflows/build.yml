@@ -27,8 +27,8 @@ jobs:
         os: [ubuntu-20.04, windows-latest, macOS-12]
         python_version: [3.9]
         node_version: [16]
-        skip_rust: [false]
-        skip_webui: [false]
+        skip_rust: [true]
+        skip_webui: [true]
         experimental: [false]
 
         #include:
@@ -260,9 +260,54 @@ jobs:
           name: release_notes
           path: release_notes.md
 
+  # an integration test designed to catch bugs triggered by updating (database migrations and such)
+  test-upgrade:
+    name: test upgrade for ${{ matrix.aw_server }}
+    needs: [build]
+    #if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        aw_server: ["aw-server"]  #, "aw-server-rust"]
+    steps:
+      # Will download all artifacts to path
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: builds-Linux-py3.9
+          path: .
+
+      - name: Install new & old ActivityWatch
+        run: |
+          # New version
+          unzip builds-Linux-py3.9/activitywatch-*.zip
+          mv activitywatch/ aw-new
+          rm -r builds-Linux-py3.9
+
+          # Old version
+          wget -O aw-old.zip https://github.com/ActivityWatch/activitywatch/releases/download/v0.12.2/activitywatch-v0.12.2-linux-x86_64.zip
+          unzip aw-old.zip
+          mv activitywatch/ aw-old
+          rm aw-old.zip
+
+      - name: Run old server
+        run: |
+          aw-old/${{ matrix.aw_server }} --testing &
+          sleep 5
+          wget localhost:5666/api/0/info
+          kill $!
+
+      - name: Run new server
+        run: |
+          aw-new/${{ matrix.aw_server }} --testing &
+          sleep 5
+          wget localhost:5666/api/0/info
+          kill $!
+
   release:
     needs: [build, release-notes]
-    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
+    if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
     runs-on: ubuntu-latest
     steps:
       # Will download all artifacts to path
