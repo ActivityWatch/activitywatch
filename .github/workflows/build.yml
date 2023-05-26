@@ -27,8 +27,8 @@ jobs:
         os: [ubuntu-20.04, windows-latest, macOS-12]
         python_version: [3.9]
         node_version: [16]
-        skip_rust: [true]
-        skip_webui: [true]
+        skip_rust: [false]
+        skip_webui: [false]
         experimental: [false]
 
         #include:
