@@ -18,6 +18,6 @@ DIR="$(dirname "$(readlink -f "${0}")")"
 chmod a+x ./activitywatch/AppRun
 
 # build appimage
-./linuxdeploy-x86_64.AppImage --appdir activitywatch --executable ./activitywatch/aw-qt --output appimage --desktop-file ./activitywatch/aw-qt.desktop --icon-file ./activitywatch/aw-server-rust/static/static/logo.png --icon-filename activitywatch
+./linuxdeploy-x86_64.AppImage --appdir activitywatch --executable ./activitywatch/aw-qt --output appimage --desktop-file ./activitywatch/aw-qt.desktop --icon-file ./activitywatch/media/logo/logo.png --icon-filename activitywatch
 APPIMAGE_FILE=`ls -1 | grep AppImage| grep -i ActivityWatch`
 cp -v $APPIMAGE_FILE ./dist/activitywatch-linux-x86_64.AppImage
