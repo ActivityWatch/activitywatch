@@ -276,31 +276,39 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: builds-Linux-py3.9
-          path: .
+          path: dist
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: dist
 
       - name: Install new & old ActivityWatch
         run: |
+          pushd dist
+
           # New version
-          unzip builds-Linux-py3.9/activitywatch-*.zip
+          unzip activitywatch-*-linux-x86_64.zip
           mv activitywatch/ aw-new
-          rm -r builds-Linux-py3.9
 
           # Old version
           wget -O aw-old.zip https://github.com/ActivityWatch/activitywatch/releases/download/v0.12.2/activitywatch-v0.12.2-linux-x86_64.zip
           unzip aw-old.zip
           mv activitywatch/ aw-old
-          rm aw-old.zip
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: dist
 
       - name: Run old server
         run: |
-          aw-old/${{ matrix.aw_server }} --testing &
+          dist/aw-old/${{ matrix.aw_server }}/${{ matrix.aw_server }} --testing &
           sleep 5
           wget localhost:5666/api/0/info
           kill $!
 
       - name: Run new server
         run: |
-          aw-new/${{ matrix.aw_server }} --testing &
+          dist/aw-new/${{ matrix.aw_server }}/${{ matrix.aw_server }} --testing &
           sleep 5
           wget localhost:5666/api/0/info
           kill $!
