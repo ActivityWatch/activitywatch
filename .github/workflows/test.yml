@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 
+
 jobs:
   # an integration test designed to catch bugs triggered by updating (database migrations and such)
   upgrades:
@@ -30,6 +31,7 @@ jobs:
           - aw_server_old: 'aw-server'
             aw_server_new: 'aw-server'
           # python, sqlite
+          # FIXME: sqlite broken since aw-server enabled flask multithreading (new default)
           - aw_server_old: "aw-server"
             aw_server_new: "aw-server"
             aw_server_old_args: "--storage sqlite"
@@ -37,6 +39,7 @@ jobs:
             old_version: 'v0.12.2'
             new_version: 'v0.12.3b3'
           # python, peewee to sqlite
+          # FIXME: broken, same thing with sqlite as above
           - aw_server_old: "aw-server"
             aw_server_new: "aw-server"
             aw_server_old_args: "--storage peewee"
