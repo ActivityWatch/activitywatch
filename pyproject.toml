@@ -23,11 +23,13 @@ mypy = "*"
 pytest = "^7.0"
 pytest-cov = "*"
 pytest-benchmark = "*"
-pyinstaller = "^5.10"
-#pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
 psutil = "*"
 pywin32-ctypes = {version = "*", platform = "win32"}
 pefile = {version = "*", platform = "win32"}
+
+pyinstaller = "^5.10"
+# because we need this unreleased commit: https://github.com/pyinstaller/pyinstaller-hooks-contrib/commit/0f40dc6e74086e5472aee75070b9077b4c17ab18
+pyinstaller-hooks-contrib = {git = "https://github.com/pyinstaller/pyinstaller-hooks-contrib.git", branch="master"}
 
 # Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
 #setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963

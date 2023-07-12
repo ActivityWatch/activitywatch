@@ -302,14 +302,18 @@ hook-testing = ["execnet (>=1.5.0)", "psutil", "pytest (>=2.7.3)"]
 
 [[package]]
 name = "pyinstaller-hooks-contrib"
-version = "2023.5"
+version = "2023.6"
 description = "Community maintained hooks for PyInstaller"
 optional = false
 python-versions = ">=3.7"
-files = [
-    {file = "pyinstaller-hooks-contrib-2023.5.tar.gz", hash = "sha256:cca6cdc31e739954b5bbbf05ef3f71fe448e9cdacad3a2197243bcf99bea2c00"},
-    {file = "pyinstaller_hooks_contrib-2023.5-py2.py3-none-any.whl", hash = "sha256:e60185332a6b56691f471d364e9e9405b03091ca27c96e0dbebdedb7624457fd"},
-]
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/pyinstaller/pyinstaller-hooks-contrib.git"
+reference = "master"
+resolved_reference = "17783aceef53f941102b863fc349a83a9ee6a2ef"
 
 [[package]]
 name = "pytest"
@@ -439,4 +443,4 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<3.11"
-content-hash = "26b90d81ec69823f89d6e4036b56504f7696228415eb9438701dd46c0807e1fb"
+content-hash = "23bf1e1525605b34fc5b21fa62ead9f790cfb30db843d1e9de2b7635180c8137"
