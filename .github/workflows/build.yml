@@ -226,7 +226,7 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0  # fetch all branches and tags
 
-      - uses: nowsprinting/check-version-format-action@v2
+      - uses: ActivityWatch/check-version-format-action@v2
         id: version
         with:
           prefix: 'v'
@@ -276,7 +276,7 @@ jobs:
         working-directory: dist
 
       # detect if version tag is stable/beta
-      - uses: nowsprinting/check-version-format-action@v2
+      - uses: ActivityWatch/check-version-format-action@v2
         id: version
         with:
           prefix: 'v'
