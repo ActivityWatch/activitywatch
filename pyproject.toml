@@ -16,7 +16,7 @@ python = "^3.8,<3.13"
 #aw-qt = {path = "aw-qt"}
 
 # https://github.com/ionrock/cachecontrol/issues/292
-urllib3 = "<2"
+urllib3 = "<3"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
