@@ -76,12 +76,10 @@ jobs:
 
     - name: Set up Rust nightly
       if: ${{ !matrix.skip_rust }}
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@master
       id: toolchain
       with:
-        profile: minimal
         toolchain: nightly
-        override: true
 
     - name: Get npm cache dir
       id: npm-cache-dir
@@ -107,7 +105,7 @@ jobs:
       with:
         path: aw-server-rust/target
         # key needs to contain rustc_hash due to https://github.com/ActivityWatch/aw-server-rust/issues/180
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
