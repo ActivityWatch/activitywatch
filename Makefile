@@ -13,6 +13,18 @@
 
 SHELL := /usr/bin/env bash
 
+SUBMODULES := aw-core aw-client aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
+# Submodules with executable modules (i.e. `make package`)
+RUNNABLES := aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
+ifeq ($(SKIP_SERVER_RUST),true)
+	SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
+	RUNNABLES := $(filter-out aw-server-rust,$(RUNNABLES))
+endif
+ifeq ($(AW_EXTRAS),true)
+	SUBMODULES := $(SUBMODULES) aw-notify aw-watcher-input
+	RUNNABLES := $(RUNNABLES) aw-notify aw-watcher-input
+endif
+
 # The `build` target
 # ------------------
 #
@@ -30,28 +42,19 @@ build:
 	else \
 		git submodule update --init --recursive; \
 	fi
-#
 #	needed due to https://github.com/pypa/setuptools/issues/1963
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
-#
-	make --directory=aw-core build
-	make --directory=aw-client build
-	make --directory=aw-watcher-afk build
-	make --directory=aw-watcher-window build
-	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
-ifeq ($(SKIP_SERVER_RUST),true)  # Skip building aw-server-rust if SKIP_SERVER_RUST is true
-	@echo "Skipping aw-server-rust build"
-else
-	@echo 'Looking for rust...'
 	@if (which cargo); then \
 		echo 'Rust found!'; \
-		make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI); \
 	else \
-		echo 'Rust not found, skipping aw-server-rust!'; \
+		echo 'ERROR: Rust not found, try running with SKIP_SERVER_RUST=true'; \
+		exit 1; \
 	fi
-endif
-	make --directory=aw-qt build
+	for module in $(SUBMODULES); do \
+		echo "Building $$module"; \
+		make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI); \
+	done
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
@@ -104,15 +107,18 @@ uninstall:
 	done
 
 test:
-	make --directory=aw-core test
-	make --directory=aw-client test
-	make --directory=aw-server test
-	make --directory=aw-qt test
-ifeq ($(SKIP_SERVER_RUST),true)  # Skip testing aw-server-rust if SKIP_SERVER_RUST is true
-	@echo "Skipping aw-server-rust test"
-else
-	make --directory=aw-server-rust test
-endif
+	@for module in $(SUBMODULES); do \
+        (make -q -C $$module test) 2>/dev/null; \
+        case $$? in \
+            0|1) \
+                echo "Running tests for $$module"; \
+                poetry run make -C $$module test || { echo "Error in $$module tests"; exit 2; } ;; \
+            2) \
+                echo "No test target in $$module. Skipping...";; \
+            *) \
+                echo "Unexpected error in $$module"; exit 2;; \
+        esac; \
+    done
 
 test-integration:
 	# TODO: Move "integration tests" to aw-client
@@ -150,25 +156,16 @@ dist/notarize:
 	./scripts/notarize.sh
 
 package:
+	rm -rf dist
 	mkdir -p dist/activitywatch
-#
-	make --directory=aw-watcher-afk package
-	cp -r aw-watcher-afk/dist/aw-watcher-afk dist/activitywatch
-#
-	make --directory=aw-watcher-window package
-	cp -r aw-watcher-window/dist/aw-watcher-window dist/activitywatch
-#
-	make --directory=aw-server package
-	cp -r aw-server/dist/aw-server dist/activitywatch
-ifeq ($(SKIP_SERVER_RUST),true)
-	@echo "Skipping aw-server-rust package"
-else
-	make --directory=aw-server-rust package
-	mkdir -p dist/activitywatch/aw-server-rust
-	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
-endif
-	make --directory=aw-qt package
-	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
+	for dir in $(RUNNABLES); do \
+		make --directory=$$dir package; \
+		cp -r $$dir/dist/$$dir dist/activitywatch; \
+	done
+# Move aw-qt to the root of the dist folder
+	mv dist/activitywatch/aw-qt aw-qt-tmp
+	mv aw-qt-tmp/* dist/activitywatch
+	rmdir aw-qt-tmp
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
@@ -187,13 +184,9 @@ clean:
 
 # Clean all subprojects
 clean_all: clean
-	make --directory=aw-client clean
-	make --directory=aw-core clean
-	make --directory=aw-qt clean
-	make --directory=aw-server clean
-	make --directory=aw-watcher-afk clean
-	make --directory=aw-watcher-window clean
-	make --directory=aw-server-rust clean
+	for dir in $(SUBMODULES); do \
+		make --directory=$$dir clean; \
+	done
 
 clean-auto:
 	rm -rIv **/aw-server-rust/target
