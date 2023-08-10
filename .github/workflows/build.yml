@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, windows-latest, macOS-12]
-        python_version: [3.9]
+        python_version: [3.11]
         node_version: [16]
         skip_rust: [false]
         skip_webui: [false]
@@ -62,13 +62,15 @@ jobs:
     - name: Set up Python for macOS
       if: runner.os == 'macOS'
       run: |
-        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
+        # macos11 seems to suggest it only supports macos11 and up, but the release page says "for macOS 10.9 and later"
+        # unclear what the resulting binary compatibility will be.
+        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
         sudo installer -pkg python.pkg -target /
         echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
         "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
       env:
         # Add the patch number to the Python version (for FTP download link)
-        PYTHON_VERSION: ${{ matrix.python_version }}.13
+        PYTHON_VERSION: ${{ matrix.python_version }}.4
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
