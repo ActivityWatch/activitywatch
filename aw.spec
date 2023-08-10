@@ -10,6 +10,59 @@ from pathlib import Path
 import aw_core
 import flask_restx
 
+
+def build_analysis(name, location, binaries=[], datas=[], hiddenimports=[]):
+    name_py = name.replace("-", "_")
+    location_candidates = [
+        location / f"{name_py}/__main__.py",
+        location / f"src/{name_py}/__main__.py",
+    ]
+    try:
+        location = next(p for p in location_candidates if p.exists())
+    except StopIteration:
+        raise Exception(f"Could not find {name} location from {location_candidates}")
+
+    return Analysis(
+        [location],
+        pathex=[],
+        binaries=binaries,
+        datas=datas,
+        hiddenimports=hiddenimports,
+        hookspath=[],
+        runtime_hooks=[],
+        excludes=[],
+        win_no_prefer_redirects=False,
+        win_private_assemblies=False,
+    )
+
+
+def build_collect(analysis, name, console=True):
+    """Used to build the COLLECT statements for each module"""
+    pyz = PYZ(analysis.pure, analysis.zipped_data)
+    exe = EXE(
+        pyz,
+        analysis.scripts,
+        exclude_binaries=True,
+        name=name,
+        debug=False,
+        strip=False,
+        upx=True,
+        console=console,
+        entitlements_file=entitlements_file,
+        codesign_identity=codesign_identity,
+    )
+    return COLLECT(
+        exe,
+        analysis.binaries,
+        analysis.zipfiles,
+        analysis.datas,
+        strip=False,
+        upx=True,
+        name=name,
+    )
+
+
+# Get the current release version
 current_release = subprocess.run(
     shlex.split("git describe --tags --abbrev=0"),
     stdout=subprocess.PIPE,
@@ -18,6 +71,7 @@ current_release = subprocess.run(
 ).stdout.strip()
 print("bundling activitywatch version " + current_release)
 
+# Get entitlements and codesign identity
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
 codesign_identity = os.environ.get("APPLE_PERSONALID", "").strip()
 if not codesign_identity:
@@ -32,69 +86,42 @@ aw_server_rust_bin = aw_server_rust_location / "target/package/aw-server-rust"
 aw_qt_location = Path("aw-qt")
 awa_location = Path("aw-watcher-afk")
 aww_location = Path("aw-watcher-window")
+awi_location = Path("aw-watcher-input")
+aw_notify_location = Path("aw-notify")
 
 if platform.system() == "Darwin":
     icon = aw_qt_location / "media/logo/logo.icns"
 else:
     icon = aw_qt_location / "media/logo/logo.ico"
-block_cipher = None
-
-extra_pathex = []
-if platform.system() == "Windows":
-    # The Windows version includes paths to Qt binaries which are
-    # not automatically found due to bug in PyInstaller 3.2.
-    # See: https://github.com/pyinstaller/pyinstaller/issues/2152
-    import PyQt5
-
-    pyqt_path = os.path.dirname(PyQt5.__file__)
-    extra_pathex.append(pyqt_path + "\\Qt\\bin")
 
 skip_rust = False
 if not aw_server_rust_bin.exists():
     skip_rust = True
     print("Skipping Rust build because aw-server-rust binary not found.")
 
-aw_server_a = Analysis(
-    ["aw-server/__main__.py"],
-    pathex=[],
-    binaries=None,
+
+aw_qt_a = build_analysis(
+    "aw-qt",
+    aw_qt_location,
+    binaries=[(aw_server_rust_bin, ".")] if not skip_rust else [],
+    datas=[
+        (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
+        (aw_qt_location / "media", "aw_qt/media"),
+    ],
+)
+aw_server_a = build_analysis(
+    "aw-server",
+    aws_location,
     datas=[
         (aws_location / "aw_server/static", "aw_server/static"),
         (restx_path / "templates", "flask_restx/templates"),
         (restx_path / "static", "flask_restx/static"),
         (aw_core_path / "schemas", "aw_core/schemas"),
     ],
-    hiddenimports=[],
-    hookspath=[],
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
 )
-
-aw_qt_a = Analysis(
-    [aw_qt_location / "aw_qt/__main__.py"],
-    pathex=[] + extra_pathex,
-    binaries=[(aw_server_rust_bin, ".")] if not skip_rust else [],
-    datas=[
-        (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
-        (aw_qt_location / "media", "aw_qt/media"),
-    ],
-    hiddenimports=[],
-    hookspath=[],
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-)
-
-aw_watcher_afk_a = Analysis(
-    [awa_location / "aw_watcher_afk/__main__.py"],
-    pathex=[],
-    binaries=None,
-    datas=None,
+aw_watcher_afk_a = build_analysis(
+    "aw_watcher_afk",
+    awa_location,
     hiddenimports=[
         "Xlib.keysymdef.miscellany",
         "Xlib.keysymdef.latin1",
@@ -117,17 +144,11 @@ aw_watcher_afk_a = Analysis(
         "pynput.keyboard._darwin",
         "pynput.mouse._darwin",
     ],
-    hookspath=[],
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
 )
-
-aw_watcher_window_a = Analysis(
-    [aww_location / "aw_watcher_window/__main__.py"],
-    pathex=[],
+aw_watcher_input_a = build_analysis("aw_watcher_input", awi_location)
+aw_watcher_window_a = build_analysis(
+    "aw_watcher_window",
+    aww_location,
     binaries=[
         (
             aww_location / "aw_watcher_window/aw-watcher-window-macos",
@@ -139,13 +160,9 @@ aw_watcher_window_a = Analysis(
     datas=[
         (aww_location / "aw_watcher_window/printAppStatus.jxa", "aw_watcher_window")
     ],
-    hiddenimports=[],
-    hookspath=[],
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
+)
+aw_notify_a = build_analysis(
+    "aw_notify", aw_notify_location, hiddenimports=["desktop_notifier.resources"]
 )
 
 # https://pythonhosted.org/PyInstaller/spec-files.html#multipackage-bundles
@@ -156,110 +173,40 @@ MERGE(
     (aw_qt_a, "aw-qt", "aw-qt"),
     (aw_watcher_afk_a, "aw-watcher-afk", "aw-watcher-afk"),
     (aw_watcher_window_a, "aw-watcher-window", "aw-watcher-window"),
+    (aw_watcher_input_a, "aw-watcher-input", "aw-watcher-input"),
+    (aw_notify_a, "aw-notify", "aw-notify"),
 )
 
-aww_pyz = PYZ(
-    aw_watcher_window_a.pure, aw_watcher_window_a.zipped_data, cipher=block_cipher
-)
-aww_exe = EXE(
-    aww_pyz,
-    aw_watcher_window_a.scripts,
-    exclude_binaries=True,
-    name="aw-watcher-window",
-    debug=False,
-    strip=False,
-    upx=True,
-    console=True,
-    entitlements_file=entitlements_file,
-    codesign_identity=codesign_identity,
-)
-aww_coll = COLLECT(
-    aww_exe,
-    aw_watcher_window_a.binaries,
-    aw_watcher_window_a.zipfiles,
-    aw_watcher_window_a.datas,
-    strip=False,
-    upx=True,
-    name="aw-watcher-window",
-)
 
-awa_pyz = PYZ(aw_watcher_afk_a.pure, aw_watcher_afk_a.zipped_data, cipher=block_cipher)
-awa_exe = EXE(
-    awa_pyz,
-    aw_watcher_afk_a.scripts,
-    exclude_binaries=True,
-    name="aw-watcher-afk",
-    debug=False,
-    strip=False,
-    upx=True,
-    console=True,
-    entitlements_file=entitlements_file,
-    codesign_identity=codesign_identity,
-)
-awa_coll = COLLECT(
-    awa_exe,
-    aw_watcher_afk_a.binaries,
-    aw_watcher_afk_a.zipfiles,
-    aw_watcher_afk_a.datas,
-    strip=False,
-    upx=True,
-    name="aw-watcher-afk",
-)
+# aw-server
+aws_coll = build_collect(aw_server_a, "aw-server")
 
-aws_pyz = PYZ(aw_server_a.pure, aw_server_a.zipped_data, cipher=block_cipher)
+# aw-watcher-window
+aww_coll = build_collect(aw_watcher_window_a, "aw-watcher-window")
 
-aws_exe = EXE(
-    aws_pyz,
-    aw_server_a.scripts,
-    exclude_binaries=True,
-    name="aw-server",
-    debug=False,
-    strip=False,
-    upx=True,
-    console=True,
-    entitlements_file=entitlements_file,
-    codesign_identity=codesign_identity,
-)
-aws_coll = COLLECT(
-    aws_exe,
-    aw_server_a.binaries,
-    aw_server_a.zipfiles,
-    aw_server_a.datas,
-    strip=False,
-    upx=True,
-    name="aw-server",
-)
+# aw-watcher-afk
+awa_coll = build_collect(aw_watcher_afk_a, "aw-watcher-afk")
 
-awq_pyz = PYZ(aw_qt_a.pure, aw_qt_a.zipped_data, cipher=block_cipher)
-awq_exe = EXE(
-    awq_pyz,
-    aw_qt_a.scripts,
-    exclude_binaries=True,
-    name="aw-qt",
-    debug=True,
-    strip=False,
-    upx=True,
-    icon=icon,
+# aw-qt
+awq_coll = build_collect(
+    aw_qt_a,
+    "aw-qt",
     console=False if platform.system() == "Windows" else True,
-    entitlements_file=entitlements_file,
-    codesign_identity=codesign_identity,
 )
-awq_coll = COLLECT(
-    awq_exe,
-    aw_qt_a.binaries,
-    aw_qt_a.zipfiles,
-    aw_qt_a.datas,
-    strip=False,
-    upx=True,
-    name="aw-qt",
-)
+
+# aw-watcher-input
+awi_coll = build_collect(aw_watcher_input_a, "aw-watcher-input")
+
+aw_notify_coll = build_collect(aw_notify_a, "aw-notify")
 
 if platform.system() == "Darwin":
     app = BUNDLE(
         awq_coll,
+        aws_coll,
         aww_coll,
         awa_coll,
-        aws_coll,
+        awi_coll,
+        aw_notify_coll,
         name="ActivityWatch.app",
         icon=icon,
         bundle_identifier="net.activitywatch.ActivityWatch",
