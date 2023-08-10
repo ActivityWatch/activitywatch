@@ -7,11 +7,30 @@
 #
 # We recommend creating and activating a Python virtualenv before building.
 # Instructions on how to do this can be found in the guide linked above.
-
-# These targets should always rerun
 .PHONY: build install test clean clean_all
 
 SHELL := /usr/bin/env bash
+
+SUBMODULES := aw-core aw-client aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
+
+# Exclude aw-server-rust if SKIP_SERVER_RUST is true
+ifeq ($(SKIP_SERVER_RUST),true)
+	SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
+endif
+# Include extras if AW_EXTRAS is true
+ifeq ($(AW_EXTRAS),true)
+	SUBMODULES := $(SUBMODULES) aw-notify aw-watcher-input
+endif
+
+# A function that checks if a target exists in a Makefile
+# Usage: $(call has_target,<dir>,<target>)
+define has_target
+$(shell make -q -C $1 $2 >/dev/null 2>&1; if [ $$? -eq 0 -o $$? -eq 1 ]; then echo $1; fi)
+endef
+
+# Submodules with `test` and `package` targets
+TESTABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),test))
+PACKAGEABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),package))
 
 # The `build` target
 # ------------------
@@ -19,39 +38,25 @@ SHELL := /usr/bin/env bash
 # What it does:
 #  - Installs all the Python modules
 #  - Builds the web UI and bundles it with aw-server
-#
-# Tips:
-#  - Set the environment variable `PIP_USER=true` for pip to install all Python
-#    packages as user packages (same as `pip install --user <pkg>`). This makes
-#    it possible to install without using a virtualenv (or root).
 build:
 	if [ -e "aw-core/.git" ]; then \
 		echo "Submodules seem to already be initialized, continuing..."; \
 	else \
 		git submodule update --init --recursive; \
 	fi
-#
 #	needed due to https://github.com/pypa/setuptools/issues/1963
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
-#
-	make --directory=aw-core build
-	make --directory=aw-client build
-	make --directory=aw-watcher-afk build
-	make --directory=aw-watcher-window build
-	make --directory=aw-server build SKIP_WEBUI=$(SKIP_WEBUI)
-ifeq ($(SKIP_SERVER_RUST),true)  # Skip building aw-server-rust if SKIP_SERVER_RUST is true
-	@echo "Skipping aw-server-rust build"
-else
-	@echo 'Looking for rust...'
 	@if (which cargo); then \
 		echo 'Rust found!'; \
-		make --directory=aw-server-rust build SKIP_WEBUI=$(SKIP_WEBUI); \
 	else \
-		echo 'Rust not found, skipping aw-server-rust!'; \
+		echo 'ERROR: Rust not found, try running with SKIP_SERVER_RUST=true'; \
+		exit 1; \
 	fi
-endif
-	make --directory=aw-qt build
+	for module in $(SUBMODULES); do \
+		echo "Building $$module"; \
+		make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI); \
+	done
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
@@ -104,15 +109,10 @@ uninstall:
 	done
 
 test:
-	make --directory=aw-core test
-	make --directory=aw-client test
-	make --directory=aw-server test
-	make --directory=aw-qt test
-ifeq ($(SKIP_SERVER_RUST),true)  # Skip testing aw-server-rust if SKIP_SERVER_RUST is true
-	@echo "Skipping aw-server-rust test"
-else
-	make --directory=aw-server-rust test
-endif
+	@for module in $(TESTABLES); do \
+		echo "Running tests for $$module"; \
+		poetry run make -C $$module test || { echo "Error in $$module tests"; exit 2; }; \
+    done
 
 test-integration:
 	# TODO: Move "integration tests" to aw-client
@@ -150,25 +150,16 @@ dist/notarize:
 	./scripts/notarize.sh
 
 package:
+	rm -rf dist
 	mkdir -p dist/activitywatch
-#
-	make --directory=aw-watcher-afk package
-	cp -r aw-watcher-afk/dist/aw-watcher-afk dist/activitywatch
-#
-	make --directory=aw-watcher-window package
-	cp -r aw-watcher-window/dist/aw-watcher-window dist/activitywatch
-#
-	make --directory=aw-server package
-	cp -r aw-server/dist/aw-server dist/activitywatch
-ifeq ($(SKIP_SERVER_RUST),true)
-	@echo "Skipping aw-server-rust package"
-else
-	make --directory=aw-server-rust package
-	mkdir -p dist/activitywatch/aw-server-rust
-	cp -r aw-server-rust/target/package/* dist/activitywatch/aw-server-rust
-endif
-	make --directory=aw-qt package
-	cp -r aw-qt/dist/aw-qt/. dist/activitywatch
+	for dir in $(PACKAGEABLES); do \
+		make --directory=$$dir package; \
+		cp -r $$dir/dist/$$dir dist/activitywatch; \
+	done
+# Move aw-qt to the root of the dist folder
+	mv dist/activitywatch/aw-qt aw-qt-tmp
+	mv aw-qt-tmp/* dist/activitywatch
+	rmdir aw-qt-tmp
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
@@ -187,13 +178,9 @@ clean:
 
 # Clean all subprojects
 clean_all: clean
-	make --directory=aw-client clean
-	make --directory=aw-core clean
-	make --directory=aw-qt clean
-	make --directory=aw-server clean
-	make --directory=aw-watcher-afk clean
-	make --directory=aw-watcher-window clean
-	make --directory=aw-server-rust clean
+	for dir in $(SUBMODULES); do \
+		make --directory=$$dir clean; \
+	done
 
 clean-auto:
 	rm -rIv **/aw-server-rust/target
