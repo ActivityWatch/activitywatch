@@ -16,6 +16,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
+      # Wether to build and include extras (like aw-notify and aw-watcher-input)
+      AW_EXTRAS: true
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.9
     defaults:

@@ -7,23 +7,30 @@
 #
 # We recommend creating and activating a Python virtualenv before building.
 # Instructions on how to do this can be found in the guide linked above.
-
-# These targets should always rerun
 .PHONY: build install test clean clean_all
 
 SHELL := /usr/bin/env bash
 
 SUBMODULES := aw-core aw-client aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
-# Submodules with executable modules (i.e. `make package`)
-RUNNABLES := aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
+
+# Exclude aw-server-rust if SKIP_SERVER_RUST is true
 ifeq ($(SKIP_SERVER_RUST),true)
 	SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
-	RUNNABLES := $(filter-out aw-server-rust,$(RUNNABLES))
 endif
+# Include extras if AW_EXTRAS is true
 ifeq ($(AW_EXTRAS),true)
 	SUBMODULES := $(SUBMODULES) aw-notify aw-watcher-input
-	RUNNABLES := $(RUNNABLES) aw-notify aw-watcher-input
 endif
+
+# A function that checks if a target exists in a Makefile
+# Usage: $(call has_target,<dir>,<target>)
+define has_target
+$(shell make -q -C $1 $2 >/dev/null 2>&1; if [ $$? -eq 0 -o $$? -eq 1 ]; then echo $1; fi)
+endef
+
+# Submodules with `test` and `package` targets
+TESTABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),test))
+PACKAGEABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),package))
 
 # The `build` target
 # ------------------
@@ -31,11 +38,6 @@ endif
 # What it does:
 #  - Installs all the Python modules
 #  - Builds the web UI and bundles it with aw-server
-#
-# Tips:
-#  - Set the environment variable `PIP_USER=true` for pip to install all Python
-#    packages as user packages (same as `pip install --user <pkg>`). This makes
-#    it possible to install without using a virtualenv (or root).
 build:
 	if [ -e "aw-core/.git" ]; then \
 		echo "Submodules seem to already be initialized, continuing..."; \
@@ -107,17 +109,9 @@ uninstall:
 	done
 
 test:
-	@for module in $(SUBMODULES); do \
-        (make -q -C $$module test) 2>/dev/null; \
-        case $$? in \
-            0|1) \
-                echo "Running tests for $$module"; \
-                poetry run make -C $$module test || { echo "Error in $$module tests"; exit 2; } ;; \
-            2) \
-                echo "No test target in $$module. Skipping...";; \
-            *) \
-                echo "Unexpected error in $$module"; exit 2;; \
-        esac; \
+	@for module in $(TESTABLES); do \
+		echo "Running tests for $$module"; \
+		poetry run make -C $$module test || { echo "Error in $$module tests"; exit 2; }; \
     done
 
 test-integration:
@@ -158,7 +152,7 @@ dist/notarize:
 package:
 	rm -rf dist
 	mkdir -p dist/activitywatch
-	for dir in $(RUNNABLES); do \
+	for dir in $(PACKAGEABLES); do \
 		make --directory=$$dir package; \
 		cp -r $$dir/dist/$$dir dist/activitywatch; \
 	done
