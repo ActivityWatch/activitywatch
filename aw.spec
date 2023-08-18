@@ -34,6 +34,7 @@ aw_server_rust_webui = aw_server_rust_location / "target/package/static"
 aw_qt_location = Path("aw-qt")
 awa_location = Path("aw-watcher-afk")
 aww_location = Path("aw-watcher-window")
+awz_location = Path("aw-watcher-zoom")
 
 if platform.system() == "Darwin":
     icon = aw_qt_location / "media/logo/logo.icns"
@@ -151,6 +152,29 @@ aw_watcher_window_a = Analysis(
     cipher=block_cipher,
 )
 
+aw_watcher_zoom_a = Analysis(
+    [awz_location / "aw_watcher_zoom/__main__.py"],
+    pathex=[],
+    binaries=[
+        (
+            awz_location / "aw_watcher_zoom",
+            "aw_watcher_zoom",
+        )
+    ]
+    if platform.system() == "Darwin"
+    else [],
+    datas=[
+        (awz_location / "aw_watcher_zoom")
+    ],
+    hiddenimports=[],
+    hookspath=[],
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+)
+
 # https://pythonhosted.org/PyInstaller/spec-files.html#multipackage-bundles
 # MERGE takes a bit weird arguments, it wants tuples which consists of
 # the analysis paired with the script name and the bin name
@@ -159,6 +183,7 @@ MERGE(
     (aw_qt_a, "aw-qt", "aw-qt"),
     (aw_watcher_afk_a, "aw-watcher-afk", "aw-watcher-afk"),
     (aw_watcher_window_a, "aw-watcher-window", "aw-watcher-window"),
+    (aw_watcher_zoom_a, "aw-watcher-zoom", "aw-watcher-zoom"),
 )
 
 aww_pyz = PYZ(
@@ -184,6 +209,32 @@ aww_coll = COLLECT(
     strip=False,
     upx=True,
     name="aw-watcher-window",
+)
+
+#zoom
+awz_pyz = PYZ(
+    aw_watcher_zoom_a.pure, aw_watcher_zoom_a.zipped_data, cipher=block_cipher
+)
+awz_exe = EXE(
+    aww_pyz,
+    aw_watcher_zoom_a.scripts,
+    exclude_binaries=True,
+    name="aw-watcher-zoom",
+    debug=False,
+    strip=False,
+    upx=True,
+    console=True,
+    entitlements_file=entitlements_file,
+    codesign_identity=codesign_identity,
+)
+awz_coll = COLLECT(
+    aww_exe,
+    aw_watcher_zoom_a.binaries,
+    aw_watcher_zoom_a.zipfiles,
+    aw_watcher_zoom_a.datas,
+    strip=False,
+    upx=True,
+    name="aw-watcher-zoom",
 )
 
 awa_pyz = PYZ(aw_watcher_afk_a.pure, aw_watcher_afk_a.zipped_data, cipher=block_cipher)

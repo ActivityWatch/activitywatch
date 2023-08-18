@@ -25,3 +25,6 @@
 [submodule "aw-watcher-input"]
 	path = aw-watcher-input
 	url = https://github.com/ActivityWatch/aw-watcher-input.git
+[submodule "aw-watcher-zoom"]
+	path = aw-watcher-zoom
+	url = https://github.com/vinaygy29/aw-watcher-zoom.git
