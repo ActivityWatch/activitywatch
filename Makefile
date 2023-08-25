@@ -95,6 +95,7 @@ lint:
 		aw-server/aw_server/ \
 		aw-watcher-window/aw_watcher_window/ \
 		aw-watcher-afk/aw_watcher_afk/ \
+		aw-watcher-zoom/aw_watcher_zoom/ \
 		aw-qt/aw_qt/
 
 # Uninstall
