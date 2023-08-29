@@ -1,7 +1,4 @@
-poetry 1.1.12
-nodejs 15.14.0
+poetry 1.5.1
+nodejs 16.20.2
 rust nightly
-
-# in order for pyinstall to work properly:
-# export PYTHON_CONFIGURE_OPTS="--enable-framework"
-python 3.9.9
+python 3.11.4
