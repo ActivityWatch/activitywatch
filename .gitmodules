@@ -7,6 +7,7 @@
 [submodule "aw-server"]
 	path = aw-server
 	url = https://github.com/vinaygy29/aw-server.git
+	branch = master
 [submodule "aw-watcher-afk"]
 	path = aw-watcher-afk
 	url = https://github.com/ActivityWatch/aw-watcher-afk.git
@@ -19,6 +20,7 @@
 [submodule "aw-server-rust"]
 	path = aw-server-rust
 	url = https://github.com/vinaygy29/aw-server-rust.git
+	branch = master
 [submodule "aw-notify"]
 	path = aw-notify
 	url = https://github.com/ErikBjare/aw-notify.git
