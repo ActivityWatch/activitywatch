@@ -1,4 +1,4 @@
 poetry 1.5.1
 nodejs 16.20.2
 rust nightly
-python 3.11.4
+python 3.9.13
