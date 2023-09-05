@@ -57,7 +57,7 @@ jobs:
         if: ${{ env.new_version == 'this' }}
         uses: actions/download-artifact@v3
         with:
-          name: builds-Linux-py3.11
+          name: builds-Linux-py3.9
           path: dist
 
       # Only used during testing, so we don't have to wait for the main build job

@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, windows-latest, macOS-12]
-        python_version: [3.11]
+        python_version: [3.9]
         node_version: [16]
         skip_rust: [false]
         skip_webui: [false]
@@ -62,15 +62,21 @@ jobs:
     - name: Set up Python for macOS
       if: runner.os == 'macOS'
       run: |
-        # macos11 seems to suggest it only supports macos11 and up, but the release page says "for macOS 10.9 and later"
+        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
+
+        # Python 3.11+ only has *macos11.pkg, so no more *macosx10.9.pkg
+        # the 'macos11' naming seems to suggest it only supports macos11 and up,
+        # but the release page says "for macOS 10.9 and later",
         # unclear what the resulting binary compatibility will be.
-        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
+        #
+        # curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
+
         sudo installer -pkg python.pkg -target /
         echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
         "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
       env:
         # Add the patch number to the Python version (for FTP download link)
-        PYTHON_VERSION: ${{ matrix.python_version }}.4
+        PYTHON_VERSION: ${{ matrix.python_version }}.13
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
@@ -240,7 +246,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ">=3.11"
+          python-version: "3.9"
 
       - name: Install deps
         run: |
