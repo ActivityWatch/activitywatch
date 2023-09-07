@@ -6,7 +6,7 @@
   All in a secure way where <i>you control the data</i>.
 </p>
 
-<p align="center">
+<p align="right">
 
   <a href="https://twitter.com/ActivityWatchIt">
     <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
