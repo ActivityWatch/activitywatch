@@ -156,7 +156,7 @@ package:
 	for dir in $(PACKAGEABLES); do \
 		make --directory=$$dir package; \
 		cd $$dir; \
-		pyarmor gen --pack "dist/$$dir/$$dir.exe" "$$(echo $$dir | sed 's/-/_/g')/__main__.py"; \
+		pyarmor gen -r --pack "dist/$$dir/$$dir.exe" -r "$$(echo $$dir | sed 's/-/_/g')"; \
 		cd - && cp -r $$dir/dist/$$dir dist/activitywatch; \
 	done
 # Move aw-qt to the root of the dist folder
