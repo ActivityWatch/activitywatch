@@ -1,32 +1,32 @@
 [submodule "aw-core"]
 	path = aw-core
-	url = https://github.com/ActivityWatch/aw-core.git
+	url = https://github.com/vinaygy29/aw-core.git
 [submodule "aw-client"]
 	path = aw-client
-	url = https://github.com/ActivityWatch/aw-client.git
+	url = https://github.com/vinaygy29/aw-client.git
 [submodule "aw-server"]
 	path = aw-server
 	url = https://github.com/vinaygy29/aw-server.git
 	branch = master
 [submodule "aw-watcher-afk"]
 	path = aw-watcher-afk
-	url = https://github.com/ActivityWatch/aw-watcher-afk.git
+	url = https://github.com/vinaygy29/aw-watcher-afk.git
 [submodule "aw-qt"]
 	path = aw-qt
-	url = https://github.com/ActivityWatch/aw-qt.git
+	url = https://github.com/vinaygy29/aw-qt.git
 [submodule "aw-watcher-window"]
 	path = aw-watcher-window
-	url = https://github.com/ActivityWatch/aw-watcher-window.git
+	url = https://github.com/vinaygy29/aw-watcher-window.git
 [submodule "aw-server-rust"]
 	path = aw-server-rust
 	url = https://github.com/vinaygy29/aw-server-rust.git
 	branch = master
 [submodule "aw-notify"]
 	path = aw-notify
-	url = https://github.com/ErikBjare/aw-notify.git
+	url = https://github.com/vinaygy29/aw-notify.git
 [submodule "aw-watcher-input"]
 	path = aw-watcher-input
-	url = https://github.com/ActivityWatch/aw-watcher-input.git
+	url = https://github.com/vinaygy29/aw-watcher-input.git
 [submodule "aw-watcher-zoom"]
 	path = aw-watcher-zoom
 	url = https://github.com/vinaygy29/aw-watcher-zoom.git
