@@ -17,10 +17,6 @@
 [submodule "aw-watcher-window"]
 	path = aw-watcher-window
 	url = https://github.com/vinaygy29/aw-watcher-window.git
-[submodule "aw-server-rust"]
-	path = aw-server-rust
-	url = https://github.com/vinaygy29/aw-server-rust.git
-	branch = master
 [submodule "aw-notify"]
 	path = aw-notify
 	url = https://github.com/vinaygy29/aw-notify.git
