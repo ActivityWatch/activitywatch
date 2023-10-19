@@ -118,7 +118,13 @@ test-integration:
 	# TODO: Move "integration tests" to aw-client
 	# FIXME: For whatever reason the script stalls on Appveyor
 	#        Example: https://ci.appveyor.com/project/ErikBjare/activitywatch/build/1.0.167/job/k1ulexsc5ar5uv4v
-	pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
+	# aw-server-python
+	@echo "== Integration testing aw-server =="
+	@pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
+	# aw-server-rust
+	@echo "== Integration testing aw-server-rust =="
+	@export PATH=aw-server-rust/target/release:aw-server-rust/target/debug:${PATH}; \
+		 pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
 
 ICON := "aw-qt/media/logo/logo.png"
 

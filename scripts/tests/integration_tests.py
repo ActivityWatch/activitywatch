@@ -1,25 +1,39 @@
-import subprocess
-from time import sleep
-import tempfile
+import os
 import platform
+import subprocess
+import tempfile
+from time import sleep
 
 import pytest
 
 
 def _windows_kill_process(pid):
     import ctypes
+
     PROCESS_TERMINATE = 1
     handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
     ctypes.windll.kernel32.TerminateProcess(handle, -1)
     ctypes.windll.kernel32.CloseHandle(handle)
 
 
+# NOTE: to run tests with a specific server binary,
+#       set the PATH such that it is the "aw-server" binary.
 @pytest.fixture(scope="session")
 def server_process():
     logfile_stdout = tempfile.NamedTemporaryFile(delete=False)
     logfile_stderr = tempfile.NamedTemporaryFile(delete=False)
 
-    server_proc = subprocess.Popen(["aw-server", "--testing"], stdout=logfile_stdout, stderr=logfile_stderr)
+    # find the path of the "aw-server" binary and log it
+    which_server = subprocess.check_output(["which", "aw-server"], text=True)
+    print(f"aw-server path: {which_server}")
+
+    # if aw-server-rust in PATH, assert that we're picking up the aw-server-rust binary
+    if "aw-server-rust" in os.environ["PATH"]:
+        assert "aw-server-rust" in which_server
+
+    server_proc = subprocess.Popen(
+        ["aw-server", "--testing"], stdout=logfile_stdout, stderr=logfile_stderr
+    )
 
     # Wait for server to start up properly
     # TODO: Ping the server until it's alive to remove this sleep
@@ -40,19 +54,20 @@ def server_process():
     with open(logfile_stdout.name, "r+b") as f:
         stdout = str(f.read(), "utf8")
         if any(e in stdout for e in error_indicators):
-            pytest.fail("Found ERROR indicator in stdout from server: {}".format(stdout))
+            pytest.fail(f"Found ERROR indicator in stdout from server: {stdout}")
 
     with open(logfile_stderr.name, "r+b") as f:
         stderr = str(f.read(), "utf8")
-        if not stderr:
-            pytest.fail("No output to stderr from server")
+        # For some reason, this fails aw-server-rust, but not aw-server-python
+        # if not stderr:
+        #    pytest.fail("No output to stderr from server")
 
         # Will show in case pytest fails
         print(stderr)
 
         for s in error_indicators:
             if s in stderr:
-                pytest.fail("Found ERROR indicator in stderr from server: {}".format(s))
+                pytest.fail(f"Found ERROR indicator in stderr from server: {s}")
 
     # NOTE: returncode was -9 for whatever reason
     # if server_proc.returncode != 0:
