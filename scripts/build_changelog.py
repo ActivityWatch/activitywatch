@@ -6,7 +6,6 @@ Manual actions needed to clean up for changelog:
  - Reorder modules in a logical order (aw-webui, aw-server, aw-server-rust, aw-watcher-window, aw-watcher-afk, ...)
  - Remove duplicate aw-webui entries
 """
-
 import argparse
 import logging
 import os
@@ -302,8 +301,12 @@ Changes since {since}
 
     # Would ideally sort by number of commits or something, but that's tricky
     usernames = sorted(get_all_contributors(), key=str.casefold)
+    usernames = [u for u in usernames if not u.endswith("[bot]")]
     twitter_handles = get_twitter_of_ghusers(usernames)
-    print(", ".join("@" + handle for handle in twitter_handles.values() if handle))
+    print(
+        "Twitter handles: "
+        + ", ".join("@" + handle for handle in twitter_handles.values() if handle),
+    )
 
     output_contributors = f"""# Contributors
 
@@ -313,9 +316,7 @@ Thanks to everyone who contributed to this release:
 
     # Header starts here
     logger.info("Building final output")
-    output = f"""# {tag}"""
-    output += "\n\n"
-    output += f"These are the release notes for ActivityWatch version {tag}.".strip()
+    output = f"These are the release notes for ActivityWatch version {tag}.".strip()
     output += "\n\n"
     output += "**New to ActivityWatch?** Check out the [website](https://activitywatch.net) and the [README](https://github.com/ActivityWatch/activitywatch/blob/master/README.md)."
     output += "\n\n"
@@ -407,6 +408,8 @@ def get_all_contributors() -> set[str]:
     usernames["kewde"] |= {"kewde@particl.io"}
     usernames["victorwinberg"] |= {"victor.m.winberg@gmail.com"}
     usernames["NicoWeio"] |= {"nico.weio@gmail.com"}
+    usernames["2e3s"] |= {"2e3s19@gmail.com"}
+    usernames["alwinator"] |= {"accounts@alwinschuster.at"}
 
     # read existing contributors, to avoid extra calls to the GitHub API
     if os.path.exists(filename):
@@ -450,8 +453,26 @@ def get_all_contributors() -> set[str]:
 
 def get_twitter_of_ghusers(ghusers: Collection[str]):
     logger.info("Getting twitter of GitHub usernames")
+
+    # We will commit this file, to act as a cache (preventing us from querying GitHub API every time)
+    filename = "scripts/changelog_contributors_twitter.csv"
+
     twitter = {}
+
+    # read existing contributors, to avoid extra calls to the GitHub API
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            s = f.read()
+        for line in s.split("\n"):
+            if not line:
+                continue
+            gh_username, twitter_username = line.split("\t")
+            twitter[gh_username] = twitter_username
+        logger.info(f"Read {len(twitter)} Twitter handles from {filename}")
+
     for username in ghusers:
+        if username in twitter:
+            continue
         try:
             resp = requests.get(f"https://api.github.com/users/{username}")
             resp.raise_for_status()
@@ -460,7 +481,15 @@ def get_twitter_of_ghusers(ghusers: Collection[str]):
             logger.warning(f"Failed to get twitter of {username}: {e}")
             continue
 
-        twitter[username] = data["twitter_username"]
+        twitter_username = data["twitter_username"]
+        if twitter_username:
+            twitter[username] = twitter_username
+
+    with open(filename, "w") as f:
+        for username, twitter_username in sorted(twitter.items()):
+            f.write(f"{username}\t{twitter_username}")
+            f.write("\n")
+
     return twitter
 
 
