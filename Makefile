@@ -28,9 +28,11 @@ define has_target
 $(shell make -q -C $1 $2 >/dev/null 2>&1; if [ $$? -eq 0 -o $$? -eq 1 ]; then echo $1; fi)
 endef
 
-# Submodules with `test` and `package` targets
+# Submodules with test/package/lint/typecheck targets
 TESTABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),test))
 PACKAGEABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),package))
+LINTABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),lint))
+TYPECHECKABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),typecheck))
 
 # The `build` target
 # ------------------
@@ -86,16 +88,16 @@ update:
 
 
 lint:
-	pylint -E \
-		aw-core/aw_core/ \
-		aw-core/aw_datastore/ \
-		aw-core/aw_transform/ \
-		aw-core/aw_analysis/ \
-		aw-client/aw_client/ \
-		aw-server/aw_server/ \
-		aw-watcher-window/aw_watcher_window/ \
-		aw-watcher-afk/aw_watcher_afk/ \
-		aw-qt/aw_qt/
+	@for module in $(LINTABLES); do \
+		echo "Linting $$module"; \
+		make --directory=$$module lint || { echo "Error in $$module lint"; exit 2; }; \
+	done
+
+typecheck:
+	@for module in $(TYPECHECKABLES); do \
+		echo "Typechecking $$module"; \
+		make --directory=$$module typecheck || { echo "Error in $$module typecheck"; exit 2; }; \
+	done
 
 # Uninstall
 # ---------
