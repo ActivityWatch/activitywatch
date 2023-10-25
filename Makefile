@@ -169,17 +169,34 @@ package:
 	mv aw-qt-tmp/* dist/activitywatch
 	rmdir aw-qt-tmp
 # Remove problem-causing binaries
-	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
-	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
+	rm -f dist/activitywatch/_internal/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
+	rm -f dist/activitywatch/_internal/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
 # These should be provided by the distro itself
 # Had to be removed due to otherwise causing the error:
 #   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
-	rm -f dist/activitywatch/libfontconfig.so.1
-	rm -f dist/activitywatch/libfreetype.so.6
+	rm -f dist/activitywatch/_internal/libfontconfig.so.1
+	rm -f dist/activitywatch/_internal/libfreetype.so.6
+# Check
+	make package-check
 # Remove unnecessary files
 	rm -rf dist/activitywatch/pytz
 # Builds zips and setups
 	bash scripts/package/package-all.sh
+
+BADLIBS := \
+					libdrm.so.2 \
+					libharfbuzz.so.0 \
+					libfontconfig.so.1 \
+					libfreetype.so.6
+
+package-check:
+	# check that the libs are gone everywhere
+	@for lib in $(BADLIBS); do \
+		if [ -n "$$(find dist/activitywatch -name $$lib)" ]; then \
+			echo "Error: $$lib found in $$(find dist/activitywatch -name $$lib)" >&2; \
+			exit 1; \
+		fi \
+	done
 
 clean:
 	rm -rf build dist
