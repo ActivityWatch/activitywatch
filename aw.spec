@@ -3,13 +3,12 @@
 
 import os
 import platform
-import subprocess
 import shlex
+import subprocess
 from pathlib import Path
 
-import flask_restx
-
 import aw_core
+import flask_restx
 
 current_release = subprocess.run(
     shlex.split("git describe --tags --abbrev=0"),
@@ -30,7 +29,6 @@ restx_path = Path(os.path.dirname(flask_restx.__file__))
 aws_location = Path("aw-server")
 aw_server_rust_location = Path("aw-server-rust")
 aw_server_rust_bin = aw_server_rust_location / "target/package/aw-server-rust"
-aw_server_rust_webui = aw_server_rust_location / "target/package/static"
 aw_qt_location = Path("aw-qt")
 awa_location = Path("aw-watcher-afk")
 aww_location = Path("aw-watcher-window")
@@ -82,8 +80,7 @@ aw_qt_a = Analysis(
     datas=[
         (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
         (aw_qt_location / "media", "aw_qt/media"),
-    ]
-    + ([(aw_server_rust_webui, "aw_server_rust/static")] if not skip_rust else []),
+    ],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
