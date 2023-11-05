@@ -29,18 +29,51 @@ import requests
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# preferred repository order
-repo_order = [
-    "activitywatch",
-    "aw-server",
-    "aw-server-rust",
-    "aw-webui",
-    "aw-watcher-afk",
-    "aw-watcher-window",
-    "aw-qt",
-    "aw-core",
-    "aw-client",
-]
+
+def main():
+    prev_release = run("git describe --tags --abbrev=0").strip()
+    next_release = "master"
+
+    parser = argparse.ArgumentParser(description="Generate changelog from git history")
+
+    parser.add_argument("--org", default="ActivityWatch", help="GitHub organization")
+    parser.add_argument("--repo", default="activitywatch", help="GitHub repository")
+    parser.add_argument(
+        "--project-title", default="ActivityWatch", help="Project title"
+    )
+
+    parser.add_argument(
+        "--range", default=f"{prev_release}...{next_release}", help="Git commit range"
+    )
+    parser.add_argument("--path", default=".", help="Path to git repo")
+    parser.add_argument(
+        "--output", default="changelog.md", help="Path to output changelog"
+    )
+    args = parser.parse_args()
+
+    since, until = args.range.split("...", 1)
+
+    # preferred output order for submodules
+    repo_order = [
+        "activitywatch",
+        "aw-server",
+        "aw-server-rust",
+        "aw-webui",
+        "aw-watcher-afk",
+        "aw-watcher-window",
+        "aw-qt",
+        "aw-core",
+        "aw-client",
+    ]
+
+    build(
+        args.org,
+        args.repo,
+        args.project_title,
+        commit_range=(since, until),
+        output_path=args.output,
+        repo_order=repo_order,
+    )
 
 
 class CommitMsg:
@@ -53,6 +86,7 @@ class CommitMsg:
 class Commit:
     id: str
     msg: str
+    org: str
     repo: str
 
     @property
@@ -60,18 +94,18 @@ class Commit:
         """Generates links from commit and issue references (like 0c14d77, #123) to correct repo and such"""
         s = self.msg
         s = re.sub(
-            r"[^(-]https://github.com/ActivityWatch/([\-\w\d]+)/(issues|pulls)/(\d+)",
-            r"[#\3](https://github.com/ActivityWatch/\1/issues/\3)",
+            rf"[^(-]https://github.com/{self.org}/([\-\w\d]+)/(issues|pulls)/(\d+)",
+            rf"[#\3](https://github.com/{self.org}/\1/issues/\3)",
             s,
         )
         s = re.sub(
             r"#(\d+)",
-            rf"[#\1](https://github.com/ActivityWatch/{self.repo}/issues/\1)",
+            rf"[#\1](https://github.com/{self.org}/{self.repo}/issues/\1)",
             s,
         )
         s = re.sub(
             r"[\s\(][0-9a-f]{7}[\s\)]",
-            rf"[`\0`](https://github.com/ActivityWatch/{self.repo}/issues/\0)",
+            rf"[`\0`](https://github.com/{self.org}/{self.repo}/issues/\0)",
             s,
         )
         return s
@@ -101,7 +135,7 @@ class Commit:
         return f"{_type}" + (f"({subtype})" if subtype else "")
 
     def format(self) -> str:
-        commit_link = commit_linkify(self.id, self.repo) if self.id else ""
+        commit_link = commit_linkify(self.id, self.org, self.repo) if self.id else ""
 
         return f"{self.msg_processed}" + (f" ({commit_link})" if commit_link else "")
 
@@ -116,38 +150,45 @@ def run(cmd, cwd=".") -> str:
     return p.stdout
 
 
-def pr_linkify(prid: str, repo: str) -> str:
-    return f"[#{prid}](https://github.com/ActivityWatch/{repo}/pulls/{prid})"
+def pr_linkify(prid: str, org: str, repo: str) -> str:
+    return f"[#{prid}](https://github.com/{org}/{repo}/pulls/{prid})"
 
 
-def commit_linkify(commitid: str, repo: str) -> str:
-    return f"[`{commitid}`](https://github.com/ActivityWatch/{repo}/commit/{commitid})"
+def commit_linkify(commitid: str, org: str, repo: str) -> str:
+    return f"[`{commitid}`](https://github.com/{org}/{repo}/commit/{commitid})"
 
 
 def wrap_details(title, body, wraplines=5):
     """Wrap lines into a <details> element if body is longer than `wraplines`"""
     out = f"\n\n### {title}"
-    if body.count("\n") > wraplines:
-        out += "\n<details><summary>Click to expand</summary>"
-    out += f"\n<p>\n\n{body.rstrip()}\n\n</p>\n"
-    if body.count("\n") > wraplines:
-        out += "</details>"
+    wrap = body.strip().count("\n") > wraplines
+    if wrap:
+        out += "\n<details><summary>Click to expand</summary>\n<p>"
+    out += f"\n{body.rstrip()}\n\n"
+    if wrap:
+        out += "</p>\n</details>"
     return out
 
 
 contributor_emails = set()
 
 
-def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
-    if commitrange.endswith("0000000"):
+def summary_repo(
+    org: str,
+    repo: str,
+    path: str,
+    commit_range: Tuple[str, str],
+    filter_types: List[str],
+    repo_order: List[str],
+) -> str:
+    if commit_range[1] == "0000000":
         # Happens when a submodule has been removed
         return ""
-    if commitrange.startswith("0000000"):
+    if commit_range[0] == "0000000":
         # Happens when a submodule has been added
-        commitrange = ""  # no range = all commits
+        commit_range = ("", "")  # no range = all commits for new submodule
 
-    dirname = run("bash -c 'basename $(pwd)'", cwd=path).strip()
-    out = f"\n## 📦 {dirname}"
+    out = f"\n## 📦 {repo}"
 
     feats = ""
     fixes = ""
@@ -155,20 +196,17 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
 
     # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
     summary_bundle = run(
-        f"git log {commitrange} --no-decorate --pretty=format:'%h%x09%an%x09%ae%x09%s'",
+        f"git log {'...'.join(commit_range) if any(commit_range) else ''} --no-decorate --pretty=format:'%h%x09%an%x09%ae%x09%s'",
         cwd=path,
     )
+    print(f"Found {len(summary_bundle.splitlines())} commits in {repo}")
     for line in summary_bundle.split("\n"):
         if line:
             _id, _author, email, msg = line.split("\t")
             # will add author email to contributor list
             # the `contributor_emails` is global and collected later
             contributor_emails.add(email)
-            commit = Commit(
-                id=_id,
-                msg=msg,
-                repo=dirname,
-            )
+            commit = Commit(id=_id, msg=msg, org=org, repo=repo)
 
             entry = f"\n - {commit.format()}"
             if commit.type == "feat":
@@ -192,7 +230,7 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
     # TODO: Fix issue where subsubmodules can appear twice (like aw-webui)
     # TODO: Use specific order (aw-webui should be one of the first, for example)
     summary_subrepos = run(
-        f"git submodule summary --cached {commitrange.split('...')[0]}", cwd=path
+        f"git submodule summary --cached {commit_range[0]}", cwd=path
     )
     subrepos = {}
     for header, *_ in [s.split("\n") for s in summary_subrepos.split("\n\n")]:
@@ -204,15 +242,21 @@ def summary_repo(path: str, commitrange: str, filter_types: List[str]) -> str:
                 # Submodule may have been deleted
                 continue
 
-            _, name, commitrange, count = header.split(" ")
+            _, name, crange, count = header.split(" ")
+            commit_range = tuple(crange.split("...", 1))  # type: ignore
             count = count.strip().lstrip("(").rstrip("):")
             logger.info(
-                f"Found {name}, looking up range: {commitrange} ({count} commits)"
+                f"Found {name}, looking up range: {commit_range} ({count} commits)"
             )
             name = name.strip(".").strip("/")
 
             subrepos[name] = summary_repo(
-                f"{path}/{name}", commitrange, filter_types=filter_types
+                org,
+                repo,
+                f"{path}/{name}",
+                commit_range,
+                filter_types=filter_types,
+                repo_order=repo_order,
             )
 
     # pick subrepos in repo_order, and remove from dict
@@ -266,35 +310,33 @@ def remove_duplicates(s: List[str], minlen=10, only_sections=True) -> List[str]:
     return out
 
 
-def build(filter_types=["build", "ci", "tests", "test"]):
-    prev_release = run("git describe --tags --abbrev=0").strip()
-    next_release = "master"
-
-    parser = argparse.ArgumentParser(description="Generate changelog from git history")
-    parser.add_argument(
-        "--range", default=f"{prev_release}...{next_release}", help="Git commit range"
-    )
-    parser.add_argument("--path", default=".", help="Path to git repo")
-    parser.add_argument(
-        "--output", default="changelog.md", help="Path to output changelog"
-    )
-    args = parser.parse_args()
-
-    since, until = args.range.split("...")
-    tag = until
-
+def build(
+    org: str,
+    repo: str,
+    project_name: str,
+    commit_range: Tuple[str, str],
+    output_path: str,
+    repo_order: List[str],
+    filter_types=["build", "ci", "tests", "test"],
+):
     # provides a commit summary for the repo and subrepos, recursively looking up subrepos
     # NOTE: this must be done *before* `get_all_contributors` is called,
     #       as the latter relies on summary_repo looking up all users and storing in a global.
     logger.info("Generating commit summary")
+    since, tag = commit_range
     output_changelog = summary_repo(
-        ".", commitrange=args.range, filter_types=filter_types
+        org,
+        repo,
+        ".",
+        commit_range=commit_range,
+        filter_types=filter_types,
+        repo_order=repo_order,
     )
 
     output_changelog = f"""
 # Changelog
 
-Changes since {since}
+Changes since {since}:
 
 {output_changelog}
     """.strip()
@@ -316,29 +358,34 @@ Thanks to everyone who contributed to this release:
 
     # Header starts here
     logger.info("Building final output")
-    output = f"These are the release notes for ActivityWatch version {tag}.".strip()
+    output = f"These are the release notes for {project_name} version {tag}.".strip()
     output += "\n\n"
-    output += "**New to ActivityWatch?** Check out the [website](https://activitywatch.net) and the [README](https://github.com/ActivityWatch/activitywatch/blob/master/README.md)."
-    output += "\n\n"
-    output += """# Installation
+
+    # hardcoded for now
+    if repo == "activitywatch":
+        output += "**New to ActivityWatch?** Check out the [website](https://activitywatch.net) and the [README](https://github.com/ActivityWatch/activitywatch/blob/master/README.md)."
+        output += "\n\n"
+        output += """# Installation
 
 See the [getting started guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
-    """.strip()
-    output += "\n\n"
-    output += f"""# Downloads
+        """.strip()
+        output += "\n\n"
+        output += f"""# Downloads
 
  - [**Windows**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
  - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
  - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
- """.strip()
-    output += "\n\n"
+     """.strip()
+        output += "\n\n"
+
     output += output_contributors.strip() + "\n\n"
     output += output_changelog.strip() + "\n\n"
 
-    output = output.replace("# activitywatch", "# activitywatch (bundle repo)")
-    with open(args.output, "w") as f:
+    if repo == "activitywatch":
+        output = output.replace("# activitywatch", "# activitywatch (bundle repo)")
+    with open(output_path, "w") as f:
         f.write(output)
-    print(f"Wrote {len(output.splitlines())} lines to {args.output}")
+    print(f"Wrote {len(output.splitlines())} lines to {output_path}")
 
 
 def _resolve_email(email: str) -> Optional[str]:
@@ -494,4 +541,4 @@ def get_twitter_of_ghusers(ghusers: Collection[str]):
 
 
 if __name__ == "__main__":
-    build()
+    main()
