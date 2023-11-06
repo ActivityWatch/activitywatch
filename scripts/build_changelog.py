@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """
-Script that outputs a changelog for the repository in the current directory and its submodules.
+Script that generates a changelog for the repository and its submodules, and outputs it in the current directory.
+
+NOTE: This script can be downloaded as-is and run from your repository.
+
+Repos using this script:
+ - ActivityWatch/activitywatch
+ - ErikBjare/gptme
 
 Manual actions needed to clean up for changelog:
  - Reorder modules in a logical order (aw-webui, aw-server, aw-server-rust, aw-watcher-window, aw-watcher-afk, ...)
@@ -14,6 +20,7 @@ import shlex
 from collections import defaultdict
 from collections.abc import Collection
 from dataclasses import dataclass
+from pathlib import Path
 from subprocess import PIPE, STDOUT
 from subprocess import run as _run
 from time import sleep
@@ -30,27 +37,34 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-def main():
-    prev_release = run("git describe --tags --abbrev=0").strip()
-    next_release = "master"
+script_dir = Path(__file__).parent.resolve()
 
+
+def main():
     parser = argparse.ArgumentParser(description="Generate changelog from git history")
 
+    # repo info
     parser.add_argument("--org", default="ActivityWatch", help="GitHub organization")
     parser.add_argument("--repo", default="activitywatch", help="GitHub repository")
     parser.add_argument(
         "--project-title", default="ActivityWatch", help="Project title"
     )
 
+    # settings
+    last_tag = run("git describe --tags --abbrev=0").strip()  # get latest tag
+    branch = run("git rev-parse --abbrev-ref HEAD").strip()  # get current branch name
     parser.add_argument(
-        "--range", default=f"{prev_release}...{next_release}", help="Git commit range"
+        "--range", default=f"{last_tag}...{branch}", help="Git commit range"
     )
     parser.add_argument("--path", default=".", help="Path to git repo")
+
+    # output
     parser.add_argument(
         "--output", default="changelog.md", help="Path to output changelog"
     )
-    args = parser.parse_args()
 
+    # parse args
+    args = parser.parse_args()
     since, until = args.range.split("...", 1)
 
     # preferred output order for submodules
@@ -164,9 +178,9 @@ def wrap_details(title, body, wraplines=5):
     wrap = body.strip().count("\n") > wraplines
     if wrap:
         out += "\n<details><summary>Click to expand</summary>\n<p>"
-    out += f"\n{body.rstrip()}\n\n"
+    out += f"\n{body.rstrip()}"
     if wrap:
-        out += "</p>\n</details>"
+        out += "\n\n</p>\n</details>"
     return out
 
 
@@ -223,7 +237,7 @@ def summary_repo(
             if "Misc" in name or "Fixes" in name:
                 out += wrap_details(title, entries)
             else:
-                out += f"\n\n### {title}"
+                out += f"\n\n### {title}\n"
                 out += entries
 
     # NOTE: For now, these TODOs can be manually fixed for each changelog.
@@ -252,12 +266,19 @@ def summary_repo(
 
             subrepos[name] = summary_repo(
                 org,
-                repo,
+                name,
                 f"{path}/{name}",
                 commit_range,
                 filter_types=filter_types,
                 repo_order=repo_order,
             )
+
+    # filter out subrepos with no commits (single line after stripping whitespace)
+    subrepos = {
+        name: output
+        for name, output in subrepos.items()
+        if len(output.strip().splitlines()) > 1
+    }
 
     # pick subrepos in repo_order, and remove from dict
     for name in repo_order:
@@ -380,6 +401,9 @@ See the [getting started guide in the documentation](https://docs.activitywatch.
 
     output += output_contributors.strip() + "\n\n"
     output += output_changelog.strip() + "\n\n"
+    output += (
+        f"**Full Changelog**: https://github.com/{org}/{repo}/compare/{since}...{tag}"
+    )
 
     if repo == "activitywatch":
         output = output.replace("# activitywatch", "# activitywatch (bundle repo)")
@@ -444,7 +468,7 @@ def get_all_contributors() -> set[str]:
     logger.info("Getting all contributors")
 
     # We will commit this file, to act as a cache (preventing us from querying GitHub API every time)
-    filename = "scripts/changelog_contributors.csv"
+    filename = script_dir / "changelog_contributors.csv"
 
     # mapping from username to one or more emails
     usernames: Dict[str, set] = defaultdict(set)
@@ -502,7 +526,7 @@ def get_twitter_of_ghusers(ghusers: Collection[str]):
     logger.info("Getting twitter of GitHub usernames")
 
     # We will commit this file, to act as a cache (preventing us from querying GitHub API every time)
-    filename = "scripts/changelog_contributors_twitter.csv"
+    filename = script_dir / "changelog_contributors_twitter.csv"
 
     twitter = {}
 
