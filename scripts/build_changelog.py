@@ -207,6 +207,7 @@ def summary_repo(
     feats = ""
     fixes = ""
     misc = ""
+    hidden = 0
 
     # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
     summary_bundle = run(
@@ -229,6 +230,8 @@ def summary_repo(
                 fixes += entry
             elif commit.type not in filter_types:
                 misc += entry
+            else:
+                hidden += 1
 
     for name, entries in (("✨ Features", feats), ("🐛 Fixes", fixes), ("🔨 Misc", misc)):
         if entries:
@@ -239,6 +242,9 @@ def summary_repo(
             else:
                 out += f"\n\n### {title}\n"
                 out += entries
+    if hidden > 1:
+        full_history_url = f"https://github.com/{org}/{repo}/compare/{commit_range[0]}...{commit_range[1]}"
+        out += f"\n\n*(excluded {hidden} less relevant [commits]({full_history_url}))*"
 
     # NOTE: For now, these TODOs can be manually fixed for each changelog.
     # TODO: Fix issue where subsubmodules can appear twice (like aw-webui)
