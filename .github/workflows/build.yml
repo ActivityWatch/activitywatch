@@ -84,12 +84,12 @@ jobs:
       with:
         node-version: ${{ matrix.node_version }}
 
-    - name: Set up Rust nightly
+    - name: Set up Rust
       if: ${{ !matrix.skip_rust }}
       uses: dtolnay/rust-toolchain@master
       id: toolchain
       with:
-        toolchain: nightly
+        toolchain: stable
 
     - name: Get npm cache dir
       id: npm-cache-dir
