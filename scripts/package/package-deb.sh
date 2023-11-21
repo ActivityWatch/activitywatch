@@ -46,9 +46,9 @@ jdupes -L -r -S -Xsize-:1K $PKGDIR/opt/
 sudo chown -R root:root $PKGDIR
 
 # Prepare the .desktop file
-sudo sed -i 's!Exec=aw-qt!Exec=/opt/activitywatch/aw-qt!' $PKGDIR/opt/activitywatch/aw-qt.desktop
-sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/etc/xdg/autostart/
-sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/usr/share/applications/
+sudo sed -i 's!Exec=aw-qt!Exec=/opt/activitywatch/aw-qt!' $PKGDIR/opt/activitywatch/_internal/aw-qt.desktop
+sudo cp $PKGDIR/opt/activitywatch/_internal/aw-qt.desktop $PKGDIR/etc/xdg/autostart/
+sudo cp $PKGDIR/opt/activitywatch/_internal/aw-qt.desktop $PKGDIR/usr/share/applications/
 
 dpkg-deb --build $PKGDIR
 sudo mv activitywatch_${VERSION_NUM}.deb dist/activitywatch-${VERSION}-linux-x86_64.deb
