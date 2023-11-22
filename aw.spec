@@ -1,6 +1,5 @@
 # -*- mode: python -*-
 # vi: set ft=python :
-
 import os
 import platform
 import shlex
@@ -83,6 +82,7 @@ restx_path = Path(os.path.dirname(flask_restx.__file__))
 aws_location = Path("aw-server")
 aw_server_rust_location = Path("aw-server-rust")
 aw_server_rust_bin = aw_server_rust_location / "target/package/aw-server-rust"
+aw_sync_bin = aw_server_rust_location / "target/package/aw-sync"
 aw_qt_location = Path("aw-qt")
 awa_location = Path("aw-watcher-afk")
 aww_location = Path("aw-watcher-window")
@@ -103,7 +103,7 @@ if not aw_server_rust_bin.exists():
 aw_qt_a = build_analysis(
     "aw-qt",
     aw_qt_location,
-    binaries=[(aw_server_rust_bin, ".")] if not skip_rust else [],
+    binaries=[(aw_server_rust_bin, "."), (aw_sync_bin, ".")] if not skip_rust else [],
     datas=[
         (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
         (aw_qt_location / "media", "aw_qt/media"),
