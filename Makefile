@@ -147,7 +147,7 @@ aw-qt/media/logo/logo.icns:
 	mv build/MyIcon.icns aw-qt/media/logo/logo.icns
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
-	pyinstaller --clean --noconfirm aw.spec
+	pyinstaller --clean --noconfirm --log-level DEBUG aw.spec
 
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	# NOTE: This does not codesign the dmg, that is done in the CI config
