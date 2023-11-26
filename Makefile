@@ -160,9 +160,11 @@ dist/notarize:
 package:
 	rm -rf dist
 	mkdir -p dist/activitywatch
+	# We use rsync to copy the files, preserving symlinks in a cross-platform way
+	# https://github.com/pyinstaller/pyinstaller/issues/8120#issuecomment-1825924706
 	for dir in $(PACKAGEABLES); do \
 		make --directory=$$dir package; \
-		cp -r $$dir/dist/$$dir dist/activitywatch; \
+		rsync -a $$dir/dist/$$dir dist/activitywatch; \
 	done
 # Move aw-qt to the root of the dist folder
 	mv dist/activitywatch/aw-qt aw-qt-tmp
