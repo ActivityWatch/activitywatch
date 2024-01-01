@@ -221,7 +221,7 @@ jobs:
         ./scripts/package/package-deb.sh
 
     - name: Upload packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
@@ -264,7 +264,7 @@ jobs:
           mv changelog.md release_notes.md
 
       - name: Upload release notes
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release_notes
           path: release_notes.md
