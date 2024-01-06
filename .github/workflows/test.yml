@@ -55,7 +55,7 @@ jobs:
       # Will download all artifacts to path
       - name: Download build artifacts
         if: ${{ env.new_version == 'this' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: builds-Linux-py3.9
           path: dist
