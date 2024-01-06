@@ -52,7 +52,7 @@ function build_zip() {
     if [[ $platform == "windows"* ]]; then
         7z a $filename activitywatch;
     else
-        zip -r $filename activitywatch;
+        zip -r --symlinks $filename activitywatch;
     fi
     popd;
     echo "Zip built!"

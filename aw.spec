@@ -168,14 +168,14 @@ aw_notify_a = build_analysis(
 # https://pythonhosted.org/PyInstaller/spec-files.html#multipackage-bundles
 # MERGE takes a bit weird arguments, it wants tuples which consists of
 # the analysis paired with the script name and the bin name
-MERGE(
-    (aw_server_a, "aw-server", "aw-server"),
-    (aw_qt_a, "aw-qt", "aw-qt"),
-    (aw_watcher_afk_a, "aw-watcher-afk", "aw-watcher-afk"),
-    (aw_watcher_window_a, "aw-watcher-window", "aw-watcher-window"),
-    (aw_watcher_input_a, "aw-watcher-input", "aw-watcher-input"),
-    (aw_notify_a, "aw-notify", "aw-notify"),
-)
+# MERGE(
+#     (aw_server_a, "aw-server", "aw-server"),
+#     (aw_qt_a, "aw-qt", "aw-qt"),
+#     (aw_watcher_afk_a, "aw-watcher-afk", "aw-watcher-afk"),
+#     (aw_watcher_window_a, "aw-watcher-window", "aw-watcher-window"),
+#     (aw_watcher_input_a, "aw-watcher-input", "aw-watcher-input"),
+#     (aw_notify_a, "aw-notify", "aw-notify"),
+# )
 
 
 # aw-server
