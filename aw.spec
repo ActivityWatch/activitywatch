@@ -1,5 +1,6 @@
 # -*- mode: python -*-
 # vi: set ft=python :
+
 import os
 import platform
 import shlex
@@ -47,6 +48,7 @@ def build_collect(analysis, name, console=True):
         strip=False,
         upx=True,
         console=console,
+        contents_directory=".",
         entitlements_file=entitlements_file,
         codesign_identity=codesign_identity,
     )
@@ -149,14 +151,16 @@ aw_watcher_input_a = build_analysis("aw_watcher_input", awi_location)
 aw_watcher_window_a = build_analysis(
     "aw_watcher_window",
     aww_location,
-    binaries=[
-        (
-            aww_location / "aw_watcher_window/aw-watcher-window-macos",
-            "aw_watcher_window",
-        )
-    ]
-    if platform.system() == "Darwin"
-    else [],
+    binaries=(
+        [
+            (
+                aww_location / "aw_watcher_window/aw-watcher-window-macos",
+                "aw_watcher_window",
+            )
+        ]
+        if platform.system() == "Darwin"
+        else []
+    ),
     datas=[
         (aww_location / "aw_watcher_window/printAppStatus.jxa", "aw_watcher_window")
     ],

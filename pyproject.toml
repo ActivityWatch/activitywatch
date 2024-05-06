@@ -27,7 +27,7 @@ psutil = "*"
 pywin32-ctypes = {version = "*", platform = "win32"}
 pefile = {version = "*", platform = "win32"}
 
-pyinstaller = "^5.13"
+pyinstaller = "^6.6"
 # releases are very infrequent, so good idea to use the master branch
 # we need this unreleased commit: https://github.com/pyinstaller/pyinstaller-hooks-contrib/commit/0f40dc6e74086e5472aee75070b9077b4c17ab18
 pyinstaller-hooks-contrib = {git = "https://github.com/pyinstaller/pyinstaller-hooks-contrib.git", branch="master"}
