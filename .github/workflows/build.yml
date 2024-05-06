@@ -28,7 +28,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04, windows-latest, macOS-12]
         python_version: [3.9]
-        node_version: [16]
+        node_version: [20]
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
@@ -36,7 +36,7 @@ jobs:
         #include:
         #  - os: ubuntu-latest
         #    python_version: 3.9
-        #    node_version: 16
+        #    node_version: 20
         #    experimental: true
 
     steps:
