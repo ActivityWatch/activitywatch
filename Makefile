@@ -40,12 +40,7 @@ TYPECHECKABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),typecheck
 # What it does:
 #  - Installs all the Python modules
 #  - Builds the web UI and bundles it with aw-server
-build:
-	if [ -e "aw-core/.git" ]; then \
-		echo "Submodules seem to already be initialized, continuing..."; \
-	else \
-		git submodule update --init --recursive; \
-	fi
+build: aw-core/.git
 #	needed due to https://github.com/pypa/setuptools/issues/1963
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
@@ -57,7 +52,7 @@ build:
 	fi
 	for module in $(SUBMODULES); do \
 		echo "Building $$module"; \
-		make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI); \
+		make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module build"; exit 2; }; \
 	done
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
@@ -127,6 +122,9 @@ test-integration:
 	@echo "== Integration testing aw-server-rust =="
 	@export PATH=aw-server-rust/target/release:aw-server-rust/target/debug:${PATH}; \
 		 pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
+
+%/.git:
+	git submodule update --init --recursive
 
 ICON := "aw-qt/media/logo/logo.png"
 
