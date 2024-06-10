@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "activitywatch"
-version = "0.12.0"
+version = "0.13.1"
 description = "The free and open-source automated time tracker. Cross-platform, extensible, privacy-focused."
 authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho.lt>"]
 license = "MPL-2.0"

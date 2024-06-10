@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       old_version: 'v0.12.2'
-      new_version: 'v0.12.3b3'
+      new_version: 'v0.13.1'
     strategy:
       fail-fast: false
       matrix:
@@ -37,7 +37,7 @@ jobs:
             aw_server_old_args: "--storage sqlite"
             aw_server_new_args: "--storage sqlite"
             old_version: 'v0.12.2'
-            new_version: 'v0.12.3b3'
+            new_version: 'v0.13.1'
           # python, peewee to sqlite
           # FIXME: broken, same thing with sqlite as above
           - aw_server_old: "aw-server"
@@ -45,7 +45,7 @@ jobs:
             aw_server_old_args: "--storage peewee"
             aw_server_new_args: "--storage sqlite"
             old_version: 'v0.12.2'
-            new_version: 'v0.12.3b3'
+            new_version: 'v0.13.1'
         exclude:
           # rust to python, not supported
           - aw_server_old: 'aw-server-rust'
