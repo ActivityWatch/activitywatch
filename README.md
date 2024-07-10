@@ -179,14 +179,22 @@ We have a plan to address all of these and we're well on our way. See the table 
 For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 
-## Architectore
+## Architecture
 
 ```mermaid
 graph TD;
-   W[Watchers] -- Capture and send events --> S[Server];
-   S --> aw-sync --> SF[Sync folder];
-   SF --> aw-sync --> S;
-   UI[Web UI] -- Fetches data --> S;
+   aw-qt -- Manages --> S;
+   aw-qt -- Manages --> aw-notify -- Queries --> S;
+   aw-qt -- Manages --> W1[aw-watcher-window] -- Watches --> S1[Active window] -- Heartbeats --> S[aw-server];
+   aw-qt -- Manages --> W2[aw-watcher-afk] -- Watches --> S2[AFK status] -- Heartbeats --> S[aw-server];
+   Browser -- Manages --> aw-watcher-web -- Watches --> S3[Active tab] -- Heartbeats --> S;
+   SF -- Dropbox/Syncthing/etc --> SF;
+   S <-- aw-sync --> SF[Sync folder];
+   S -- Serves --> UI[aw-webui];
+
+   %% User -- Interacts --> UI;
+   %% User -- Observes --> aw-notify;
+   %% User -- Interacts --> aw-qt;
 
 classDef lightMode fill:#FFFFFF, stroke:#333333, color:#333333;
 classDef darkMode fill:#333333, stroke:#FFFFFF, color:#FFFFFF;
@@ -197,8 +205,8 @@ classDef darkModeLinks stroke:#FFFFFF;
 class A,B,C,D,E,G lightMode;
 class A,B,C,D,E,G darkMode;
 
-linkStyle 0 stroke:#FF4136, stroke-width:2px;
-linkStyle 1 stroke:#1ABC9C, stroke-width:2px;
+%% linkStyle 0 stroke:#FF4136, stroke-width:2px;
+%% linkStyle 1 stroke:#1ABC9C, stroke-width:2px;
 ```
 
 ## About this repository
