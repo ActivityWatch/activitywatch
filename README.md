@@ -183,18 +183,27 @@ For a complete list of the things ActivityWatch can track, [see the page on *wat
 
 ```mermaid
 graph TD;
-   aw-qt -- Manages --> S;
-   aw-qt -- Manages --> aw-notify -- Queries --> S;
-   aw-qt -- Manages --> W1[aw-watcher-window] -- Watches --> S1[Active window] -- Heartbeats --> S[aw-server];
-   aw-qt -- Manages --> W2[aw-watcher-afk] -- Watches --> S2[AFK status] -- Heartbeats --> S[aw-server];
-   Browser -- Manages --> aw-watcher-web -- Watches --> S3[Active tab] -- Heartbeats --> S;
-   SF -- Dropbox/Syncthing/etc --> SF;
-   S <-- aw-sync --> SF[Sync folder];
-   S -- Serves --> UI[aw-webui];
+  aw-qt[<a href='https://github.com/ActivityWatch/aw-qt'>aw-qt</a>];
+  aw-notify[<a href='https://github.com/ActivityWatch/aw-notify'>aw-notify</a>];
+  aw-server[<a href='https://github.com/ActivityWatch/aw-server'>aw-server</a>];
+  aw-webui[<a href='https://github.com/ActivityWatch/aw-webui'>aw-webui</a>];
+  aw-watcher-window[<a href='https://github.com/ActivityWatch/aw-watcher-window'>aw-watcher-window</a>];
+  aw-watcher-afk[<a href='https://github.com/ActivityWatch/aw-watcher-afk'>aw-watcher-afk</a>];
+  aw-watcher-web[<a href='https://github.com/ActivityWatch/aw-watcher-web'>aw-watcher-web</a>];
+  aw-sync[<a href='https://github.com/ActivityWatch/aw-server-rust/tree/master/aw-sync'>aw-sync</a>];
 
-   %% User -- Interacts --> UI;
-   %% User -- Observes --> aw-notify;
-   %% User -- Interacts --> aw-qt;
+  aw-qt -- Manages --> aw-server;
+  aw-qt -- Manages --> aw-notify -- Queries --> aw-server;
+  aw-qt -- Manages --> W1[aw-watcher-window] -- Watches --> S1[Active window] -- Heartbeats --> aw-server;
+  aw-qt -- Manages --> W2[aw-watcher-afk] -- Watches --> S2[AFK status] -- Heartbeats --> aw-server;
+  Browser -- Manages --> aw-watcher-web -- Watches --> S3[Active tab] -- Heartbeats --> aw-server;
+  SF -- Dropbox/Syncthing/etc --> SF;
+  aw-server <-- aw-sync --> SF[Sync folder];
+  aw-server -- Serves --> UI[aw-webui];
+
+  %% User -- Interacts --> UI;
+  %% User -- Observes --> aw-notify;
+  %% User -- Interacts --> aw-qt;
 
 classDef lightMode fill:#FFFFFF, stroke:#333333, color:#333333;
 classDef darkMode fill:#333333, stroke:#FFFFFF, color:#FFFFFF;
