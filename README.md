@@ -194,14 +194,14 @@ graph TD;
 
   aw-qt -- Manages --> aw-server;
   aw-qt -- Manages --> aw-notify -- Queries --> aw-server;
-  aw-qt -- Manages --> W1[aw-watcher-window] -- Watches --> S1[Active window] -- Heartbeats --> aw-server;
-  aw-qt -- Manages --> W2[aw-watcher-afk] -- Watches --> S2[AFK status] -- Heartbeats --> aw-server;
+  aw-qt -- Manages --> aw-watcher-window -- Watches --> S1[Active window] -- Heartbeats --> aw-server;
+  aw-qt -- Manages --> aw-watcher-afk -- Watches --> S2[AFK status] -- Heartbeats --> aw-server;
   Browser -- Manages --> aw-watcher-web -- Watches --> S3[Active tab] -- Heartbeats --> aw-server;
   SF -- Dropbox/Syncthing/etc --> SF;
-  aw-server <-- aw-sync --> SF[Sync folder];
-  aw-server -- Serves --> UI[aw-webui];
+  aw-server <-- Push/Pull --> aw-sync <-- Read/Write --> SF[Sync folder];
+  aw-server -- Serves --> aw-webui -- Queries --> aw-server;
 
-  %% User -- Interacts --> UI;
+  %% User -- Interacts --> aw-webui;
   %% User -- Observes --> aw-notify;
   %% User -- Interacts --> aw-qt;
 
