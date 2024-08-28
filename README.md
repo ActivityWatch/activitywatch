@@ -1,4 +1,4 @@
-<img title="ActivityWatch" src="https://activitywatch.net/img/banner.png" align="center">
+<H1>ActivityWatch</H1>
 
 <p align="center">
   <b>Records what you do</b> so that you can <i>know how you've spent your time</i>.
