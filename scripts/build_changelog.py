@@ -12,6 +12,7 @@ Manual actions needed to clean up for changelog:
  - Reorder modules in a logical order (aw-webui, aw-server, aw-server-rust, aw-watcher-window, aw-watcher-afk, ...)
  - Remove duplicate aw-webui entries
 """
+
 import argparse
 import logging
 import os
@@ -233,7 +234,11 @@ def summary_repo(
             else:
                 hidden += 1
 
-    for name, entries in (("✨ Features", feats), ("🐛 Fixes", fixes), ("🔨 Misc", misc)):
+    for name, entries in (
+        ("✨ Features", feats),
+        ("🐛 Fixes", fixes),
+        ("🔨 Misc", misc),
+    ):
         if entries:
             _count = len(entries.strip().split("\n"))
             title = f"{name} ({_count})"
@@ -295,7 +300,7 @@ def summary_repo(
             del subrepos[name]
 
     # add remaining repos
-    for name, output in subrepos.items():
+    for output in subrepos.values():
         out += "\n"
         out += output
 
@@ -344,11 +349,14 @@ def build(
     commit_range: Tuple[str, str],
     output_path: str,
     repo_order: List[str],
-    filter_types=["build", "ci", "tests", "test"],
+    filter_types: List[str] | None = None,
 ):
     # provides a commit summary for the repo and subrepos, recursively looking up subrepos
     # NOTE: this must be done *before* `get_all_contributors` is called,
     #       as the latter relies on summary_repo looking up all users and storing in a global.
+    if not filter_types:
+        filter_types = ["build", "ci", "tests", "test"]
+
     logger.info("Generating commit summary")
     since, tag = commit_range
     output_changelog = summary_repo(
