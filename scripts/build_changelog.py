@@ -349,7 +349,7 @@ def build(
     commit_range: Tuple[str, str],
     output_path: str,
     repo_order: List[str],
-    filter_types: List[str] | None = None,
+    filter_types: Optional[List[str]] = None,
 ):
     # provides a commit summary for the repo and subrepos, recursively looking up subrepos
     # NOTE: this must be done *before* `get_all_contributors` is called,
