@@ -263,3 +263,4 @@ Want to help? Great! Check out the [CONTRIBUTING.md file](./CONTRIBUTING.md)!
 
 Have a question, suggestion, problem, or just want to say hi? Post on [the forum](https://forum.activitywatch.net/)!
 
+# Time-tracker
