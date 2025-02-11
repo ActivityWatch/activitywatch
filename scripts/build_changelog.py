@@ -123,6 +123,8 @@ class Commit:
             rf"[`\0`](https://github.com/{self.org}/{self.repo}/issues/\0)",
             s,
         )
+        # wrap html elements in backticks, if not already wrapped
+        s = re.sub(r"(?<!`)<([^>]+)>(?!`)", r"`<\1>`", s)
         return s
 
     def parse_type(self) -> Optional[Tuple[str, str]]:
