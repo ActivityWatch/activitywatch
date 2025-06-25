@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "activitywatch"
-version = "0.12.0"
+version = "0.13.2"
 description = "The free and open-source automated time tracker. Cross-platform, extensible, privacy-focused."
 authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho.lt>"]
 license = "MPL-2.0"
 
 [tool.poetry.dependencies]
-python = "^3.8,<3.11"
+python = "^3.8"
 # Installing them from here won't work
 #aw-core = {path = "aw-core"}
 #aw-client = {path = "aw-client"}
@@ -15,20 +15,26 @@ python = "^3.8,<3.11"
 #aw-server = {path = "aw-server"}
 #aw-qt = {path = "aw-qt"}
 
+# https://github.com/ionrock/cachecontrol/issues/292
+urllib3 = "<2"
+
 [tool.poetry.dev-dependencies]
 mypy = "*"
-pytest = "^7.0"
+pytest = "*"
 pytest-cov = "*"
 pytest-benchmark = "*"
-pyinstaller = "^5.2"
-#pyinstaller = {git = "https://github.com/pyinstaller/pyinstaller.git", branch="develop"}
 psutil = "*"
 pywin32-ctypes = {version = "*", platform = "win32"}
 pefile = {version = "*", platform = "win32"}
+
+pyinstaller = {version = "*", python = "^3.8,<3.14"}
+# releases are very infrequent, so good idea to use the master branch
+# we need this unreleased commit: https://github.com/pyinstaller/pyinstaller-hooks-contrib/commit/0f40dc6e74086e5472aee75070b9077b4c17ab18
+pyinstaller-hooks-contrib = {git = "https://github.com/pyinstaller/pyinstaller-hooks-contrib.git", branch="master"}
 
 # Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
 #setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

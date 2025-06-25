@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# TODO: Merge with scripts/package/getversion.sh
 # set -e
 
 if [[ $TRAVIS_TAG ]]; then

@@ -16,14 +16,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
+      # Wether to build and include extras (like aw-notify and aw-watcher-input)
+      AW_EXTRAS: true
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.9
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-latest, macOS-12]
+        os: [ubuntu-20.04, windows-latest, macOS-13]
         python_version: [3.9]
-        node_version: [16]
+        node_version: [20]
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
@@ -31,11 +36,11 @@ jobs:
         #include:
         #  - os: ubuntu-latest
         #    python_version: 3.9
-        #    node_version: 16
+        #    node_version: 20
         #    experimental: true
-    steps:
 
-    - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
         fetch-depth: 0  # fetch all branches and tags
@@ -49,7 +54,7 @@ jobs:
 
     - name: Set up Python
       if: runner.os != 'macOS'
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python_version }}
 
@@ -58,6 +63,14 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
+
+        # Python 3.11+ only has *macos11.pkg, so no more *macosx10.9.pkg
+        # the 'macos11' naming seems to suggest it only supports macos11 and up,
+        # but the release page says "for macOS 10.9 and later",
+        # unclear what the resulting binary compatibility will be.
+        #
+        # curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
+
         sudo installer -pkg python.pkg -target /
         echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
         "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
@@ -67,25 +80,23 @@ jobs:
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node_version }}
 
-    - name: Set up Rust nightly
+    - name: Set up Rust
       if: ${{ !matrix.skip_rust }}
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@master
       id: toolchain
       with:
-        profile: minimal
-        toolchain: nightly
-        override: true
+        toolchain: stable
 
     - name: Get npm cache dir
       id: npm-cache-dir
       run: |
-        echo "::set-output name=dir::$(npm config get cache)"
+        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
-    - uses: actions/cache@v1
+    - uses: actions/cache@v4
       name: Cache npm
       if: ${{ !matrix.skip_webui }}
       env:
@@ -97,24 +108,24 @@ jobs:
           ${{ runner.os }}-${{ env.cache-name }}-
 
     - name: Cache cargo build
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
         path: aw-server-rust/target
         # key needs to contain rustc_hash due to https://github.com/ActivityWatch/aw-server-rust/issues/180
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
     - name: Install APT dependencies
-      shell: bash
       if: runner.os == 'Linux'
       run: |
           sudo apt-get update
           # Unsure which of these are actually necessary...
           sudo apt-get install -y \
+            appstream \
             qt5-default \
             qtwayland5 \
             libqt5x11extras5 \
@@ -132,23 +143,21 @@ jobs:
             libxrender-dev
 
     - name: Install dependencies
-      shell: bash
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           choco install innosetup
         fi
-        pip3 install poetry virtualenv
+        pip3 install poetry==1.3.2
 
     - name: Build
-      shell: bash
       run: |
-        python3 -m virtualenv venv
+        python3 -m venv venv
         source venv/bin/activate || source venv/Scripts/activate
         poetry install
         make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+        pip freeze  # output Python packages, useful for debugging dependency versions
 
     - name: Run tests
-      shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
@@ -161,7 +170,6 @@ jobs:
         make test-integration
 
     - name: Package
-      shell: bash
       run: |
         source venv/bin/activate || source venv/Scripts/activate
         poetry install  # run again to ensure we have the correct version of PyInstaller
@@ -201,8 +209,19 @@ jobs:
         CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
         CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
+    - name: Package AppImage
+      if: startsWith(runner.os, 'linux')
+      run: |
+        ./scripts/package/package-appimage.sh
+
+    - name: Package deb
+      if: startsWith(runner.os, 'linux')
+      run: |
+        # The entire process is deferred to a shell file for consistency.
+        ./scripts/package/package-deb.sh
+
     - name: Upload packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: builds-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
@@ -211,12 +230,12 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           fetch-depth: 0  # fetch all branches and tags
 
-      - uses: nowsprinting/check-version-format-action@v2
+      - uses: ActivityWatch/check-version-format-action@v2
         id: version
         with:
           prefix: 'v'
@@ -226,9 +245,9 @@ jobs:
           echo "${{ steps.version.outputs.full }} (stable: ${{ steps.version.outputs.is_stable }})"
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.12"
 
       - name: Install deps
         run: |
@@ -245,19 +264,19 @@ jobs:
           mv changelog.md release_notes.md
 
       - name: Upload release notes
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release_notes
           path: release_notes.md
 
   release:
     needs: [build, release-notes]
-    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
+    if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
     runs-on: ubuntu-latest
     steps:
       # Will download all artifacts to path
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: dist
 
@@ -266,7 +285,7 @@ jobs:
         working-directory: dist
 
       # detect if version tag is stable/beta
-      - uses: nowsprinting/check-version-format-action@v2
+      - uses: ActivityWatch/check-version-format-action@v2
         id: version
         with:
           prefix: 'v'

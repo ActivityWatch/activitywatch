@@ -1,0 +1,22 @@
+# Set update schedule for GitHub Actions
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+
+  # Maintain submodule versions
+  # NOTE: too noisy, easier to update by hand
+  #- package-ecosystem: "gitsubmodule"
+  #  directory: "/"
+  #  schedule:
+  #    interval: "monthly"
+
+  # Maintain dependencies for pip/poetry
+  # NOTE: too noisy, easier to update by hand
+  #- package-ecosystem: "pip"
+  #  directory: "/"
+  #  schedule:
+  #    interval: "monthly"

@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use or refer to this software in your research, please cite it."
+authors:
+- family-names: "Bjäreholt"
+  given-names: "Erik"
+  orcid: "https://orcid.org/0000-0003-1350-9677"
+- family-names: "Bjäreholt"
+  given-names: "Johan"
+  orcid: "https://orcid.org/0000-0003-4789-3160"
+title: "ActivityWatch"
+version: 0.13.1
+doi: 10.5281/zenodo.4957165
+date-released: 2024-06-10
+url: "https://github.com/ActivityWatch/activitywatch"

@@ -1,0 +1,175 @@
+name: Test
+
+on:
+  #push:
+  #  branches: [ master ]
+  #pull_request:
+  #  branches: [ master ]
+  workflow_dispatch:
+
+
+
+jobs:
+  # an integration test designed to catch bugs triggered by updating (database migrations and such)
+  upgrades:
+    name: upgrade from ${{ matrix.aw_server_old }} ${{ matrix.aw_server_old_args }} to ${{ matrix.aw_server_new }} ${{ matrix.aw_server_new_args }}
+    # needs: [build]
+    #if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
+    runs-on: ubuntu-latest
+    env:
+      old_version: 'v0.12.2'
+      new_version: 'v0.13.1'
+    strategy:
+      fail-fast: false
+      matrix:
+        aw_server_old: ['aw-server', 'aw-server-rust']
+        aw_server_new: ['aw-server', 'aw-server-rust']
+        aw_server_old_args: ['']
+        aw_server_new_args: ['']
+        include:
+          # python, peewee (default)
+          - aw_server_old: 'aw-server'
+            aw_server_new: 'aw-server'
+          # python, sqlite
+          # FIXME: sqlite broken since aw-server enabled flask multithreading (new default)
+          - aw_server_old: "aw-server"
+            aw_server_new: "aw-server"
+            aw_server_old_args: "--storage sqlite"
+            aw_server_new_args: "--storage sqlite"
+            old_version: 'v0.12.2'
+            new_version: 'v0.13.1'
+          # python, peewee to sqlite
+          # FIXME: broken, same thing with sqlite as above
+          - aw_server_old: "aw-server"
+            aw_server_new: "aw-server"
+            aw_server_old_args: "--storage peewee"
+            aw_server_new_args: "--storage sqlite"
+            old_version: 'v0.12.2'
+            new_version: 'v0.13.1'
+        exclude:
+          # rust to python, not supported
+          - aw_server_old: 'aw-server-rust'
+            aw_server_new: 'aw-server'
+
+    steps:
+      # Will download all artifacts to path
+      - name: Download build artifacts
+        if: ${{ env.new_version == 'this' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: builds-Linux-py3.9
+          path: dist
+
+      # Only used during testing, so we don't have to wait for the main build job
+      - name: Download new ActivityWatch
+        if: ${{ env.new_version != 'this' }}
+        run: |
+          mkdir dist
+          pushd dist
+          wget -q https://github.com/ActivityWatch/activitywatch/releases/download/${{ env.new_version }}/activitywatch-${{ env.new_version }}-linux-x86_64.zip
+
+      - name: Install new & old ActivityWatch
+        run: |
+          pushd dist
+
+          # New version
+          unzip activitywatch-*-linux-x86_64.zip
+          mv activitywatch/ aw-new
+
+          # Old version
+          wget -q -O aw-old.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ env.old_version }}/activitywatch-${{ env.old_version }}-linux-x86_64.zip
+          unzip aw-old.zip
+          mv activitywatch/ aw-old
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: dist
+
+      - name: Run and test old server
+        run: |
+          bin=dist/aw-old/${{ matrix.aw_server_old }}/${{ matrix.aw_server_old }}
+          url="http://localhost:5600"
+
+          # Check version
+          $bin --version || true  # due to bug in old aw-server
+
+          # Run server and log output
+          $bin ${{ matrix.aw_server_old_args }} >> log-old.txt 2>&1 &
+          sleep 5  # wait for startup
+
+          # Set server URL
+
+          # Get server info
+          curl "$url/api/0/info" --fail-with-body
+
+          # Create bucket
+          curl -X 'POST' --fail-with-body \
+            "$url/api/0/buckets/aw-test" \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '{
+            "client": "test",
+            "type": "test",
+            "hostname": "test"
+          }'
+
+          # Get buckets
+          curl "$url/api/0/buckets/" -H 'accept: application/json'
+
+          # Send a heartbeat
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -X 'POST' \
+            "$url/api/0/buckets/aw-test/heartbeat?pulsetime=0" \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '{
+            "timestamp": "'$timestamp'",
+            "duration": 0,
+            "data": {"key": "test value"}
+          }'
+
+          # Give a sec, then kill server process
+          sleep 1
+          kill $!
+
+      - name: Run and test new server
+        run: |
+          bin=dist/aw-new/${{ matrix.aw_server_new }}/${{ matrix.aw_server_new }}
+          url="http://localhost:5600"
+
+          # Check version
+          $bin --version
+
+          # Run server and log output
+          $bin ${{ matrix.aw_server_new_args }} >> log-new.txt 2>&1 &
+          sleep 5  # wait for startup
+
+          # Get server info
+          curl "$url/api/0/info"
+
+          # Get buckets
+          curl "$url/api/0/buckets/" -H 'accept: application/json'
+
+          # Send a heartbeat
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -X 'POST' --fail-with-body \
+            "$url/api/0/buckets/aw-test/heartbeat?pulsetime=60" \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '{
+            "timestamp": "'$timestamp'",
+            "duration": 0,
+            "data": {"key": "test value"}
+          }'
+
+          # Give a sec, then kill server process
+          sleep 1
+          kill $!
+
+      - name: Output logs
+        if: always()
+        run: |
+          cat log-old.txt || true
+          echo "\n---\n"
+          cat log-new.txt || true
+
