@@ -91,6 +91,13 @@ jobs:
       with:
         toolchain: stable
 
+    - name: Switch to Rust nightly
+      if: ${{ !matrix.skip_rust }}
+      run: |
+        rustup toolchain install nightly --profile minimal
+        rustup default nightly
+        rustc --version
+
     - name: Get npm cache dir
       id: npm-cache-dir
       run: |
