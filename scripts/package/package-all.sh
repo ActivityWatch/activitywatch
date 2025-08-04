@@ -41,6 +41,11 @@ function get_arch() {
 platform=$(get_platform)
 version=$(get_version)
 arch=$(get_arch)
+
+if [[ $platform == "linux" ]]; then
+    cp scripts/package/README.txt scripts/package/move-to-aw-modules.sh dist/activitywatch
+fi
+
 echo "Platform: $platform, arch: $arch, version: $version"
 
 function build_zip() {
