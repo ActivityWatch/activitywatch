@@ -103,9 +103,9 @@ jobs:
         cache-name: node
       with:
         path: ${{ steps.npm-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ matrix.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ matrix.os }}-${{ env.cache-name }}-
 
     - name: Cache cargo build
       uses: actions/cache@v4
@@ -224,7 +224,7 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
-        name: builds-${{ runner.os }}-py${{ matrix.python_version }}
+        name: builds-${{ matrix.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
 
   release-notes:
