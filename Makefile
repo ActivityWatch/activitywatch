@@ -156,7 +156,7 @@ aw-qt/media/logo/logo.icns:
 
 dist/ActivityWatch.app: aw-qt/media/logo/logo.icns
 ifeq ($(TAURI_BUILD),true)
-	scripts/package/build_app.sh
+	scripts/package/build_app_tauri.sh
 else
 	pyinstaller --clean --noconfirm aw.spec
 endif
