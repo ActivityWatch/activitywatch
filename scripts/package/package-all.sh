@@ -42,7 +42,7 @@ platform=$(get_platform)
 version=$(get_version)
 arch=$(get_arch)
 
-if [[ $platform == "linux" ]]; then
+if [[ $platform == "linux" && $TAURI_BUILD == "true" ]]; then
     cp scripts/package/README.txt scripts/package/move-to-aw-modules.sh dist/activitywatch
 fi
 

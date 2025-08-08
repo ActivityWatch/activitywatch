@@ -21,7 +21,7 @@ endif
 
 # Exclude aw-server-rust if SKIP_SERVER_RUST is true
 ifeq ($(SKIP_SERVER_RUST),true)
-        SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
+	SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
 endif
 
 # Build in release mode by default, unless RELEASE=false
@@ -132,11 +132,7 @@ test-integration:
 %/.git:
 	git submodule update --init --recursive
 
-ifeq ($(TAURI_BUILD),true)
-	ICON := "aw-tauri/aw-webui/media/logo/logo.png"
-else
-	ICON := "aw-tauri/aw-webui/media/logo/logo.png"
-endif
+ICON := "aw-qt/media/logo/logo.png"
 
 aw-qt/media/logo/logo.icns:
 	mkdir -p build/MyIcon.iconset
