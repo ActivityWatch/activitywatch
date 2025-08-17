@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     tags:
       - v*
   pull_request:
-    branches: [ master ]
+    branches: [master]
   #release:
   #  types: [published]
 
@@ -40,88 +40,88 @@ jobs:
         #    experimental: true
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-        fetch-depth: 0  # fetch all branches and tags
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0 # fetch all branches and tags
 
-    # Build in release mode if: (longer build times)
-    #  - on a tag (release)
-    #  - on the master branch (nightly)
-    - name: Set RELEASE
-      run: |
-        echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
+      # Build in release mode if: (longer build times)
+      #  - on a tag (release)
+      #  - on the master branch (nightly)
+      - name: Set RELEASE
+        run: |
+          echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
-    - name: Set up Python
-      if: runner.os != 'macOS'
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python_version }}
+      - name: Set up Python
+        if: runner.os != 'macOS'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
 
-    # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
-    - name: Set up Python for macOS
-      if: runner.os == 'macOS'
-      run: |
-        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
+      # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
+      - name: Set up Python for macOS
+        if: runner.os == 'macOS'
+        run: |
+          curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
 
-        # Python 3.11+ only has *macos11.pkg, so no more *macosx10.9.pkg
-        # the 'macos11' naming seems to suggest it only supports macos11 and up,
-        # but the release page says "for macOS 10.9 and later",
-        # unclear what the resulting binary compatibility will be.
-        #
-        # curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
+          # Python 3.11+ only has *macos11.pkg, so no more *macosx10.9.pkg
+          # the 'macos11' naming seems to suggest it only supports macos11 and up,
+          # but the release page says "for macOS 10.9 and later",
+          # unclear what the resulting binary compatibility will be.
+          #
+          # curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
 
-        sudo installer -pkg python.pkg -target /
-        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
-        "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
-      env:
-        # Add the patch number to the Python version (for FTP download link)
-        PYTHON_VERSION: ${{ matrix.python_version }}.13
+          sudo installer -pkg python.pkg -target /
+          echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
+          "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
+        env:
+          # Add the patch number to the Python version (for FTP download link)
+          PYTHON_VERSION: ${{ matrix.python_version }}.13
 
-    - name: Set up Node
-      if: ${{ !matrix.skip_webui }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node_version }}
+      - name: Set up Node
+        if: ${{ !matrix.skip_webui }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node_version }}
 
-    - name: Set up Rust
-      if: ${{ !matrix.skip_rust }}
-      uses: dtolnay/rust-toolchain@master
-      id: toolchain
-      with:
-        toolchain: stable
+      - name: Set up Rust
+        if: ${{ !matrix.skip_rust }}
+        uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          toolchain: stable
 
-    - name: Get npm cache dir
-      id: npm-cache-dir
-      run: |
-        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - name: Get npm cache dir
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
-    - uses: actions/cache@v4
-      name: Cache npm
-      if: ${{ !matrix.skip_webui }}
-      env:
-        cache-name: node
-      with:
-        path: ${{ steps.npm-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
+      - uses: actions/cache@v4
+        name: Cache npm
+        if: ${{ !matrix.skip_webui }}
+        env:
+          cache-name: node
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-
 
-    - name: Cache cargo build
-      uses: actions/cache@v4
-      if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
-      env:
-        cache-name: cargo-build-target
-      with:
-        path: aw-server-rust/target
-        # key needs to contain rustc_hash due to https://github.com/ActivityWatch/aw-server-rust/issues/180
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }} # cache doesn't seem to behave nicely on macOS, see: https://github.com/proximity-tech/aw-server-rust/issues/180
+        env:
+          cache-name: cargo-build-target
+        with:
+          path: aw-server-rust/target
+          # key needs to contain rustc_hash due to https://github.com/proximity-tech/aw-server-rust/issues/180
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
-    - name: Install APT dependencies
-      if: runner.os == 'Linux'
-      run: |
+      - name: Install APT dependencies
+        if: runner.os == 'Linux'
+        run: |
           sudo apt-get update
           # Unsure which of these are actually necessary...
           sudo apt-get install -y \
@@ -142,103 +142,103 @@ jobs:
             libxrandr-dev \
             libxrender-dev
 
-    - name: Install dependencies
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          choco install innosetup
-        fi
-        pip3 install poetry==1.3.2
+      - name: Install dependencies
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            choco install innosetup
+          fi
+          pip3 install poetry==1.3.2
 
-    - name: Build
-      run: |
-        python3 -m venv venv
-        source venv/bin/activate || source venv/Scripts/activate
-        poetry install
-        make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
-        pip freeze  # output Python packages, useful for debugging dependency versions
+      - name: Build
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate || source venv/Scripts/activate
+          poetry install
+          make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+          pip freeze  # output Python packages, useful for debugging dependency versions
 
-    - name: Run tests
-      run: |
-        source venv/bin/activate || source venv/Scripts/activate
-        make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+      - name: Run tests
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
-    # Don't run integration tests on Windows, doesn't work for some reason
-    - name: Run integration tests
-      if: runner.os != 'Windows'
-      run: |
-        source venv/bin/activate || source venv/Scripts/activate
-        make test-integration
+      # Don't run integration tests on Windows, doesn't work for some reason
+      - name: Run integration tests
+        if: runner.os != 'Windows'
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          make test-integration
 
-    - name: Package
-      run: |
-        source venv/bin/activate || source venv/Scripts/activate
-        poetry install  # run again to ensure we have the correct version of PyInstaller
-        make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+      - name: Package
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          poetry install  # run again to ensure we have the correct version of PyInstaller
+          make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
-    - name: Package dmg
-      if: runner.os == 'macOS'
-      run: |
-        # Load certificates
-        # Only load key & sign if env vars for signing exists
-        if [ -n "$APPLE_EMAIL" ]; then
-          ./scripts/ci/import-macos-p12.sh
-        fi
+      - name: Package dmg
+        if: runner.os == 'macOS'
+        run: |
+          # Load certificates
+          # Only load key & sign if env vars for signing exists
+          if [ -n "$APPLE_EMAIL" ]; then
+            ./scripts/ci/import-macos-p12.sh
+          fi
 
-        # Build .app and .dmg
-        source venv/bin/activate
-        make dist/ActivityWatch.dmg
+          # Build .app and .dmg
+          source venv/bin/activate
+          make dist/ActivityWatch.dmg
 
-        # codesign and notarize
-        if [ -n "$APPLE_EMAIL" ]; then
-          codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+          # codesign and notarize
+          if [ -n "$APPLE_EMAIL" ]; then
+            codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
 
-          # Run prechecks
-          brew install akeru-inc/tap/xcnotary
-          xcnotary precheck dist/ActivityWatch.app
-          xcnotary precheck dist/ActivityWatch.dmg
+            # Run prechecks
+            brew install akeru-inc/tap/xcnotary
+            xcnotary precheck dist/ActivityWatch.app
+            xcnotary precheck dist/ActivityWatch.dmg
 
-          # Notarize
-          make dist/notarize
-        fi
-        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
-      env:
-        APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
-        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-        APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }} # APPLE_PERSONAL_ID == APPLE_TEAM_ID for personal accounts
-        APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
-        CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
-        CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
+            # Notarize
+            make dist/notarize
+          fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
+        env:
+          APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }} # APPLE_PERSONAL_ID == APPLE_TEAM_ID for personal accounts
+          APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+          CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
+          CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
-    - name: Package AppImage
-      if: startsWith(runner.os, 'linux')
-      run: |
-        ./scripts/package/package-appimage.sh
+      - name: Package AppImage
+        if: startsWith(runner.os, 'linux')
+        run: |
+          ./scripts/package/package-appimage.sh
 
-    - name: Package deb
-      if: startsWith(runner.os, 'linux')
-      run: |
-        # The entire process is deferred to a shell file for consistency.
-        ./scripts/package/package-deb.sh
+      - name: Package deb
+        if: startsWith(runner.os, 'linux')
+        run: |
+          # The entire process is deferred to a shell file for consistency.
+          ./scripts/package/package-deb.sh
 
-    - name: Upload packages
-      uses: actions/upload-artifact@v4
-      with:
-        name: builds-${{ runner.os }}-py${{ matrix.python_version }}
-        path: dist/activitywatch-*.*
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: builds-${{ runner.os }}-py${{ matrix.python_version }}
+          path: dist/activitywatch-*.*
 
   release-notes:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')  # only on runs triggered from tag
+    if: startsWith(github.ref, 'refs/tags/v') # only on runs triggered from tag
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
-          fetch-depth: 0  # fetch all branches and tags
+          submodules: "recursive"
+          fetch-depth: 0 # fetch all branches and tags
 
       - uses: ActivityWatch/check-version-format-action@v2
         id: version
         with:
-          prefix: 'v'
+          prefix: "v"
 
       - name: Echo version
         run: |
@@ -271,7 +271,7 @@ jobs:
 
   release:
     needs: [build, release-notes]
-    if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
+    if: startsWith(github.ref, 'refs/tags/v') # only run on tag
     runs-on: ubuntu-latest
     steps:
       # Will download all artifacts to path
@@ -288,7 +288,7 @@ jobs:
       - uses: ActivityWatch/check-version-format-action@v2
         id: version
         with:
-          prefix: 'v'
+          prefix: "v"
 
       # create a release
       - name: Release
@@ -297,4 +297,4 @@ jobs:
           draft: true
           files: dist/*/activitywatch-*.*
           body_path: dist/release_notes/release_notes.md
-          prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}  # must compare to true, since boolean outputs are actually just strings, and "false" is truthy since it's not empty: https://github.com/actions/runner/issues/1483#issuecomment-994986996
+          prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }} # must compare to true, since boolean outputs are actually just strings, and "false" is truthy since it's not empty: https://github.com/actions/runner/issues/1483#issuecomment-994986996

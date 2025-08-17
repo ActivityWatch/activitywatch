@@ -1,10 +1,9 @@
 ---
 name: "\U0001F41E Bug report"
 about: Did you find a bug?
-title: ''
-labels: 'type: bug'
-assignees: ''
-
+title: ""
+labels: "type: bug"
+assignees: ""
 ---
 
 <!--
@@ -16,9 +15,9 @@ assignees: ''
 -->
 
 <!-- Checked checkbox should look like this: [x] -->
- - [ ] I am on the [latest](https://github.com/ActivityWatch/activitywatch/releases/latest) ActivityWatch version.
- - [ ] I have searched the issues of this repo and believe that this is not a duplicate.
 
+- [ ] I am on the [latest](https://github.com/proximity-tech/activitywatch/releases/latest) ActivityWatch version.
+- [ ] I have searched the issues of this repo and believe that this is not a duplicate.
 
 <!--
   Once those are done, if you're able to fill in the following list with your information,
@@ -29,9 +28,11 @@ assignees: ''
 - **ActivityWatch version**: <!-- Replace this comment with the ActivityWatch version (found at the bottom of the Web UI) -->
 
 ## Describe the bug
+
 <!-- A clear and concise description of what the bug is. -->
 
 ## To Reproduce
+
 <!--
   Steps to reproduce the behavior, for example:
     1. Go to '...'
@@ -41,9 +42,11 @@ assignees: ''
 -->
 
 ## Expected behavior
+
 <!-- A clear and concise description of what you expected to happen. -->
 
 ## Documentation
+
 <!--
   If applicable, add screenshots or logs to help explain your problem.
 
@@ -55,4 +58,5 @@ assignees: ''
 -->
 
 ## Additional context
+
 <!-- Add any other context about the problem here. -->

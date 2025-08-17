@@ -56,7 +56,7 @@ build: aw-core/.git
 		echo "Building $$module"; \
 		make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module build"; exit 2; }; \
 	done
-#   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
+#   The below is needed due to: https://github.com/proximity-tech/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
@@ -169,8 +169,8 @@ package:
 	mv aw-qt-tmp/* dist/activitywatch
 	rmdir aw-qt-tmp
 # Remove problem-causing binaries
-	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
-	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
+	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/proximity-tech/activitywatch/issues/161
+	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/proximity-tech/activitywatch/issues/660#issuecomment-959889230
 # These should be provided by the distro itself
 # Had to be removed due to otherwise causing the error:
 #   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
