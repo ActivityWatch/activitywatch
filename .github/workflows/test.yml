@@ -7,8 +7,6 @@ on:
   #  branches: [ master ]
   workflow_dispatch:
 
-
-
 jobs:
   # an integration test designed to catch bugs triggered by updating (database migrations and such)
   upgrades:
@@ -17,39 +15,39 @@ jobs:
     #if: startsWith(github.ref, 'refs/tags/v')  # only run on tag
     runs-on: ubuntu-latest
     env:
-      old_version: 'v0.12.2'
-      new_version: 'v0.13.1'
+      old_version: "v0.12.2"
+      new_version: "v0.13.1"
     strategy:
       fail-fast: false
       matrix:
-        aw_server_old: ['aw-server', 'aw-server-rust']
-        aw_server_new: ['aw-server', 'aw-server-rust']
-        aw_server_old_args: ['']
-        aw_server_new_args: ['']
+        aw_server_old: ["aw-server", "aw-server-rust"]
+        aw_server_new: ["aw-server", "aw-server-rust"]
+        aw_server_old_args: [""]
+        aw_server_new_args: [""]
         include:
           # python, peewee (default)
-          - aw_server_old: 'aw-server'
-            aw_server_new: 'aw-server'
+          - aw_server_old: "aw-server"
+            aw_server_new: "aw-server"
           # python, sqlite
           # FIXME: sqlite broken since aw-server enabled flask multithreading (new default)
           - aw_server_old: "aw-server"
             aw_server_new: "aw-server"
             aw_server_old_args: "--storage sqlite"
             aw_server_new_args: "--storage sqlite"
-            old_version: 'v0.12.2'
-            new_version: 'v0.13.1'
+            old_version: "v0.12.2"
+            new_version: "v0.13.1"
           # python, peewee to sqlite
           # FIXME: broken, same thing with sqlite as above
           - aw_server_old: "aw-server"
             aw_server_new: "aw-server"
             aw_server_old_args: "--storage peewee"
             aw_server_new_args: "--storage sqlite"
-            old_version: 'v0.12.2'
-            new_version: 'v0.13.1'
+            old_version: "v0.12.2"
+            new_version: "v0.13.1"
         exclude:
           # rust to python, not supported
-          - aw_server_old: 'aw-server-rust'
-            aw_server_new: 'aw-server'
+          - aw_server_old: "aw-server-rust"
+            aw_server_new: "aw-server"
 
     steps:
       # Will download all artifacts to path
@@ -66,7 +64,7 @@ jobs:
         run: |
           mkdir dist
           pushd dist
-          wget -q https://github.com/ActivityWatch/activitywatch/releases/download/${{ env.new_version }}/activitywatch-${{ env.new_version }}-linux-x86_64.zip
+          wget -q https://github.com/proximity-tech/activitywatch/releases/download/${{ env.new_version }}/activitywatch-${{ env.new_version }}-linux-x86_64.zip
 
       - name: Install new & old ActivityWatch
         run: |
@@ -77,7 +75,7 @@ jobs:
           mv activitywatch/ aw-new
 
           # Old version
-          wget -q -O aw-old.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ env.old_version }}/activitywatch-${{ env.old_version }}-linux-x86_64.zip
+          wget -q -O aw-old.zip https://github.com/proximity-tech/activitywatch/releases/download/${{ env.old_version }}/activitywatch-${{ env.old_version }}-linux-x86_64.zip
           unzip aw-old.zip
           mv activitywatch/ aw-old
 
@@ -172,4 +170,3 @@ jobs:
           cat log-old.txt || true
           echo "\n---\n"
           cat log-new.txt || true
-

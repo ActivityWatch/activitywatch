@@ -400,7 +400,7 @@ Thanks to everyone who contributed to this release:
 
     # hardcoded for now
     if repo == "activitywatch":
-        output += "**New to ActivityWatch?** Check out the [website](https://activitywatch.net) and the [README](https://github.com/ActivityWatch/activitywatch/blob/master/README.md)."
+        output += "**New to ActivityWatch?** Check out the [website](https://activitywatch.net) and the [README](https://github.com/proximity-tech/activitywatch/blob/master/README.md)."
         output += "\n\n"
         output += """# Installation
 
@@ -409,9 +409,9 @@ See the [getting started guide in the documentation](https://docs.activitywatch.
         output += "\n\n"
         output += f"""# Downloads
 
- - [**Windows**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
- - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
- - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
+ - [**Windows**](https://github.com/proximity-tech/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
+ - [**macOS**](https://github.com/proximity-tech/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
+ - [**Linux**](https://github.com/proximity-tech/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
      """.strip()
         output += "\n\n"
 

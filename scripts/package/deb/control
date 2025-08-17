@@ -5,4 +5,4 @@ Depends:
 Priority: optional
 Version: SCRIPT_VERSION_HERE
 Description: Open source time tracker
- https://github.com/ActivityWatch/activitywatch
+https://github.com/proximity-tech/activitywatch

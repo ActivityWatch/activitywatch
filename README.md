@@ -10,7 +10,7 @@
   <a href="https://twitter.com/ActivityWatchIt">
     <img title="Twitter follow" src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow"/>
   </a>
-  <a href="https://github.com/ActivityWatch/activitywatch">
+  <a href="https://github.com/proximity-tech/activitywatch">
     <img title="Star on GitHub" src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star">
   </a>
 
@@ -20,7 +20,7 @@
     <a href="https://activitywatch.net/">Website</a>
     — <a href="https://forum.activitywatch.net/">Forum</a>
     — <a href="https://docs.activitywatch.net">Documentation</a>
-    — <a href="https://github.com/ActivityWatch/activitywatch/releases">Releases</a>
+    — <a href="https://github.com/proximity-tech/activitywatch/releases">Releases</a>
   </b>
 
   <br>
@@ -32,8 +32,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ActivityWatch/activitywatch/actions?query=branch%3Amaster">
-    <img title="Build Status GitHub" src="https://github.com/ActivityWatch/activitywatch/workflows/Build/badge.svg?branch=master" />
+  <a href="https://github.com/proximity-tech/activitywatch/actions?query=branch%3Amaster">
+    <img title="Build Status GitHub" src="https://github.com/proximity-tech/activitywatch/workflows/Build/badge.svg?branch=master" />
   </a>
   <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
     <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
@@ -44,10 +44,10 @@
 
   <br>
 
-  <a href="https://github.com/ActivityWatch/activitywatch/releases">
+  <a href="https://github.com/proximity-tech/activitywatch/releases">
     <img title="Latest release" src="https://img.shields.io/github/release-pre/ActivityWatch/activitywatch.svg">
   </a>
-  <a href="https://github.com/ActivityWatch/activitywatch/releases">
+  <a href="https://github.com/proximity-tech/activitywatch/releases">
     <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
   </a>
   <a href="https://discord.gg/vDskV9q">
@@ -70,34 +70,33 @@
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch?ref=badge_shield)
 -->
 
-
-*Do you want to receive email updates on major announcements?*<br>
-***[Signup for the newsletter](http://eepurl.com/cTU6QX)!***
+_Do you want to receive email updates on major announcements?_<br>
+**_[Signup for the newsletter](http://eepurl.com/cTU6QX)!_**
 
 <details>
  <summary>Table of Contents</summary>
 
- * [About](#about)
-    * [Screenshots](#screenshots)
-    * [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
-       * [Feature comparison](#feature-comparison)
-    * [Installation &amp; Usage](#installation--usage)
- * [About this repository](#about-this-repository)
-    * [Server](#server)
-    * [Watchers](#watchers)
-    * [Libraries](#libraries)
- * [Contributing](#contributing)
+- [About](#about)
+  - [Screenshots](#screenshots)
+  - [Is this yet another time tracker?](#is-this-yet-another-time-tracker)
+    - [Feature comparison](#feature-comparison)
+  - [Installation &amp; Usage](#installation--usage)
+- [About this repository](#about-this-repository)
+  - [Server](#server)
+  - [Watchers](#watchers)
+  - [Libraries](#libraries)
+- [Contributing](#contributing)
 </details>
 
 ## About
 
-The goal of ActivityWatch is simple: *Enable the collection of as much valuable lifedata as possible without compromising user privacy.*
+The goal of ActivityWatch is simple: _Enable the collection of as much valuable lifedata as possible without compromising user privacy._
 
 We've worked towards this goal by creating an application for safe storage of the data on the user's local machine and as well as a set of watchers which record data such as:
 
- - Currently active application and the title of its window
- - Currently active browser tab and its title and URL
- - Keyboard and mouse activity, to detect if you are AFK ("away from keyboard") or not
+- Currently active application and the title of its window
+- Currently active browser tab and its title and URL
+- Keyboard and mouse activity, to detect if you are AFK ("away from keyboard") or not
 
 It is up to you as user to collect as much as you want, or as little as you want (and we hope some of you will help write watchers so we can collect more).
 
@@ -108,10 +107,9 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 You can find more (and newer) screenshots on [the website](https://activitywatch.net/screenshots/).
 
-
 ## Installation & Usage
 
-Downloads are available on the [releases page](https://github.com/ActivityWatch/activitywatch/releases).
+Downloads are available on the [releases page](https://github.com/proximity-tech/activitywatch/releases).
 
 For instructions on how to get started, please see the [guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
 
@@ -123,74 +121,73 @@ Yes, but we found that most time trackers lack one or more important features.
 
 **Common dealbreakers:**
 
- - Not open source
- - The user does not own the data (common with non-open source options)
- - Lack of synchronization (and when available: it's centralized and the sync server knows everything)
- - Difficult to setup/use (most open source options tend to target programmers)
- - Low data resolution (low level of detail, does not store raw data, long intervals between entries)
- - Hard or impossible to extend (collecting more data is not as simple as it could be)
+- Not open source
+- The user does not own the data (common with non-open source options)
+- Lack of synchronization (and when available: it's centralized and the sync server knows everything)
+- Difficult to setup/use (most open source options tend to target programmers)
+- Low data resolution (low level of detail, does not store raw data, long intervals between entries)
+- Hard or impossible to extend (collecting more data is not as simple as it could be)
 
 **To sum it up:**
 
- - Closed source solutions suffer from privacy issues and limited features.
- - Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack synchronization.
+- Closed source solutions suffer from privacy issues and limited features.
+- Open source solutions aren't developed with end-users in mind and are usually not written to be easily extended (they lack a proper API). They also lack synchronization.
 
 We have a plan to address all of these and we're well on our way. See the table below for our progress.
-
 
 ### Feature comparison
 
 ##### Basics
 
-|               | User owns data     | GUI                | Sync                       | Open Source        |
-| ------------- |:------------------:|:------------------:|:--------------------------:|:------------------:|
+|               |   User owns data   |        GUI         |            Sync            |    Open Source     |
+| ------------- | :----------------: | :----------------: | :------------------------: | :----------------: |
 | ActivityWatch | :white_check_mark: | :white_check_mark: | [WIP][sync], decentralized | :white_check_mark: |
-| [Selfspy]       | :white_check_mark: | :x:                | :x:                        | :white_check_mark: |
-| [ulogme]        | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
-| [RescueTime]    | :x:                | :white_check_mark: | Centralized                | :x:                |
-| [WakaTime]      | :x:                | :white_check_mark: | Centralized                | Clients            |
+| [Selfspy]     | :white_check_mark: |        :x:         |            :x:             | :white_check_mark: |
+| [ulogme]      | :white_check_mark: | :white_check_mark: |            :x:             | :white_check_mark: |
+| [RescueTime]  |        :x:         | :white_check_mark: |        Centralized         |        :x:         |
+| [WakaTime]    |        :x:         | :white_check_mark: |        Centralized         |      Clients       |
 
-[sync]: https://github.com/ActivityWatch/activitywatch/issues/35
+[sync]: https://github.com/proximity-tech/activitywatch/issues/35
 [Selfspy]: https://github.com/selfspy/selfspy
 [ulogme]: https://github.com/karpathy/ulogme
 [RescueTime]: https://www.rescuetime.com/
 [WakaTime]: https://wakatime.com/
 
 ##### Platforms
+
 <!-- TODO: Replace Platform names with icons  -->
 
-|               | Windows            | macOS              | Linux              | Android            | iOS                 |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:-------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |:x:                  |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
-| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
+|               |      Windows       |       macOS        |       Linux        |      Android       |          iOS          |
+| ------------- | :----------------: | :----------------: | :----------------: | :----------------: | :-------------------: |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |          :x:          |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :x:         |          :x:          |
+| ulogme        |        :x:         | :white_check_mark: | :white_check_mark: |        :x:         |          :x:          |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | Limited functionality |
 
 ##### Tracking
 
-|               | App & Window Title | AFK                | Browser Extensions | Editor Plugins     | Extensible            |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:---------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark:    |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
-| ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
-| WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
+|               | App & Window Title |        AFK         | Browser Extensions |   Editor Plugins   |      Extensible       |
+| ------------- | :----------------: | :----------------: | :----------------: | :----------------: | :-------------------: |
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |  :white_check_mark:   |
+| Selfspy       | :white_check_mark: | :white_check_mark: |        :x:         |        :x:         |          :x:          |
+| ulogme        | :white_check_mark: | :white_check_mark: |        :x:         |        :x:         |          :x:          |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :x:         |          :x:          |
+| WakaTime      |        :x:         | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
 
-For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
-
+For a complete list of the things ActivityWatch can track, [see the page on _watchers_ in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ## Architecture
 
 ```mermaid
 graph TD;
-  aw-qt[<a href='https://github.com/ActivityWatch/aw-qt'>aw-qt</a>];
-  aw-notify[<a href='https://github.com/ActivityWatch/aw-notify'>aw-notify</a>];
-  aw-server[<a href='https://github.com/ActivityWatch/aw-server'>aw-server</a>];
-  aw-webui[<a href='https://github.com/ActivityWatch/aw-webui'>aw-webui</a>];
-  aw-watcher-window[<a href='https://github.com/ActivityWatch/aw-watcher-window'>aw-watcher-window</a>];
-  aw-watcher-afk[<a href='https://github.com/ActivityWatch/aw-watcher-afk'>aw-watcher-afk</a>];
-  aw-watcher-web[<a href='https://github.com/ActivityWatch/aw-watcher-web'>aw-watcher-web</a>];
-  aw-sync[<a href='https://github.com/ActivityWatch/aw-server-rust/tree/master/aw-sync'>aw-sync</a>];
+  aw-qt[<a href='https://github.com/proximity-tech/aw-qt'>aw-qt</a>];
+  aw-notify[<a href='https://github.com/proximity-tech/aw-notify'>aw-notify</a>];
+  aw-server[<a href='https://github.com/proximity-tech/aw-server'>aw-server</a>];
+  aw-webui[<a href='https://github.com/proximity-tech/aw-webui'>aw-webui</a>];
+  aw-watcher-window[<a href='https://github.com/proximity-tech/aw-watcher-window'>aw-watcher-window</a>];
+  aw-watcher-afk[<a href='https://github.com/proximity-tech/aw-watcher-afk'>aw-watcher-afk</a>];
+  aw-watcher-web[<a href='https://github.com/proximity-tech/aw-watcher-web'>aw-watcher-web</a>];
+  aw-sync[<a href='https://github.com/proximity-tech/aw-server-rust/tree/master/aw-sync'>aw-sync</a>];
 
   aw-qt -- Manages --> aw-server;
   aw-qt -- Manages --> aw-notify -- Queries --> aw-server;
@@ -220,7 +217,7 @@ class A,B,C,D,E,G darkMode;
 
 ## About this repository
 
-This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). Its primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
+This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). Its primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/proximity-tech/activitywatch/releases)).
 
 ### Server
 
@@ -228,28 +225,28 @@ This repo is a bundle of the core components and official modules of ActivityWat
 
 The REST API includes:
 
- - Access to a datastore suitable for timeseries/timeperiod-data
- - A query engine and language for such data
+- Access to a datastore suitable for timeseries/timeperiod-data
+- A query engine and language for such data
 
 The webapp includes:
 
- - Data visualization & browser
- - Query explorer
- - Export functionality 
+- Data visualization & browser
+- Query explorer
+- Export functionality
 
 ### Watchers
 
 ActivityWatch comes pre-installed with two watchers:
 
- - `aw-watcher-afk` tracks the user active/inactive state from keyboard and mouse input
- - `aw-watcher-window` tracks the currently active application and its window title.
+- `aw-watcher-afk` tracks the user active/inactive state from keyboard and mouse input
+- `aw-watcher-window` tracks the currently active application and its window title.
 
 There are lots of other watchers for ActivityWatch which can track more types of activity. Like `aw-watcher-web` which tracks time spent on websites, multiple editor watchers which track spent time coding, and many more! A full list of watchers can be found in [the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
 ### Libraries
 
- - `aw-core` - core library, provides no runnable modules
- - `aw-client` - client library, useful when writing watchers
+- `aw-core` - core library, provides no runnable modules
+- `aw-client` - client library, useful when writing watchers
 
 ### Folder structure
 
@@ -262,4 +259,3 @@ Want to help? Great! Check out the [CONTRIBUTING.md file](./CONTRIBUTING.md)!
 ## Questions and support
 
 Have a question, suggestion, problem, or just want to say hi? Post on [the forum](https://forum.activitywatch.net/)!
-

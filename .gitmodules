@@ -1,27 +1,27 @@
 [submodule "aw-core"]
 	path = aw-core
-	url = https://github.com/ActivityWatch/aw-core.git
+	url = https://github.com/proximity-tech/aw-core.git
 [submodule "aw-client"]
 	path = aw-client
-	url = https://github.com/ActivityWatch/aw-client.git
+	url = https://github.com/proximity-tech/aw-client.git
 [submodule "aw-server"]
 	path = aw-server
-	url = https://github.com/ActivityWatch/aw-server.git
+	url = https://github.com/proximity-tech/aw-server.git
 [submodule "aw-watcher-afk"]
 	path = aw-watcher-afk
-	url = https://github.com/ActivityWatch/aw-watcher-afk.git
+	url = https://github.com/proximity-tech/aw-watcher-afk.git
 [submodule "aw-qt"]
 	path = aw-qt
-	url = https://github.com/ActivityWatch/aw-qt.git
+	url = https://github.com/proximity-tech/aw-qt.git
 [submodule "aw-watcher-window"]
 	path = aw-watcher-window
-	url = https://github.com/ActivityWatch/aw-watcher-window.git
+	url = https://github.com/proximity-tech/aw-watcher-window.git
 [submodule "aw-server-rust"]
 	path = aw-server-rust
-	url = https://github.com/ActivityWatch/aw-server-rust.git
+	url = https://github.com/proximity-tech/aw-server-rust.git
 [submodule "aw-notify"]
 	path = aw-notify
 	url = https://github.com/ErikBjare/aw-notify.git
 [submodule "aw-watcher-input"]
 	path = aw-watcher-input
-	url = https://github.com/ActivityWatch/aw-watcher-input.git
+	url = https://github.com/proximity-tech/aw-watcher-input.git
