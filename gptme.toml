@@ -1,0 +1,10 @@
+files = [
+    "README.md",
+    "Makefile",
+    "aw-server/README.md",
+    "aw-server/aw-webui/README.md",
+    "aw-server-rust/README.md",
+    "aw-server-rust/aw-sync/README.md",
+    "aw-client/README.md",
+    # ideally we'd also include some of the docs here, but they are not a submodule
+]
