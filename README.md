@@ -224,18 +224,29 @@ This repo is a bundle of the core components and official modules of ActivityWat
 
 ### Server
 
-`aw-server` is the official implementation of the core service which the other ActivityWatch services interact with. It provides a REST API to a datastore and query engine. It also serves the web interface developed in the `aw-webui` project (which provides the frontend part of the webapp).
+ActivityWatch has two server implementations:
+
+- `aw-server` (Python) - The current default implementation
+- `aw-server-rust` - A Rust implementation that is the planned future default
+
+Both provide a REST API to a datastore and query engine, and serve the web interface developed in the `aw-webui` project (which provides the frontend).
 
 The REST API includes:
 
- - Access to a datastore suitable for timeseries/timeperiod-data
- - A query engine and language for such data
+ - Access to a datastore suitable for timeseries/timeperiod-data organized in "buckets" (containers grouping related activity data by metadata like client type or hostname)
+ - **Buckets API:** Create, retrieve, and delete data buckets
+ - **Events API:** Read and write timestamped events within buckets
+ - **Heartbeat API:** Watchers use heartbeat signals to update the current state of activity (e.g., active application, AFK status)
+ - **Query API:** simple query scripting language for filtering, merging, grouping, and transforming events
+ - **Client libraries:** Language-specific libraries like `aw-client` (Python), `aw-client-js`, and `aw-client-rust` that wrap REST endpoints for programmatic access
 
-The webapp includes:
+The frontend (`aw-webui`) includes:
 
- - Data visualization & browser
- - Query explorer
- - Export functionality 
+ - **Data visualization:** Dashboard and timeline views showing activity summaries with detailed breakdowns of app usage, web browsing, and user-defined categories
+ - **Query explorer:** Browser-based interface for writing, executing, and debugging queries with real-time results
+ - **Activity browser:** Navigate through historical data with filtering by date ranges, applications, websites, and custom categories
+ - **Raw data access:** View and browse individual events from all tracking buckets with detailed metadata
+ - **Export functionality:** Export activity data in JSON format (individual buckets or complete datasets) via web interface or REST API
 
 ### Watchers
 
