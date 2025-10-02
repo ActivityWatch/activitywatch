@@ -63,6 +63,11 @@ def main():
     parser.add_argument(
         "--output", default="changelog.md", help="Path to output changelog"
     )
+    parser.add_argument(
+        "--add-version-header",
+        action="store_true",
+        help="Add version header and adjust heading levels for docs",
+    )
 
     # parse args
     args = parser.parse_args()
@@ -88,6 +93,7 @@ def main():
         commit_range=(since, until),
         output_path=args.output,
         repo_order=repo_order,
+        add_version_header=args.add_version_header,
     )
 
 
@@ -352,6 +358,7 @@ def build(
     output_path: str,
     repo_order: List[str],
     filter_types: Optional[List[str]] = None,
+    add_version_header: bool = False,
 ):
     # provides a commit summary for the repo and subrepos, recursively looking up subrepos
     # NOTE: this must be done *before* `get_all_contributors` is called,
@@ -423,6 +430,12 @@ See the [getting started guide in the documentation](https://docs.activitywatch.
 
     if repo == "activitywatch":
         output = output.replace("# activitywatch", "# activitywatch (bundle repo)")
+
+    if add_version_header:
+        output = f"# {tag}\n\n" + output
+        output = output.replace("\n# Contributors\n", "\n## Contributors\n")
+        output = output.replace("\n# Changelog\n", "\n## Changelog\n")
+
     with open(output_path, "w") as f:
         f.write(output)
     print(f"Wrote {len(output.splitlines())} lines to {output_path}")
