@@ -37,24 +37,10 @@ import requests
 
 script_dir = Path(__file__).parent.resolve()
 
-def ensure_directories(directory: str) -> Path:
-    '''Ensure all directories exist, if not, then create the directory
-    
-    Args:
-        directory: Name of folder
-
-    Returns:
-        Path : created directory
-    '''
-    path = Path(directory)
-    path.mkdir(parents=True,exist_ok=True)
-    log.info(f'✅Directory ensured : {path}')
-    return path
-
-ensure_directories('logs')
+Path('logs').mkdir(exists_ok=True)
 
 def setup_logger(name: str, log_filename: str | Path, level = logging.INFO) -> logging.Logger:
-    ''' Setup a dedicated timedrotatingfilehandler logging system that logs information to both file and console
+    ''' Setup a dedicated timedrotatingfilehandler logging system that logs information to file
 
     Args: 
         name : logger name (e.g. EDA, preprocessing, feature_engineering)
@@ -84,21 +70,16 @@ def setup_logger(name: str, log_filename: str | Path, level = logging.INFO) -> l
     file_handler.suffix = "_%Y%m%d"
     file_handler.setFormatter(formatter)
 
-   # highlight the next two lines of code to avoid logging to console
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
 
     log.propagate = False # don't propagate to root logger
     log.setLevel(level)
 
     log.addHandler(file_handler)
-   # highlight the line below to avoid adding console log handler
-    log.addHandler(console_handler)
     
     return log
 
 # setup log
-logger = setup_logger(name='build_changelog',log_filename='logs/build_changelog.log',level=logging.INFO)
+logger = setup_logger(name='build_changelog',log_filename='logs/build_changelog.log',level=logging.DEBUG)
 
 
 def main():
