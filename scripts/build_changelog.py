@@ -15,6 +15,7 @@ Manual actions needed to clean up for changelog:
 
 import argparse
 import logging
+from logging import TimedRotatingFileHandler
 import os
 import re
 import shlex
@@ -34,11 +35,51 @@ from typing import (
 
 import requests
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
 script_dir = Path(__file__).parent.resolve()
+
+Path('logs').mkdir(exists_ok=True)
+
+def setup_logger(name: str, log_filename: str | Path, level = logging.INFO) -> logging.Logger:
+    ''' Setup a dedicated timedrotatingfilehandler logging system that logs information to file
+
+    Args: 
+        name : logger name (e.g. EDA, preprocessing, feature_engineering)
+        log_filename: Log output file
+        level: Logging level (e.g. INFO, WARNING, ERROR, DEBUG)
+
+    Examples:
+        log = setup_logger(name="EDA",log_filename="logs/EDA_pipeline.log", level=logging.INFO)
+        log.info("Dedicated logging system setup successful")
+    '''
+    log = logging.getLogger(name)
+    # prevent adding handlers multiple times if handlers already exist
+    if log.handlers:
+        return log
+    
+    formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s : %(message)s",
+        datefmt='%Y-%m-%d %H:%M:%S'
+        )
+    # Time rotating file handler
+    file_handler = TimedRotatingFileHandler(
+        filename=log_filename,
+        when='midnight',
+        interval=1,
+        backupCount=7
+    )
+    file_handler.suffix = "_%Y%m%d"
+    file_handler.setFormatter(formatter)
+
+
+    log.propagate = False # don't propagate to root logger
+    log.setLevel(level)
+
+    log.addHandler(file_handler)
+    
+    return log
+
+# setup log
+logger = setup_logger(name='build_changelog',log_filename='logs/build_changelog.log',level=logging.DEBUG)
 
 
 def main():
