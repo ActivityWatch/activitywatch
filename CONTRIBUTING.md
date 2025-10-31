@@ -33,7 +33,7 @@ There are many ways to contribute to ActivityWatch:
  - Implement new features.
    - Look among the [requested features][requested features] on the forum.
    - Talk to us in the issues or on [our Discord server][discord] to get help on how to proceed.
- - Write documentation.
+ - Write [documentation](https://github.com/ActivityWatch/docs).
  - Build the ecosystem.
    - Examples: New watchers, tools to analyze data, tools to import data from other sources, etc.
 
