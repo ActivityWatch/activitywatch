@@ -218,6 +218,15 @@ class A,B,C,D,E,G darkMode;
 %% linkStyle 1 stroke:#1ABC9C, stroke-width:2px;
 ```
 
+### How does `activitywatch` work under the hood?
+
+Check out this interactive walkthrough of the `activitywatch` codebase on CodeCanvas [here](https://www.code-canvas.com/?session=unauthenticatedGithub&repo=activitywatch&owner=ActivityWatch&branch=master&OnboardingTutorial=true).
+
+To refine existing dataflow simulation or create new ones, follow the quick tutorial [here](https://docs.code-canvas.com/updating-diagram).
+
+<img width="1916" alt="CodeCanvas Screenshot" src="https://codecanvas-media-public.s3.amazonaws.com/images/codecanvas-readme-screenshot.png" />
+
+
 ## About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). Its primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
