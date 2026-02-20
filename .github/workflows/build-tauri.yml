@@ -1,0 +1,260 @@
+name: Build Tauri
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - v*
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: ${{ matrix.os }}, py-${{ matrix.python_version }}, node-${{ matrix.node_version }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
+    env:
+      # Whether to build and include extras (like aw-notify and aw-watcher-input)
+      AW_EXTRAS: true
+      TAURI_BUILD: true
+      # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
+      MACOSX_DEPLOYMENT_TARGET: 10.9
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        os:
+          [
+            ubuntu-24.04,
+            ubuntu-24.04-arm,
+            windows-latest,
+            macOS-13,
+            macos-latest,
+          ]
+        python_version: [3.9]
+        node_version: [22]
+        skip_rust: [false]
+        skip_webui: [false]
+        experimental: [false]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Set environment variables
+        run: |
+          echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
+          echo "TAURI_BUILD=true" >> $GITHUB_ENV
+
+      - name: Set up Python
+        if: matrix.os != 'macOS-13'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
+      - name: Set up Python for macOS
+        if: matrix.os == 'macOS-13'
+        run: |
+          curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
+          sudo installer -pkg python.pkg -target /
+          echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
+          "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
+        env:
+          PYTHON_VERSION: ${{ matrix.python_version }}.13
+
+      - name: Set up Node
+        if: ${{ !matrix.skip_webui }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Set up Rust
+        if: ${{ !matrix.skip_rust }}
+        uses: dtolnay/rust-toolchain@master
+        id: toolchain
+        with:
+          toolchain: stable
+
+      - name: Get npm cache dir
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Cache npm
+        if: ${{ !matrix.skip_webui }}
+        env:
+          cache-name: node
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ matrix.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ matrix.os }}-${{ env.cache-name }}-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        env:
+          cache-name: cargo-build-target
+        with:
+          path: aw-server-rust/target
+          key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+
+      - name: Install APT dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libjavascriptcoregtk-4.1-dev \
+            libsoup-3.0-dev \
+            xdg-utils
+
+      - name: Install dependencies
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            choco install innosetup
+          fi
+          pip3 install poetry==1.3.2
+
+      - name: Build
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          shell: bash
+          command: |
+            python3 -m venv venv
+            source venv/bin/activate || source venv/Scripts/activate
+            poetry install
+            make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+            pip freeze
+
+      - name: Run tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          shell: bash
+          command: |
+            source venv/bin/activate || source venv/Scripts/activate
+            make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+
+      - name: Package
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          poetry install
+          make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+
+      - name: Package dmg
+        if: runner.os == 'macOS'
+        run: |
+          if [ -n "$APPLE_EMAIL" ]; then
+            ./scripts/ci/import-macos-p12.sh
+          fi
+
+          source venv/bin/activate
+          make dist/ActivityWatch.dmg
+
+          if [ -n "$APPLE_EMAIL" ]; then
+            codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+
+            brew install akeru-inc/tap/xcnotary
+            xcnotary precheck dist/ActivityWatch.app
+            xcnotary precheck dist/ActivityWatch.dmg
+
+            make dist/notarize
+          fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
+        env:
+          APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }}
+          APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+          CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
+          CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}
+          path: dist/activitywatch-*.*
+
+  release-notes:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - uses: ActivityWatch/check-version-format-action@v2
+        id: version
+        with:
+          prefix: "v"
+
+      - name: Echo version
+        run: |
+          echo "${{ steps.version.outputs.full }} (stable: ${{ steps.version.outputs.is_stable }})"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          pip install requests
+
+      - name: Generate release notes
+        run: |
+          LAST_RELEASE=`STABLE_ONLY=${{ steps.version.output.is_stable }} ./scripts/get_latest_release.sh`
+          ./scripts/build_changelog.py --range "$LAST_RELEASE...${{ steps.version.outputs.full }}"
+
+      - name: Rename
+        run: |
+          mv changelog.md release_notes.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release_notes_tauri
+          path: release_notes.md
+
+  release:
+    needs: [build, release-notes]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: dist
+
+      - uses: ActivityWatch/check-version-format-action@v2
+        id: version
+        with:
+          prefix: "v"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: dist/*/activitywatch-*.*
+          body_path: dist/release_notes_tauri/release_notes.md
+          prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}

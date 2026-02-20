@@ -43,6 +43,11 @@ version=$(get_version)
 arch=$(get_arch)
 echo "Platform: $platform, arch: $arch, version: $version"
 
+# For Tauri Linux builds, include helper scripts and README
+if [[ $platform == "linux" && $TAURI_BUILD == "true" ]]; then
+    cp scripts/package/README.txt scripts/package/move-to-aw-modules.sh dist/activitywatch/
+fi
+
 function build_zip() {
     echo "Zipping executables..."
     pushd dist;
@@ -70,7 +75,11 @@ function build_setup() {
 
     # Windows installer version should not include 'v' prefix, see: https://github.com/microsoft/winget-pkgs/pull/17564
     version_no_prefix="$(echo $version | sed -e 's/^v//')"
-    env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/activitywatch-setup.iss
+    if [[ $TAURI_BUILD == "true" ]]; then
+        env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/aw-tauri.iss
+    else
+        env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/activitywatch-setup.iss
+    fi
     mv dist/activitywatch-setup.exe dist/$filename
     echo "Setup built!"
 }
