@@ -1,3 +1,3 @@
 Run move-to-aw-modules.sh to copy all modules except aw-tauri to ~/aw-modules/. Aw-tauri (replaces aw-qt), will use this directory to discover new modules. You can add your own modules and scripts to this directory. The modules should start with the aw- prefix and should not have an extension i.e `.sh`.
 
-In the aw-tauri folder there is appimage, rpm and deb binaries. Choose the appropriate one for your distro, if in doubt use the appimage works on most linux systems. If you decide on the appimage copy it a permanent folder like ~/bin or /usr/local/bin, since autostart relies on the appimage being in the same location each time. 
+In the aw-tauri folder there are AppImage, RPM, and DEB binaries. Choose the appropriate one for your distro; if in doubt, the AppImage works on most Linux systems. If you decide on the AppImage, copy it to a permanent folder like ~/bin or /usr/local/bin, since autostart relies on the AppImage being in the same location each time.
