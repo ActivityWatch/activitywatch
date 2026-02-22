@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
-      # Whether to build and include extras (like aw-notify and aw-watcher-input)
+      # Whether to build and include extras (like aw-notify-rs and aw-watcher-input)
       AW_EXTRAS: true
       TAURI_BUILD: true
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
@@ -88,6 +88,7 @@ jobs:
           path: |
             aw-server-rust/target
             aw-tauri/src-tauri/target
+            aw-notify-rs/target
           key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
