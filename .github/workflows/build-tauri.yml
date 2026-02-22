@@ -31,7 +31,7 @@ jobs:
             ubuntu-24.04,
             ubuntu-24.04-arm,
             windows-latest,
-            macos-13,
+            macos-14,
             macos-latest,
           ]
         python_version: [3.9]
@@ -52,21 +52,9 @@ jobs:
           echo "TAURI_BUILD=true" >> $GITHUB_ENV
 
       - name: Set up Python
-        if: matrix.os != 'macos-13'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
-
-      # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
-      - name: Set up Python for macOS
-        if: matrix.os == 'macos-13'
-        run: |
-          curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
-          sudo installer -pkg python.pkg -target /
-          echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
-          "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
-        env:
-          PYTHON_VERSION: ${{ matrix.python_version }}.13
 
       - name: Set up Node
         if: ${{ !matrix.skip_webui }}

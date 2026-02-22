@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest, macos-13, macos-latest]
+        os: [ubuntu-24.04, windows-latest, macos-14, macos-latest]
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
@@ -53,30 +53,9 @@ jobs:
         echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
     - name: Set up Python
-      if: matrix.os != 'macos-13'
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python_version }}
-
-    # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
-    - name: Set up Python for macOS
-      if: matrix.os == 'macos-13'
-      run: |
-        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
-
-        # Python 3.11+ only has *macos11.pkg, so no more *macosx10.9.pkg
-        # the 'macos11' naming seems to suggest it only supports macos11 and up,
-        # but the release page says "for macOS 10.9 and later",
-        # unclear what the resulting binary compatibility will be.
-        #
-        # curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
-
-        sudo installer -pkg python.pkg -target /
-        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
-        "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
-      env:
-        # Add the patch number to the Python version (for FTP download link)
-        PYTHON_VERSION: ${{ matrix.python_version }}.13
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
