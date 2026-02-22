@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
-      # Wether to build and include extras (like aw-notify and aw-watcher-input)
+      # Whether to build and include extras (like aw-notify and aw-watcher-input)
       AW_EXTRAS: true
       # sets the macOS version target, see: https://users.rust-lang.org/t/compile-rust-binary-for-older-versions-of-mac-osx/38695
       MACOSX_DEPLOYMENT_TARGET: 10.9
@@ -26,9 +26,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-latest, macOS-13]
+        os: [ubuntu-24.04, windows-latest, macos-14, macos-latest]
         python_version: [3.9]
-        node_version: [20]
+        node_version: [22]
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
@@ -53,30 +53,9 @@ jobs:
         echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
     - name: Set up Python
-      if: runner.os != 'macOS'
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python_version }}
-
-    # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
-    - name: Set up Python for macOS
-      if: runner.os == 'macOS'
-      run: |
-        curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
-
-        # Python 3.11+ only has *macos11.pkg, so no more *macosx10.9.pkg
-        # the 'macos11' naming seems to suggest it only supports macos11 and up,
-        # but the release page says "for macOS 10.9 and later",
-        # unclear what the resulting binary compatibility will be.
-        #
-        # curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg -o "python.pkg"
-
-        sudo installer -pkg python.pkg -target /
-        echo "/Library/Frameworks/Python.framework/Versions/${{ matrix.python_version }}/bin" >> $GITHUB_PATH
-        "/Applications/Python ${{ matrix.python_version }}/Install Certificates.command"
-      env:
-        # Add the patch number to the Python version (for FTP download link)
-        PYTHON_VERSION: ${{ matrix.python_version }}.13
 
     - name: Set up Node
       if: ${{ !matrix.skip_webui }}
@@ -91,33 +70,26 @@ jobs:
       with:
         toolchain: stable
 
-    - name: Get npm cache dir
-      id: npm-cache-dir
-      run: |
-        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-
-    - uses: actions/cache@v4
-      name: Cache npm
+    - name: Cache node_modules
+      uses: actions/cache@v4
       if: ${{ !matrix.skip_webui }}
-      env:
-        cache-name: node
       with:
-        path: ${{ steps.npm-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        path: aw-server-rust/aw-webui/node_modules
+        key: ${{ matrix.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ matrix.os }}-node_modules-
 
     - name: Cache cargo build
       uses: actions/cache@v4
-      if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
+      # if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
       with:
         path: aw-server-rust/target
         # key needs to contain rustc_hash due to https://github.com/ActivityWatch/aw-server-rust/issues/180
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+          ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
     - name: Install APT dependencies
       if: runner.os == 'Linux'
@@ -126,7 +98,8 @@ jobs:
           # Unsure which of these are actually necessary...
           sudo apt-get install -y \
             appstream \
-            qtbase5-dev qt5-qmake \
+            qt5-qmake \
+            qtbase5-dev \
             qtwayland5 \
             libqt5x11extras5 \
             libfontconfig1 \
@@ -147,7 +120,7 @@ jobs:
         if [ "$RUNNER_OS" == "Windows" ]; then
           choco install innosetup
         fi
-        pip3 install poetry==1.3.2
+        pip3 install poetry==1.4.2
 
     - name: Build
       run: |
@@ -223,7 +196,7 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
-        name: builds-${{ runner.os }}-py${{ matrix.python_version }}
+        name: builds-${{ matrix.os }}-py${{ matrix.python_version }}
         path: dist/activitywatch-*.*
 
   release-notes:
