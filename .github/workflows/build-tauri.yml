@@ -69,28 +69,25 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Get npm cache dir
-        id: npm-cache-dir
-        run: |
-          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        name: Cache npm
+      - name: Cache node_modules
+        uses: actions/cache@v4
         if: ${{ !matrix.skip_webui }}
-        env:
-          cache-name: node
         with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ matrix.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          path: |
+            aw-server-rust/aw-webui/node_modules
+            aw-tauri/node_modules
+          key: ${{ matrix.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ matrix.os }}-${{ env.cache-name }}-
+            ${{ matrix.os }}-node_modules-
 
       - name: Cache cargo build
         uses: actions/cache@v4
         env:
           cache-name: cargo-build-target
         with:
-          path: aw-server-rust/target
+          path: |
+            aw-server-rust/target
+            aw-tauri/src-tauri/target
           key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
