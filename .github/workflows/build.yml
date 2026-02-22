@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest, macOS-13, macos-latest]
+        os: [ubuntu-24.04, windows-latest, macos-13, macos-latest]
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
@@ -53,14 +53,14 @@ jobs:
         echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
     - name: Set up Python
-      if: matrix.os != 'macOS-13'
+      if: matrix.os != 'macos-13'
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python_version }}
 
     # Setup Python version built for older macOS (https://github.com/actions/virtual-environments/issues/1256)
     - name: Set up Python for macOS
-      if: matrix.os == 'macOS-13'
+      if: matrix.os == 'macos-13'
       run: |
         curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
 
