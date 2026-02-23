@@ -193,6 +193,16 @@ jobs:
         # The entire process is deferred to a shell file for consistency.
         ./scripts/package/package-deb.sh
 
+    - name: Code signing
+      if: runner.os == 'Windows'
+      uses: dlemstra/code-sign-action@v1
+      with:
+        certificate: "${{ secrets.CERTIFICATE }}"
+        password: "${{ secrets.CERTIFICATE_PASSWORD }}"
+        folder: "dist"
+        recursive: true
+        description: "Activity Watch"
+
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
