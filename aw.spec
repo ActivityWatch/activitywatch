@@ -165,21 +165,33 @@ aw_watcher_window_a = build_analysis(
         (aww_location / "aw_watcher_window/printAppStatus.jxa", "aw_watcher_window")
     ],
 )
-aw_notify_a = build_analysis(
+# Check if aw-notify is a Python package
+_notify_candidates = [
+    aw_notify_location / "aw_notify/__main__.py",
+    aw_notify_location / "src/aw_notify/__main__.py",
+]
+skip_aw_notify = not any(p.exists() for p in _notify_candidates)
+if skip_aw_notify:
+    print("Skipping aw-notify Python packaging (Rust-based implementation detected)")
+
+aw_notify_a = None if skip_aw_notify else build_analysis(
     "aw_notify", aw_notify_location, hiddenimports=["desktop_notifier.resources"]
 )
 
 # https://pythonhosted.org/PyInstaller/spec-files.html#multipackage-bundles
 # MERGE takes a bit weird arguments, it wants tuples which consists of
 # the analysis paired with the script name and the bin name
-MERGE(
+merge_args = [
     (aw_server_a, "aw-server", "aw-server"),
     (aw_qt_a, "aw-qt", "aw-qt"),
     (aw_watcher_afk_a, "aw-watcher-afk", "aw-watcher-afk"),
     (aw_watcher_window_a, "aw-watcher-window", "aw-watcher-window"),
     (aw_watcher_input_a, "aw-watcher-input", "aw-watcher-input"),
-    (aw_notify_a, "aw-notify", "aw-notify"),
-)
+]
+if aw_notify_a is not None:
+    merge_args.append((aw_notify_a, "aw-notify", "aw-notify"))
+
+MERGE(*merge_args)
 
 
 # aw-server
@@ -201,16 +213,22 @@ awq_coll = build_collect(
 # aw-watcher-input
 awi_coll = build_collect(aw_watcher_input_a, "aw-watcher-input")
 
-aw_notify_coll = build_collect(aw_notify_a, "aw-notify")
+# aw-notify (only if Python package exists)
+aw_notify_coll = build_collect(aw_notify_a, "aw-notify") if aw_notify_a is not None else None
 
 if platform.system() == "Darwin":
-    app = BUNDLE(
+    bundle_args = [
         awq_coll,
         aws_coll,
         aww_coll,
         awa_coll,
         awi_coll,
-        aw_notify_coll,
+    ]
+    if aw_notify_coll is not None:
+        bundle_args.append(aw_notify_coll)
+    
+    app = BUNDLE(
+        *bundle_args,
         name="ActivityWatch.app",
         icon=icon,
         bundle_identifier="net.activitywatch.ActivityWatch",

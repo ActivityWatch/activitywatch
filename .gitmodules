@@ -19,9 +19,6 @@
 [submodule "aw-server-rust"]
 	path = aw-server-rust
 	url = https://github.com/ActivityWatch/aw-server-rust.git
-[submodule "aw-notify"]
-	path = aw-notify
-	url = https://github.com/ErikBjare/aw-notify.git
 [submodule "aw-watcher-input"]
 	path = aw-watcher-input
 	url = https://github.com/ActivityWatch/aw-watcher-input.git
@@ -31,3 +28,6 @@
 [submodule "awatcher"]
 	path = awatcher
 	url = https://github.com/2e3s/awatcher
+[submodule "aw-notify"]
+	path = aw-notify
+	url = https://github.com/ActivityWatch/aw-notify-rs.git
