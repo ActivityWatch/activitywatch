@@ -218,6 +218,13 @@ class A,B,C,D,E,G darkMode;
 %% linkStyle 1 stroke:#1ABC9C, stroke-width:2px;
 ```
 
+### Interactive `activitywatch` Architecture Tutorial with CodeCanvas
+
+Check out this interactive walkthrough of the `activitywatch` codebase on CodeCanvas [here](https://www.code-canvas.com/?session=unauthenticatedGithub&repo=activitywatch&owner=Abdulnaser97&branch=master&OnboardingTutorial=true).
+
+<img width="1837" height="812" alt="image" src="https://github.com/user-attachments/assets/fd540249-7eea-4575-8c5a-472ad902c119" />
+
+
 ## About this repository
 
 This repo is a bundle of the core components and official modules of ActivityWatch (managed with `git submodule`). Its primary use is as a meta-package providing all the components in one repo; enabling easier packaging and installation. It is also where releases of the full suite are published (see [releases](https://github.com/ActivityWatch/activitywatch/releases)).
