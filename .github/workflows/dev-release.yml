@@ -35,11 +35,11 @@ jobs:
       next_tag: ${{ steps.preflight.outputs.next_tag }}
       since_ref: ${{ steps.preflight.outputs.since_ref }}
       commits_since_ref: ${{ steps.preflight.outputs.commits_since_ref }}
+      head_sha: ${{ steps.preflight.outputs.head_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
 
       - name: Decide whether to create a dev release
         id: preflight
@@ -154,6 +154,7 @@ jobs:
           echo "next_tag=$next_tag" >> "$GITHUB_OUTPUT"
           echo "since_ref=$since_ref" >> "$GITHUB_OUTPUT"
           echo "commits_since_ref=$commits_since_ref" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
 
   create-tag:
     name: Create dev release tag
@@ -163,7 +164,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: master
+          ref: ${{ needs.preflight.outputs.head_sha }}
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
