@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
 
   # Maintain dependencies for pip/poetry
   # NOTE: too noisy, easier to update by hand
