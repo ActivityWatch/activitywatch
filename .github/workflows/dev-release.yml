@@ -110,16 +110,23 @@ jobs:
           fi
 
           head_sha=$(git rev-parse HEAD)
+
+          # Get the current workflow run's check suite ID so we can exclude
+          # our own check runs without relying on fragile job name strings
+          current_suite_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --jq '.check_suite_id' 2>/dev/null || echo "0")
+
           conclusions=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs" \
             --paginate \
-            --jq '[.check_runs[] | select(
+            --jq --arg suite "$current_suite_id" \
+            '[.check_runs[] | select(
               .app.slug == "github-actions" and
-              (.name | test("^Pre-flight checks$|^Create dev release$") | not)
+              ((.check_suite.id | tostring) != $suite)
             )] | map(.conclusion) | unique | .[]' 2>/dev/null || echo unknown)
 
           echo "CI conclusions: $conclusions"
 
-          if echo "$conclusions" | grep -qE 'failure|action_required|timed_out'; then
+          if echo "$conclusions" | grep -qE 'failure|action_required|timed_out|cancelled|startup_failure'; then
             echo "CI has failures on HEAD, skipping dev release."
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             exit 0
