@@ -39,7 +39,7 @@ jobs:
       commits_since_ref: ${{ steps.preflight.outputs.commits_since_ref }}
       head_sha: ${{ steps.preflight.outputs.head_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: master  # explicit: prevent workflow_dispatch from a non-master branch tagging the wrong commit
           fetch-depth: 0
@@ -163,7 +163,7 @@ jobs:
     if: needs.preflight.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.preflight.outputs.head_sha }}
           fetch-depth: 1
