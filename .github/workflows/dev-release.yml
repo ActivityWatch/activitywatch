@@ -21,6 +21,8 @@ on:
 
 permissions:
   contents: write
+  actions: read   # needed for /actions/runs/{run_id} (check_suite_id lookup)
+  checks: read    # needed for /commits/{sha}/check-runs
 
 concurrency:
   group: dev-release
@@ -164,7 +166,7 @@ jobs:
         with:
           ref: ${{ needs.preflight.outputs.head_sha }}
           fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.AWBOT_GH_TOKEN }}  # PAT required — GITHUB_TOKEN cannot trigger downstream tag-based workflows
 
       - name: Configure git
         run: |
