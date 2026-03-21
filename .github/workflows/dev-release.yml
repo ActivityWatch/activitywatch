@@ -59,21 +59,15 @@ jobs:
           fi
 
           bump_version() {
-            python3 - "$1" "$2" <<'PY'
-            import sys
-
-            version = sys.argv[1]
-            release_line = sys.argv[2]
-            major, minor, patch = map(int, version.split('.'))
-
-            if release_line == 'minor':
-                minor += 1
-                patch = 0
-            else:
-                patch += 1
-
-            print(f"{major}.{minor}.{patch}")
-            PY
+            local version="$1" release_line="$2"
+            IFS='.' read -r major minor patch <<< "$version"
+            if [ "$release_line" = "minor" ]; then
+              minor=$((minor + 1))
+              patch=0
+            else
+              patch=$((patch + 1))
+            fi
+            echo "${major}.${minor}.${patch}"
           }
 
           latest_stable=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
