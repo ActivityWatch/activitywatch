@@ -41,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: master  # explicit: prevent workflow_dispatch from a non-master branch tagging the wrong commit
           fetch-depth: 0
 
       - name: Decide whether to create a dev release
