@@ -52,6 +52,11 @@ jobs:
       run: |
         echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> $GITHUB_ENV
 
+    - name: Set tag metadata
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        echo "VERSION_TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -173,7 +178,7 @@ jobs:
           # Notarize
           make dist/notarize
         fi
-        mv dist/ActivityWatch.dmg dist/activitywatch-$(scripts/package/getversion.sh)-macos-x86_64.dmg
+        mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_TAG:-$(scripts/package/getversion.sh)}-macos-x86_64.dmg
       env:
         APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}

@@ -1,0 +1,191 @@
+name: Create dev release
+
+# Create prerelease tags on a schedule (every other Thursday) or manually.
+# The existing build workflows already know how to package tag builds and create
+# draft GitHub prereleases, so this workflow only needs to decide whether a new
+# prerelease is warranted and push the next prerelease tag.
+
+on:
+  schedule:
+    - cron: '0 12 * * 4'
+  workflow_dispatch:
+    inputs:
+      release_line:
+        description: 'Release line to prerelease from'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+
+permissions:
+  contents: write
+  actions: read   # needed for /actions/runs/{run_id} (check_suite_id lookup)
+  checks: read    # needed for /commits/{sha}/check-runs
+
+concurrency:
+  group: dev-release
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Pre-flight checks
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.preflight.outputs.should_release }}
+      next_tag: ${{ steps.preflight.outputs.next_tag }}
+      since_ref: ${{ steps.preflight.outputs.since_ref }}
+      commits_since_ref: ${{ steps.preflight.outputs.commits_since_ref }}
+      head_sha: ${{ steps.preflight.outputs.head_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master  # explicit: prevent workflow_dispatch from a non-master branch tagging the wrong commit
+          fetch-depth: 0
+
+      - name: Decide whether to create a dev release
+        id: preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_LINE: ${{ github.event.inputs.release_line || 'patch' }}
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            # Use a fixed reference Thursday to compute biweekly parity, avoiding
+            # ISO week resets at year boundaries (which cause a 3-week gap in Dec/Jan).
+            ref_epoch=$(date -d "2024-01-04" +%s)   # a known even-week Thursday
+            now_epoch=$(date -u +%s)
+            weeks_since=$(( (now_epoch - ref_epoch) / 604800 ))
+            if [ $((weeks_since % 2)) -eq 1 ]; then
+              echo "Skipping this week to keep the cadence biweekly."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          bump_version() {
+            local version="$1" release_line="$2"
+            IFS='.' read -r major minor patch <<< "$version"
+            if [ "$release_line" = "minor" ]; then
+              minor=$((minor + 1))
+              patch=0
+            else
+              patch=$((patch + 1))
+            fi
+            echo "${major}.${minor}.${patch}"
+          }
+
+          latest_stable=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+          if [ -z "$latest_stable" ]; then
+            echo "No stable tag found, refusing to create prerelease tags."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          next_base=$(bump_version "${latest_stable#v}" "$RELEASE_LINE")
+          prerelease_pattern="^v${next_base//./\\.}b[0-9]+$"
+          last_prerelease=$(git tag --sort=-version:refname | grep -E "$prerelease_pattern" | head -1 || true)
+
+          if [ -n "$last_prerelease" ]; then
+            since_ref="$last_prerelease"
+            last_prerelease_num=${last_prerelease##*b}
+            next_tag="v${next_base}b$((last_prerelease_num + 1))"
+          else
+            since_ref="$latest_stable"
+            next_tag="v${next_base}b1"
+          fi
+
+          commits_since_ref=$(git rev-list "${since_ref}..HEAD" --count)
+          echo "latest_stable=$latest_stable"
+          echo "last_prerelease=${last_prerelease:-<none>}"
+          echo "since_ref=$since_ref"
+          echo "next_tag=$next_tag"
+          echo "commits_since_ref=$commits_since_ref"
+
+          if [ "$commits_since_ref" -eq 0 ]; then
+            echo "No new commits since $since_ref, skipping dev release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          head_sha=$(git rev-parse HEAD)
+
+          # Get the current workflow run's check suite ID so we can exclude
+          # our own check runs without relying on fragile job name strings
+          current_suite_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --jq '.check_suite_id' 2>/dev/null || echo "0")
+
+          conclusions=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs" \
+            --paginate \
+            --arg suite "$current_suite_id" \
+            --jq '[.check_runs[] | select(
+              .app.slug == "github-actions" and
+              ((.check_suite.id | tostring) != $suite)
+            )] | map(.conclusion) | unique | .[]' 2>/dev/null || echo unknown)
+
+          echo "CI conclusions: $conclusions"
+
+          if echo "$conclusions" | grep -qE 'failure|action_required|timed_out|cancelled|startup_failure'; then
+            echo "CI has failures on HEAD, skipping dev release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if echo "$conclusions" | grep -qE 'null|pending'; then
+            echo "CI is still running on HEAD, skipping dev release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -z "$conclusions" ] || [ "$conclusions" = "unknown" ]; then
+            echo "CI status unavailable on HEAD, skipping dev release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! echo "$conclusions" | grep -q 'success'; then
+            echo "No successful CI checks found on HEAD, skipping dev release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "next_tag=$next_tag" >> "$GITHUB_OUTPUT"
+          echo "since_ref=$since_ref" >> "$GITHUB_OUTPUT"
+          echo "commits_since_ref=$commits_since_ref" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+
+  create-tag:
+    name: Create dev release tag
+    needs: preflight
+    if: needs.preflight.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.head_sha }}
+          fetch-depth: 1
+          token: ${{ secrets.AWBOT_GH_TOKEN }}  # PAT required — GITHUB_TOKEN cannot trigger downstream tag-based workflows
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push prerelease tag
+        run: |
+          set -euo pipefail
+          tag="${{ needs.preflight.outputs.next_tag }}"
+          git tag -a "$tag" -m "Development prerelease $tag"
+          git push origin "$tag"
+          {
+            echo "## Dev release created"
+            echo ""
+            echo "- Tag: \`$tag\`"
+            echo "- Changes since: \`${{ needs.preflight.outputs.since_ref }}\`"
+            echo "- Commits: \`${{ needs.preflight.outputs.commits_since_ref }}\`"
+            echo ""
+            echo "The existing tag-triggered build workflows will now build artifacts and create/update the draft prerelease."
+          } >> "$GITHUB_STEP_SUMMARY"
