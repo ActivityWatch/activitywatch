@@ -50,8 +50,12 @@ jobs:
           set -euo pipefail
 
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            week=$(date -u +%V)
-            if [ $((10#$week % 2)) -eq 1 ]; then
+            # Use a fixed reference Thursday to compute biweekly parity, avoiding
+            # ISO week resets at year boundaries (which cause a 3-week gap in Dec/Jan).
+            ref_epoch=$(date -d "2024-01-04" +%s)   # a known even-week Thursday
+            now_epoch=$(date -u +%s)
+            weeks_since=$(( (now_epoch - ref_epoch) / 604800 ))
+            if [ $((weeks_since % 2)) -eq 1 ]; then
               echo "Skipping this week to keep the cadence biweekly."
               echo "should_release=false" >> "$GITHUB_OUTPUT"
               exit 0
@@ -112,8 +116,8 @@ jobs:
 
           conclusions=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs" \
             --paginate \
-            --jq --arg suite "$current_suite_id" \
-            '[.check_runs[] | select(
+            --arg suite "$current_suite_id" \
+            --jq '[.check_runs[] | select(
               .app.slug == "github-actions" and
               ((.check_suite.id | tostring) != $suite)
             )] | map(.conclusion) | unique | .[]' 2>/dev/null || echo unknown)
