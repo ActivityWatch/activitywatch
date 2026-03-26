@@ -1,0 +1,14 @@
+Source: activitywatch-odoo
+Section: utils
+Priority: optional
+Maintainer: Christophe Monniez <moc@odoo.com>
+Homepage: https://nightly.odoo.com/aw
+Package: activitywatch-odoo
+Version: 0.13.2-1
+Architecture: amd64
+Depends: python3, python3-psutil, gnome-shell-extension-manager, libnotify-bin, gir1.2-appindicator3-0.1
+Description: Tracks how you spend time on your devices
+ It can be used to keep track of your productivity, time spent on different
+ projects, bad screen habits, or just to understand how you spend your time.
+ .
+ This version supports odoo timesheet.

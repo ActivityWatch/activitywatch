@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=ActivityWatchOdoo
+GenericName=Time-tracking application (Odoo Version)
+Comment=Open source time-tracking application with a focus on extensibility and privacy.
+Exec=/usr/bin/python3 /opt/activitywatch/aw-systray-odoo.py
+Hidden=false
+StartupNotify=true
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true
+Version=1.0
+Icon=activitywatch
+Categories=Utility;
