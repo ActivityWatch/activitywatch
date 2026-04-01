@@ -96,7 +96,10 @@ echo "APPL????" > "dist/${APP_NAME}.app/Contents/PkgInfo"
 
 if [ -n "$APPLE_PERSONALID" ]; then
     echo "Signing app with identity: $APPLE_PERSONALID"
-    codesign --deep --force --sign "$APPLE_PERSONALID" "dist/${APP_NAME}.app"
+    # Hardened runtime is required for notarization prechecks on macOS.
+    # The Tauri bundle still embeds PyInstaller-built helpers from dist/activitywatch/,
+    # so keep the existing entitlements that those binaries need under hardened runtime.
+    codesign --deep --force --options runtime --entitlements scripts/package/entitlements.plist --sign "$APPLE_PERSONALID" "dist/${APP_NAME}.app"
     echo "App signing complete."
 else
     echo "APPLE_PERSONALID not set. Skipping code signing."

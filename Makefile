@@ -131,8 +131,12 @@ uninstall:
 test:
 	@for module in $(TESTABLES); do \
 		echo "Running tests for $$module"; \
-		poetry run make -C $$module test || { echo "Error in $$module tests"; exit 2; }; \
-    done
+		if [ -f "$$module/pyproject.toml" ]; then \
+			(cd $$module && poetry run make test) || { echo "Error in $$module tests"; exit 2; }; \
+		else \
+			make -C $$module test || { echo "Error in $$module tests"; exit 2; }; \
+		fi; \
+	done
 
 test-integration:
 	# TODO: Move "integration tests" to aw-client
