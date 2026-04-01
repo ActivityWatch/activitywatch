@@ -76,7 +76,7 @@ jobs:
         toolchain: stable
 
     - name: Cache node_modules
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       if: ${{ !matrix.skip_webui }}
       with:
         path: aw-server-rust/aw-webui/node_modules
@@ -85,7 +85,7 @@ jobs:
           ${{ matrix.os }}-node_modules-
 
     - name: Cache cargo build
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       # if: ${{ !matrix.skip_rust && (runner.os != 'macOS') }}  # cache doesn't seem to behave nicely on macOS, see: https://github.com/ActivityWatch/aw-server-rust/issues/180
       env:
         cache-name: cargo-build-target
