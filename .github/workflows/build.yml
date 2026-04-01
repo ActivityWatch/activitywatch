@@ -58,7 +58,7 @@ jobs:
         echo "VERSION_TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python_version }}
 
@@ -223,7 +223,7 @@ jobs:
           echo "${{ steps.version.outputs.full }} (stable: ${{ steps.version.outputs.is_stable }})"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
