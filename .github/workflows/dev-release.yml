@@ -117,13 +117,20 @@ jobs:
           current_suite_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             --jq '.check_suite_id' 2>/dev/null || echo "0")
 
+          # gh api's built-in --jq does not support jq variables like --arg, so
+          # use jq directly for the suite-id filter.
           conclusions=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs" \
             --paginate \
-            --arg suite "$current_suite_id" \
-            --jq '[.check_runs[] | select(
-              .app.slug == "github-actions" and
-              ((.check_suite.id | tostring) != $suite)
-            )] | map(.conclusion) | unique | .[]' 2>/dev/null || echo unknown)
+            --slurp 2>/dev/null | jq -r --arg suite "$current_suite_id" '
+              [.[].check_runs[]?
+               | select(
+                   .app.slug == "github-actions" and
+                   ((.check_suite.id | tostring) != $suite)
+                 )
+               | .conclusion]
+              | unique
+              | .[]
+            ' 2>/dev/null || echo unknown)
 
           echo "CI conclusions: $conclusions"
 
