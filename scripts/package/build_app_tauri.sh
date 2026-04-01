@@ -96,7 +96,8 @@ echo "APPL????" > "dist/${APP_NAME}.app/Contents/PkgInfo"
 
 if [ -n "$APPLE_PERSONALID" ]; then
     echo "Signing app with identity: $APPLE_PERSONALID"
-    codesign --deep --force --sign "$APPLE_PERSONALID" "dist/${APP_NAME}.app"
+    # Hardened runtime is required for notarization prechecks on macOS.
+    codesign --deep --force --options runtime --sign "$APPLE_PERSONALID" "dist/${APP_NAME}.app"
     echo "App signing complete."
 else
     echo "APPLE_PERSONALID not set. Skipping code signing."
