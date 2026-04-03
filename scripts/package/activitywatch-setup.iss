@@ -5,7 +5,7 @@
 #define MyAppVersion GetEnv('AW_VERSION')
 #define MyAppPublisher "ActivityWatch Contributors"
 #define MyAppURL "https://activitywatch.net/"
-#define MyAppExeName "aw-qt.exe"
+#define MyAppExeName "aw-systray-odoo.exe"
 #define RootDir "..\.."
 #define DistDir "..\..\dist"
 
@@ -45,7 +45,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "StartMenuEntry" ; Description: "Start ActivityWatch when Windows starts"; GroupDescription: "Windows Startup"; MinVersion: 4,4;
 
 [Files]
-Source: "{#DistDir}\activitywatch\aw-qt.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#DistDir}\activitywatch\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
