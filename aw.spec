@@ -101,16 +101,25 @@ if not aw_server_rust_bin.exists():
     skip_rust = True
     print("Skipping Rust build because aw-server-rust binary not found.")
 
+skip_aw_server_python = os.environ.get("SKIP_SERVER_PYTHON", "false").lower() == "true"
+if skip_aw_server_python:
+    print("Skipping aw-server (Python) packaging, using aw-server-rust only.")
 
-aw_qt_a = build_analysis(
-    "aw-qt",
-    aw_qt_location,
-    binaries=[(aw_server_rust_bin, "."), (aw_sync_bin, ".")] if not skip_rust else [],
-    datas=[
-        (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
-        (aw_qt_location / "media", "aw_qt/media"),
-    ],
-)
+skip_aw_qt = os.environ.get("ODOO_WINDOWS_BUILD", "false").lower() == "true"
+if skip_aw_qt:
+    print("Skipping aw-qt packaging, using aw-systray-odoo instead.")
+
+
+if not skip_aw_qt:
+    aw_qt_a = build_analysis(
+        "aw-qt",
+        aw_qt_location,
+        binaries=[(aw_server_rust_bin, "."), (aw_sync_bin, ".")] if not skip_rust else [],
+        datas=[
+            (aw_qt_location / "resources/aw-qt.desktop", "aw_qt/resources"),
+            (aw_qt_location / "media", "aw_qt/media"),
+        ],
+    )
 aw_server_a = build_analysis(
     "aw-server",
     aws_location,
@@ -182,12 +191,14 @@ aw_notify_a = None if skip_aw_notify else build_analysis(
 # MERGE takes a bit weird arguments, it wants tuples which consists of
 # the analysis paired with the script name and the bin name
 merge_args = [
-    (aw_server_a, "aw-server", "aw-server"),
-    (aw_qt_a, "aw-qt", "aw-qt"),
     (aw_watcher_afk_a, "aw-watcher-afk", "aw-watcher-afk"),
     (aw_watcher_window_a, "aw-watcher-window", "aw-watcher-window"),
     (aw_watcher_input_a, "aw-watcher-input", "aw-watcher-input"),
 ]
+if not skip_aw_server_python:
+    merge_args.insert(0, (aw_server_a, "aw-server", "aw-server"))
+if not skip_aw_qt:
+    merge_args.append((aw_qt_a, "aw-qt", "aw-qt"))
 if aw_notify_a is not None:
     merge_args.append((aw_notify_a, "aw-notify", "aw-notify"))
 
@@ -195,7 +206,8 @@ MERGE(*merge_args)
 
 
 # aw-server
-aws_coll = build_collect(aw_server_a, "aw-server")
+if not skip_aw_server_python:
+    aws_coll = build_collect(aw_server_a, "aw-server")
 
 # aw-watcher-window
 aww_coll = build_collect(aw_watcher_window_a, "aw-watcher-window")
@@ -204,11 +216,12 @@ aww_coll = build_collect(aw_watcher_window_a, "aw-watcher-window")
 awa_coll = build_collect(aw_watcher_afk_a, "aw-watcher-afk")
 
 # aw-qt
-awq_coll = build_collect(
-    aw_qt_a,
-    "aw-qt",
-    console=False if platform.system() == "Windows" else True,
-)
+if not skip_aw_qt:
+    awq_coll = build_collect(
+        aw_qt_a,
+        "aw-qt",
+        console=False if platform.system() == "Windows" else True,
+    )
 
 # aw-watcher-input
 awi_coll = build_collect(aw_watcher_input_a, "aw-watcher-input")
@@ -218,12 +231,14 @@ aw_notify_coll = build_collect(aw_notify_a, "aw-notify") if aw_notify_a is not N
 
 if platform.system() == "Darwin":
     bundle_args = [
-        awq_coll,
-        aws_coll,
         aww_coll,
         awa_coll,
         awi_coll,
     ]
+    if not skip_aw_server_python:
+        bundle_args.insert(1, aws_coll)
+    if not skip_aw_qt:
+        bundle_args.insert(0, awq_coll)
     if aw_notify_coll is not None:
         bundle_args.append(aw_notify_coll)
     

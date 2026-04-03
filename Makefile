@@ -27,6 +27,14 @@ endif
 ifeq ($(SKIP_SERVER_RUST),true)
 	SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
 endif
+# Exclude aw-server (Python) when using aw-server-rust only
+ifeq ($(SKIP_SERVER_PYTHON),true)
+    SUBMODULES := $(filter-out aw-server,$(SUBMODULES))
+endif
+# Odoo-specific Windows build: replaces aw-qt with aw-systray-odoo
+ifeq ($(ODOO_WINDOWS_BUILD),true)
+    SUBMODULES := $(filter-out aw-qt,$(SUBMODULES))
+endif
 # Include extras if AW_EXTRAS is true
 ifeq ($(AW_EXTRAS),true)
 	SUBMODULES := $(SUBMODULES) aw-notify aw-watcher-input
@@ -79,7 +87,9 @@ build: aw-core/.git
 	make --directory=aw-client build
 	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
+ifneq ($(SKIP_SERVER_PYTHON),true)
 	python -c "import aw_server; print(aw_server.__version__)"
+endif
 
 
 # Install
@@ -194,10 +204,14 @@ ifeq ($(TAURI_BUILD),true)
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp aw-server-rust/target/$(targetdir)/aw-sync dist/activitywatch/aw-server-rust/aw-sync
 else
-# Move aw-qt to the root of the dist folder
-	mv dist/activitywatch/aw-qt aw-qt-tmp
-	mv aw-qt-tmp/* dist/activitywatch
-	rmdir aw-qt-tmp
+ifeq ($(ODOO_WINDOWS_BUILD),true)
+# ODOO_WINDOWS_BUILD: Install pystray and build aw-systray-odoo.exe via PyInstaller
+	@echo "ODOO_WINDOWS_BUILD: Installing pystray..."
+	python -m pip install pystray pillow pywin32
+	@echo "ODOO_WINDOWS_BUILD: Building aw-systray-odoo.exe via PyInstaller..."
+	pyinstaller --clean --noconfirm odoo-setup/aw-systray-odoo.spec
+	cp dist/aw-systray-odoo.exe dist/activitywatch/aw-systray-odoo.exe
+endif
 endif
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
