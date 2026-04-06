@@ -66,21 +66,21 @@ if [ $notarization_method = "exit" ]; then
     $notarization_method
 fi
 
-if test -f "$app"; then
+if test -d "$app"; then
     echo "Notarizing: $app"
     zip=$app.zip
     # Turn the app into a zip file that notarization will accept
-    ditto -c -k --keepParent $app $zip
-    $notarization_method $zip
-    run_stapler $app
+    ditto -c -k --keepParent "$app" "$zip"
+    $notarization_method "$zip"
+    run_stapler "$app"
 else
-    echo "Skipping: $app"
+    echo "Skipping: $app (expected .app bundle directory)"
 fi
 
 if test -f "$dmg"; then
     echo "Notarizing: $dmg"
-    $notarization_method $dmg
-    run_stapler $dmg
+    $notarization_method "$dmg"
+    run_stapler "$dmg"
 else
     echo "Skipping: $dmg"
 fi
