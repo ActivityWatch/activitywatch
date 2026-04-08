@@ -147,8 +147,18 @@ if [ -n "$APPLE_PERSONALID" ]; then
     # in Step 3 will seal everything.
     echo "  Signing bundle directories (.framework, .bundle, .plugin)..."
     while IFS= read -r fw; do
-        if ! sign_binary "$fw"; then
-            echo "  WARNING: Skipping $fw (bundle format may be ambiguous, contents already signed in Step 1)"
+        echo "  Signing: $fw"
+        if ! codesign_out=$(codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS" \
+            --sign "$APPLE_PERSONALID" \
+            "$fw" 2>&1); then
+            if echo "$codesign_out" | grep -q "bundle format is ambiguous"; then
+                echo "  WARNING: $fw — bundle format is ambiguous; contents already signed in Step 1, skipping"
+            else
+                echo "  ERROR: Failed to sign $fw:" >&2
+                echo "$codesign_out" >&2
+                exit 1
+            fi
         fi
     done < <(find "dist/${APP_NAME}.app" -type d \
         \( -name "*.framework" -o -name "*.bundle" -o -name "*.plugin" \) \
