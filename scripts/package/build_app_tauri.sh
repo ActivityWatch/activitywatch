@@ -159,7 +159,9 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 if [ -f "$fw_binary" ]; then
                     sign_binary "$fw_binary"
                 else
-                    echo "  Warning: No main binary found at $fw_binary, skipping"
+                    echo "ERROR: Expected main binary not found at $fw_binary" >&2
+                    echo "  PyInstaller may have changed its output structure. Inspect $fw" >&2
+                    exit 1
                 fi
             else
                 echo "ERROR: Failed to sign $fw: $sign_output" >&2
