@@ -113,23 +113,27 @@ if [ -n "$APPLE_PERSONALID" ]; then
     }
 
     # Step 1: Sign all Mach-O binary files (dylibs, .so files, standalone executables).
-    # Use `file` to identify Mach-O objects — do not rely on -perm +111 which would
-    # also match Python scripts and shell scripts, causing codesign to error out.
+    # Use `xargs file` to batch all type queries in O(1) subprocess calls instead of
+    # one `file` invocation per binary (PyInstaller bundles can contain hundreds of files).
     # Sort by path length descending so deeper binaries are signed before shallower containers.
     echo "  Signing Mach-O binary files..."
     while IFS= read -r f; do
-        if file "$f" | grep -q "Mach-O"; then
-            sign_binary "$f"
-        fi
+        sign_binary "$f"
     done < <(find "dist/${APP_NAME}.app" -type f \
+        | xargs file \
+        | grep "Mach-O" \
+        | cut -d: -f1 \
         | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
 
-    # Step 2: Sign .framework bundles (after their contents are signed).
-    # Deepest frameworks first (sort by path length descending).
-    echo "  Signing .framework bundles..."
+    # Step 2: Sign bundle directories (.framework, .bundle, .plugin) after their contents.
+    # Deepest bundles first (sort by path length descending) to maintain inside-out order.
+    # .bundle/.plugin coverage prevents missing CodeResources catalog seals that can
+    # trigger notarytool bundle-integrity warnings.
+    echo "  Signing bundle directories (.framework, .bundle, .plugin)..."
     while IFS= read -r fw; do
         sign_binary "$fw"
-    done < <(find "dist/${APP_NAME}.app" -type d -name "*.framework" \
+    done < <(find "dist/${APP_NAME}.app" -type d \
+        \( -name "*.framework" -o -name "*.bundle" -o -name "*.plugin" \) \
         | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
 
     # Step 3: Sign the top-level .app bundle last.
