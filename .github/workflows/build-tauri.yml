@@ -157,7 +157,7 @@ jobs:
           make dist/ActivityWatch.dmg
 
           if [ -n "$APPLE_EMAIL" ]; then
-            codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
 
             brew install akeru-inc/tap/xcnotary
             xcnotary precheck dist/ActivityWatch.app

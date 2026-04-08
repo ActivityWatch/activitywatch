@@ -95,11 +95,47 @@ echo "Creating PkgInfo..."
 echo "APPL????" > "dist/${APP_NAME}.app/Contents/PkgInfo"
 
 if [ -n "$APPLE_PERSONALID" ]; then
-    echo "Signing app with identity: $APPLE_PERSONALID"
-    # Hardened runtime is required for notarization prechecks on macOS.
-    # The Tauri bundle still embeds PyInstaller-built helpers from dist/activitywatch/,
-    # so keep the existing entitlements that those binaries need under hardened runtime.
-    codesign --deep --force --options runtime --entitlements scripts/package/entitlements.plist --sign "$APPLE_PERSONALID" "dist/${APP_NAME}.app"
+    echo "Signing app with identity: $APPLE_PERSONALID (inside-out, per-binary)"
+    # codesign --deep is unreliable for bundles with PyInstaller helpers:
+    # it doesn't reach all nested dylibs/so files and mishandles Python.framework
+    # symlinks, leaving hundreds of binaries unsigned or invalidly signed.
+    # The correct approach is inside-out: sign all Mach-O leaves first,
+    # then .framework bundles, then the top-level .app last.
+    # --timestamp is required for notarization (Apple rejects submissions without it).
+    ENTITLEMENTS="scripts/package/entitlements.plist"
+
+    sign_binary() {
+        echo "  Signing: $1"
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS" \
+            --sign "$APPLE_PERSONALID" \
+            "$1"
+    }
+
+    # Step 1: Sign all Mach-O binary files (dylibs, .so files, standalone executables).
+    # Use `file` to identify Mach-O objects — do not rely on -perm +111 which would
+    # also match Python scripts and shell scripts, causing codesign to error out.
+    # Sort by path length descending so deeper binaries are signed before shallower containers.
+    echo "  Signing Mach-O binary files..."
+    while IFS= read -r f; do
+        if file "$f" | grep -q "Mach-O"; then
+            sign_binary "$f"
+        fi
+    done < <(find "dist/${APP_NAME}.app" -type f \
+        | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
+
+    # Step 2: Sign .framework bundles (after their contents are signed).
+    # Deepest frameworks first (sort by path length descending).
+    echo "  Signing .framework bundles..."
+    while IFS= read -r fw; do
+        sign_binary "$fw"
+    done < <(find "dist/${APP_NAME}.app" -type d -name "*.framework" \
+        | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
+
+    # Step 3: Sign the top-level .app bundle last.
+    echo "  Signing top-level .app bundle..."
+    sign_binary "dist/${APP_NAME}.app"
+
     echo "App signing complete."
 else
     echo "APPLE_PERSONALID not set. Skipping code signing."

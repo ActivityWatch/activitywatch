@@ -168,7 +168,7 @@ jobs:
 
         # codesign and notarize
         if [ -n "$APPLE_EMAIL" ]; then
-          codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+          codesign --force --verbose --timestamp -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
 
           # Run prechecks
           brew install akeru-inc/tap/xcnotary
