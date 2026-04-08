@@ -143,7 +143,31 @@ if [ -n "$APPLE_PERSONALID" ]; then
     # trigger notarytool bundle-integrity warnings.
     echo "  Signing bundle directories (.framework, .bundle, .plugin)..."
     while IFS= read -r fw; do
-        sign_binary "$fw"
+        # PyInstaller-embedded frameworks (e.g. Python.framework inside aw-watcher-window)
+        # lack the standard Versions/ structure and Info.plist, so codesign rejects them
+        # with "bundle format is ambiguous (could be app or framework)". Fall back to
+        # signing the main binary inside the framework directly. All other signing errors
+        # are still fatal.
+        sign_output=$(codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS" \
+            --sign "$APPLE_PERSONALID" \
+            "$fw" 2>&1) && echo "  Signed bundle: $fw" || {
+            if echo "$sign_output" | grep -q "bundle format is ambiguous"; then
+                echo "  Note: $fw lacks standard bundle structure; signing main binary inside directly"
+                fw_name="$(basename "${fw%.*}")"
+                fw_binary="$fw/$fw_name"
+                if [ -f "$fw_binary" ]; then
+                    sign_binary "$fw_binary"
+                else
+                    echo "ERROR: Expected main binary not found at $fw_binary" >&2
+                    echo "  PyInstaller may have changed its output structure. Inspect $fw" >&2
+                    exit 1
+                fi
+            else
+                echo "ERROR: Failed to sign $fw: $sign_output" >&2
+                exit 1
+            fi
+        }
     done < <(find "dist/${APP_NAME}.app" -type d \
         \( -name "*.framework" -o -name "*.bundle" -o -name "*.plugin" \) \
         | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
