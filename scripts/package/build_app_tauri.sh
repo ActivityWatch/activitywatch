@@ -141,9 +141,15 @@ if [ -n "$APPLE_PERSONALID" ]; then
     # Deepest bundles first (sort by path length descending) to maintain inside-out order.
     # .bundle/.plugin coverage prevents missing CodeResources catalog seals that can
     # trigger notarytool bundle-integrity warnings.
+    # NOTE: Some frameworks (e.g. PyInstaller's Python.framework) have an ambiguous
+    # bundle structure that codesign rejects. Their individual binaries are already
+    # signed in Step 1, so skipping them here is safe — the .app-level signature
+    # in Step 3 will seal everything.
     echo "  Signing bundle directories (.framework, .bundle, .plugin)..."
     while IFS= read -r fw; do
-        sign_binary "$fw"
+        if ! sign_binary "$fw"; then
+            echo "  WARNING: Skipping $fw (bundle format may be ambiguous, contents already signed in Step 1)"
+        fi
     done < <(find "dist/${APP_NAME}.app" -type d \
         \( -name "*.framework" -o -name "*.bundle" -o -name "*.plugin" \) \
         | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
