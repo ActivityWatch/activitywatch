@@ -116,8 +116,20 @@ if [ -n "$APPLE_PERSONALID" ]; then
     # Use `xargs file` to batch all type queries in O(1) subprocess calls instead of
     # one `file` invocation per binary (PyInstaller bundles can contain hundreds of files).
     # Sort by path length descending so deeper binaries are signed before shallower containers.
+    # IMPORTANT: Skip the main binary of .framework bundles (e.g. Python.framework/Python).
+    # codesign treats those as ambiguous ("could be app or framework") when signed as
+    # standalone files. They are correctly signed in Step 2 as part of the framework bundle.
     echo "  Signing Mach-O binary files..."
     while IFS= read -r f; do
+        # Skip main binaries of bundle directories (.framework, .bundle, .plugin) —
+        # they'll be signed as part of the bundle in Step 2. Signing them standalone
+        # causes "bundle format is ambiguous" errors from codesign.
+        parent_dir="$(dirname "$f")"
+        if [[ "$parent_dir" == *.framework ]] || [[ "$parent_dir" == *.framework/Versions/* ]] \
+            || [[ "$parent_dir" == *.bundle ]] || [[ "$parent_dir" == *.plugin ]]; then
+            echo "  Skipping bundle binary (signed in Step 2): $f"
+            continue
+        fi
         sign_binary "$f"
     done < <(find "dist/${APP_NAME}.app" -type f \
         | xargs file \
