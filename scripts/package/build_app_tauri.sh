@@ -172,7 +172,7 @@ if [ -n "$APPLE_PERSONALID" ]; then
                     # from PyInstaller's codesign_identity step) or falling back to the
                     # binary's filename avoids this rejection.
                     existing_id=$(codesign -d "$fw_bin" 2>&1 \
-                        | awk -F= '/^Identifier=/{print $2; exit}' || true)
+                        | sed -n 's/^Identifier=//p' || true)
                     if [ -z "$existing_id" ]; then
                         existing_id=$(basename "$fw_bin")
                     fi
@@ -184,7 +184,7 @@ if [ -n "$APPLE_PERSONALID" ]; then
                         --identifier "$existing_id" \
                         --sign "$APPLE_PERSONALID" \
                         "$tmp_binary" || { rm -f "$tmp_binary"; exit 1; }
-                    cp "$tmp_binary" "$fw_bin"
+                    cp "$tmp_binary" "$fw_bin" || { rm -f "$tmp_binary"; exit 1; }
                     rm -f "$tmp_binary"
                     signed_count=$((signed_count + 1))
                 done < <(find "$fw" -type f | xargs file | grep "Mach-O" | cut -d: -f1)
