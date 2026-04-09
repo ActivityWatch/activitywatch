@@ -153,25 +153,28 @@ if [ -n "$APPLE_PERSONALID" ]; then
             --sign "$APPLE_PERSONALID" \
             "$fw" 2>&1) && echo "  Signed bundle: $fw" || {
             if echo "$sign_output" | grep -q "bundle format is ambiguous"; then
-                echo "  Note: $fw lacks standard bundle structure; signing main binary via temp copy"
-                fw_name="$(basename "${fw%.*}")"
-                fw_binary="$fw/$fw_name"
-                if [ -f "$fw_binary" ]; then
-                    # codesign refuses to sign Python.framework/Python in-place because
-                    # it sees the parent .framework dir and reports "bundle format is
-                    # ambiguous". Copy to a temp path outside any bundle directory,
-                    # sign there, then copy back. Code signatures are embedded in the
-                    # binary (not path-dependent), so the result is identical.
+                echo "  Note: $fw lacks standard bundle structure; signing all Mach-O binaries inside via temp copy"
+                # PyInstaller copies Python.framework contents as separate files rather
+                # than symlinks — Python, Versions/Current/Python, and Versions/3.9/Python
+                # are distinct inodes. Signing only $fw_name leaves the Versions/ copies
+                # unsigned, causing Apple notarization to reject every affected watcher.
+                # Sign every Mach-O file inside the framework via a temp-path copy to
+                # avoid the in-place "bundle format is ambiguous" error from codesign.
+                signed_count=0
+                while IFS= read -r fw_bin; do
+                    echo "    Signing framework binary via temp copy: $fw_bin"
                     tmp_binary=$(mktemp)
-                    cp "$fw_binary" "$tmp_binary"
-                    sign_binary "$tmp_binary"
-                    cp "$tmp_binary" "$fw_binary"
+                    cp "$fw_bin" "$tmp_binary"
+                    sign_binary "$tmp_binary" || { rm -f "$tmp_binary"; exit 1; }
+                    cp "$tmp_binary" "$fw_bin"
                     rm -f "$tmp_binary"
-                else
-                    echo "ERROR: Expected main binary not found at $fw_binary" >&2
-                    echo "  PyInstaller may have changed its output structure. Inspect $fw" >&2
+                    signed_count=$((signed_count + 1))
+                done < <(find "$fw" -type f | xargs file | grep "Mach-O" | cut -d: -f1)
+                if [ "$signed_count" -eq 0 ]; then
+                    echo "ERROR: No Mach-O binaries found inside $fw" >&2
                     exit 1
                 fi
+                echo "  Signed $signed_count Mach-O binary/binaries inside $fw"
             else
                 echo "ERROR: Failed to sign $fw: $sign_output" >&2
                 exit 1
