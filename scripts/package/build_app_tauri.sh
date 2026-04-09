@@ -201,10 +201,13 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 # byte-identical signatures (Apple notarization checks all paths).
                 # Guard with PRE-SIGNING checksum so genuinely distinct binaries are
                 # signed separately rather than silently overwritten.
+                synced_count=0
+                separately_count=0
                 for fw_bin in "${fw_bins[@]:1}"; do
                     if [ "$(shasum "$fw_bin" | cut -d' ' -f1)" = "$canonical_presign" ]; then
                         echo "    Syncing signed binary to duplicate path: $fw_bin"
                         cp "$canonical" "$fw_bin" || exit 1
+                        ((synced_count++))
                     else
                         echo "    WARNING: $fw_bin differs from canonical; signing separately" >&2
                         tmp2=$(mktemp)
@@ -218,9 +221,10 @@ if [ -n "$APPLE_PERSONALID" ]; then
                             "$tmp2" || { rm -f "$tmp2"; exit 1; }
                         cp "$tmp2" "$fw_bin" || { rm -f "$tmp2"; exit 1; }
                         rm -f "$tmp2"
+                        ((separately_count++))
                     fi
                 done
-                echo "  Signed 1 + synced $((${#fw_bins[@]} - 1)) duplicate(s) inside $fw"
+                echo "  Signed $((1 + separately_count)) + synced ${synced_count} duplicate(s) inside $fw"
             else
                 echo "ERROR: Failed to sign $fw: $sign_output" >&2
                 exit 1
