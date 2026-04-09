@@ -185,7 +185,7 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 fi
                 echo "    Signing canonical framework binary: $canonical (identifier: $existing_id)"
                 tmp_binary=$(mktemp)
-                cp "$canonical" "$tmp_binary"
+                cp -p "$canonical" "$tmp_binary"
                 codesign --force --options runtime --timestamp \
                     --entitlements "$ENTITLEMENTS" \
                     --identifier "$existing_id" \
@@ -195,9 +195,26 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 rm -f "$tmp_binary"
                 # Copy the signed canonical to all duplicate paths so they share
                 # byte-identical signatures (Apple notarization checks all paths).
+                # Guard with cmp -s so genuinely distinct binaries are signed
+                # separately rather than silently overwritten.
                 for fw_bin in "${fw_bins[@]:1}"; do
-                    echo "    Syncing signed binary to duplicate path: $fw_bin"
-                    cp "$canonical" "$fw_bin" || exit 1
+                    if cmp -s "$canonical" "$fw_bin"; then
+                        echo "    Syncing signed binary to duplicate path: $fw_bin"
+                        cp "$canonical" "$fw_bin" || exit 1
+                    else
+                        echo "    WARNING: $fw_bin differs from canonical; signing separately" >&2
+                        tmp2=$(mktemp)
+                        fw_id=$(codesign -d "$fw_bin" 2>&1 | sed -n 's/^Identifier=//p' || true)
+                        [ -z "$fw_id" ] && fw_id=$(basename "$fw_bin")
+                        cp -p "$fw_bin" "$tmp2"
+                        codesign --force --options runtime --timestamp \
+                            --entitlements "$ENTITLEMENTS" \
+                            --identifier "$fw_id" \
+                            --sign "$APPLE_PERSONALID" \
+                            "$tmp2" || { rm -f "$tmp2"; exit 1; }
+                        cp "$tmp2" "$fw_bin" || { rm -f "$tmp2"; exit 1; }
+                        rm -f "$tmp2"
+                    fi
                 done
                 echo "  Signed 1 + synced $((${#fw_bins[@]} - 1)) duplicate(s) inside $fw"
             else
