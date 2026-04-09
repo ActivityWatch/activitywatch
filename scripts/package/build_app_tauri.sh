@@ -153,22 +153,32 @@ if [ -n "$APPLE_PERSONALID" ]; then
             --sign "$APPLE_PERSONALID" \
             "$fw" 2>&1) && echo "  Signed bundle: $fw" || {
             if echo "$sign_output" | grep -q "bundle format is ambiguous"; then
-                echo "  Note: $fw lacks standard bundle structure; signing main binary via temp copy"
-                fw_name="$(basename "${fw%.*}")"
-                fw_binary="$fw/$fw_name"
-                if [ -f "$fw_binary" ]; then
-                    # codesign refuses to sign Python.framework/Python in-place because
-                    # it sees the parent .framework dir and reports "bundle format is
-                    # ambiguous". Copy to a temp path outside any bundle directory,
-                    # sign there, then copy back. Code signatures are embedded in the
-                    # binary (not path-dependent), so the result is identical.
+                echo "  Note: $fw has non-standard structure (PyInstaller); signing all Mach-O files inside it via temp copy"
+                # PyInstaller-embedded Python.framework lacks the standard Versions/ symlink
+                # hierarchy. When cp -r assembles the .app bundle, it dereferences symlinks,
+                # creating multiple physical copies of the Python binary at all three paths:
+                #   Python.framework/Python
+                #   Python.framework/Versions/Current/Python
+                #   Python.framework/Versions/3.9/Python
+                # codesign refuses to sign any of them in-place due to the ambiguous
+                # framework directory context. Signing only $fw/$fw_name (the top-level
+                # copy) leaves the Versions/ copies unsigned, and Apple notarytool rejects
+                # all three paths independently.
+                # Fix: find all Mach-O files inside the framework and sign each via a temp
+                # path outside any .framework directory. Signatures are embedded in the
+                # Mach-O binary (not path-dependent), so the signed binary is valid at
+                # its original location.
+                found=0
+                while IFS= read -r fw_binary; do
+                    found=1
                     tmp_binary=$(mktemp)
                     cp "$fw_binary" "$tmp_binary"
                     sign_binary "$tmp_binary"
                     cp "$tmp_binary" "$fw_binary"
                     rm -f "$tmp_binary"
-                else
-                    echo "ERROR: Expected main binary not found at $fw_binary" >&2
+                done < <(find "$fw" -type f | xargs file | grep "Mach-O" | cut -d: -f1)
+                if [ "$found" -eq 0 ]; then
+                    echo "ERROR: No Mach-O binaries found inside $fw" >&2
                     echo "  PyInstaller may have changed its output structure. Inspect $fw" >&2
                     exit 1
                 fi
