@@ -163,9 +163,27 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 signed_count=0
                 while IFS= read -r fw_bin; do
                     echo "    Signing framework binary via temp copy: $fw_bin"
+                    # Preserve the binary's existing code-signing identifier.
+                    # Without --identifier, codesign uses the random temp filename
+                    # (e.g. "tmp.XXXXXX") as the identifier, which makes Apple's
+                    # notarization service report "The signature of the binary is
+                    # invalid" — even though the certificate chain and code hashes
+                    # are valid. Using the original identifier (e.g. "org.python.python"
+                    # from PyInstaller's codesign_identity step) or falling back to the
+                    # binary's filename avoids this rejection.
+                    existing_id=$(codesign -d "$fw_bin" 2>&1 \
+                        | awk -F= '/^Identifier=/{print $2; exit}' || true)
+                    if [ -z "$existing_id" ]; then
+                        existing_id=$(basename "$fw_bin")
+                    fi
+                    echo "      Using identifier: $existing_id"
                     tmp_binary=$(mktemp)
                     cp "$fw_bin" "$tmp_binary"
-                    sign_binary "$tmp_binary" || { rm -f "$tmp_binary"; exit 1; }
+                    codesign --force --options runtime --timestamp \
+                        --entitlements "$ENTITLEMENTS" \
+                        --identifier "$existing_id" \
+                        --sign "$APPLE_PERSONALID" \
+                        "$tmp_binary" || { rm -f "$tmp_binary"; exit 1; }
                     cp "$tmp_binary" "$fw_bin"
                     rm -f "$tmp_binary"
                     signed_count=$((signed_count + 1))
