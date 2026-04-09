@@ -13,16 +13,19 @@ run_notarytool() {
     dist=$1
     # Setup the credentials for notarization
     xcrun notarytool store-credentials $keychain_profile --apple-id $applemail --team-id $teamid --password $password
-    # Notarize and wait; capture output to extract submission ID on failure
+    # Notarize and wait; tee to a temp file so output streams in real-time
+    # while we can still inspect it afterward for failure details.
     echo "Notarization: starting for $dist"
     echo "Notarization: in progress for $dist"
-    submission_output=$(xcrun notarytool submit $dist --keychain-profile $keychain_profile --wait 2>&1)
-    submission_exit=$?
-    echo "$submission_output"
+    tmpfile=$(mktemp)
+    xcrun notarytool submit $dist --keychain-profile $keychain_profile --wait 2>&1 | tee "$tmpfile"
+    submission_exit=${PIPESTATUS[0]}
+    submission_output=$(cat "$tmpfile")
+    rm -f "$tmpfile"
     # On failure, retrieve the detailed rejection log from Apple's server.
     # This avoids having to run 'notarytool log' manually after the fact.
     if echo "$submission_output" | grep -q "status: Invalid"; then
-        uuid=$(echo "$submission_output" | grep '^\s*id:' | head -1 | awk '{print $NF}')
+        uuid=$(echo "$submission_output" | grep '^[[:space:]]*id:' | head -1 | awk '{print $NF}')
         if [ -n "$uuid" ]; then
             echo ""
             echo "=== Notarization rejected (status: Invalid) — fetching rejection log for $uuid ==="
