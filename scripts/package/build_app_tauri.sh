@@ -183,10 +183,6 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 if [ -z "$existing_id" ]; then
                     existing_id=$(basename "$canonical")
                 fi
-                # Snapshot the canonical checksum BEFORE signing — signing changes
-                # the binary bytes, so cmp -s after the fact always returns "differs"
-                # even when canonical and duplicates started as byte-identical copies.
-                canonical_presign=$(shasum "$canonical" | cut -d' ' -f1)
                 echo "    Signing canonical framework binary: $canonical (identifier: $existing_id)"
                 tmp_binary=$(mktemp)
                 cp -p "$canonical" "$tmp_binary"
@@ -197,34 +193,26 @@ if [ -n "$APPLE_PERSONALID" ]; then
                     "$tmp_binary" || { rm -f "$tmp_binary"; exit 1; }
                 cp "$tmp_binary" "$canonical" || { rm -f "$tmp_binary"; exit 1; }
                 rm -f "$tmp_binary"
-                # Copy the signed canonical to all duplicate paths so they share
-                # byte-identical signatures (Apple notarization checks all paths).
-                # Guard with PRE-SIGNING checksum so genuinely distinct binaries are
-                # signed separately rather than silently overwritten.
+                # Copy the signed canonical to ALL other paths unconditionally.
+                # PyInstaller signs each Python.framework copy independently during the
+                # watcher build (aw.spec codesign_identity), giving each a different
+                # embedded signature (different timestamp nonce). After cp -r into the
+                # .app, all three paths (Python, Versions/Current/Python, Versions/3.9/Python)
+                # carry pre-existing but DIFFERENT signatures, so a pre-sign SHA comparison
+                # never detects them as duplicates — all three end up signed separately,
+                # producing three divergent signatures that Apple rejects as "invalid".
+                #
+                # The correct fix: always sync the signed canonical to every other path,
+                # making all copies byte-identical including the embedded signature.
+                # These paths are always the same Python binary; independently signing
+                # them is the root of every Apple rejection in this fallback block.
                 synced_count=0
-                separately_count=0
                 for fw_bin in "${fw_bins[@]:1}"; do
-                    if [ "$(shasum "$fw_bin" | cut -d' ' -f1)" = "$canonical_presign" ]; then
-                        echo "    Syncing signed binary to duplicate path: $fw_bin"
-                        cp "$canonical" "$fw_bin" || exit 1
-                        ((synced_count++))
-                    else
-                        echo "    WARNING: $fw_bin differs from canonical; signing separately" >&2
-                        tmp2=$(mktemp)
-                        fw_id=$(codesign -d "$fw_bin" 2>&1 | sed -n 's/^Identifier=//p' || true)
-                        [ -z "$fw_id" ] && fw_id=$(basename "$fw_bin")
-                        cp -p "$fw_bin" "$tmp2"
-                        codesign --force --options runtime --timestamp \
-                            --entitlements "$ENTITLEMENTS" \
-                            --identifier "$fw_id" \
-                            --sign "$APPLE_PERSONALID" \
-                            "$tmp2" || { rm -f "$tmp2"; exit 1; }
-                        cp "$tmp2" "$fw_bin" || { rm -f "$tmp2"; exit 1; }
-                        rm -f "$tmp2"
-                        ((separately_count++))
-                    fi
+                    echo "    Syncing signed binary to path: $fw_bin"
+                    cp "$canonical" "$fw_bin" || exit 1
+                    synced_count=$((synced_count + 1))
                 done
-                echo "  Signed $((1 + separately_count)) + synced ${synced_count} duplicate(s) inside $fw"
+                echo "  Signed 1 + synced ${synced_count} path(s) inside $fw"
             else
                 echo "ERROR: Failed to sign $fw: $sign_output" >&2
                 exit 1
