@@ -210,7 +210,7 @@ if [ -n "$APPLE_PERSONALID" ]; then
                 for fw_bin in "${fw_bins[@]:1}"; do
                     echo "    Syncing signed binary to path: $fw_bin"
                     cp "$canonical" "$fw_bin" || exit 1
-                    ((synced_count++))
+                    synced_count=$((synced_count + 1))
                 done
                 echo "  Signed 1 + synced ${synced_count} path(s) inside $fw"
             else
