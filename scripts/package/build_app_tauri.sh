@@ -57,7 +57,14 @@ echo "Fixing Python.framework symlink structure..."
 while IFS= read -r fw; do
     echo "  Fixing: $fw"
     # Find the actual version directory (e.g., "3.9"), skipping "Current"
-    version_dir=$(ls "$fw/Versions/" 2>/dev/null | grep -v Current | head -1)
+    version_dir=""
+    for d in "$fw/Versions"/*/; do
+        bname="$(basename "$d")"
+        if [ "$bname" != "Current" ] && [ -d "$d" ]; then
+            version_dir="$bname"
+            break
+        fi
+    done
     if [ -z "$version_dir" ]; then
         echo "  Warning: No version directory found in $fw/Versions/, skipping"
         continue
@@ -76,8 +83,7 @@ while IFS= read -r fw; do
             ln -s "Versions/Current/$item" "$fw/$item"
         fi
     done
-done < <(find "dist/${APP_NAME}.app" -type d -name "*.framework" \
-    | grep -i python)
+done < <(find "dist/${APP_NAME}.app" -type d -iname "Python.framework")
 
 echo "Setting executable permissions..."
 find "dist/${APP_NAME}.app/Contents/Resources" -type f -name "aw-*" -exec chmod +x {} \;
