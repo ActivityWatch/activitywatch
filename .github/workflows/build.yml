@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest, macos-14, macos-latest]
+        os: [ubuntu-24.04, windows-latest, macos-latest]
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
