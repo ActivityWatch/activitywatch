@@ -45,6 +45,46 @@ for component in dist/activitywatch/*/; do
     fi
 done
 
+echo "Fixing Python.framework symlink structure..."
+# PyInstaller copies Python.framework using regular files/directories instead of
+# preserving the standard macOS symlink layout. Without symlinks, codesign rejects
+# the framework with "bundle format is ambiguous (could be app or framework)".
+# Restore the canonical layout so codesign can sign it as a proper framework bundle:
+#   Versions/Current -> <version>  (symlink)
+#   Python -> Versions/Current/Python  (symlink)
+#   Resources -> Versions/Current/Resources  (symlink)
+#   Headers -> Versions/Current/Headers  (symlink, if present)
+while IFS= read -r fw; do
+    echo "  Fixing: $fw"
+    # Find the actual version directory (e.g., "3.9"), skipping "Current"
+    version_dir=""
+    for d in "$fw/Versions"/*/; do
+        bname="$(basename "$d")"
+        if [ "$bname" != "Current" ] && [ -d "$d" ]; then
+            version_dir="$bname"
+            break
+        fi
+    done
+    if [ -z "$version_dir" ]; then
+        echo "  Warning: No version directory found in $fw/Versions/, skipping"
+        continue
+    fi
+
+    # Replace Versions/Current directory with a symlink to the version dir
+    if [ -d "$fw/Versions/Current" ] && [ ! -L "$fw/Versions/Current" ]; then
+        rm -rf "$fw/Versions/Current"
+        ln -s "$version_dir" "$fw/Versions/Current"
+    fi
+
+    # Replace root-level copies with symlinks into Versions/Current/
+    for item in Python Resources Headers; do
+        if [ -e "$fw/$item" ] && [ ! -L "$fw/$item" ]; then
+            rm -rf "$fw/$item"
+            ln -s "Versions/Current/$item" "$fw/$item"
+        fi
+    done
+done < <(find "dist/${APP_NAME}.app" -type d -iname "Python.framework")
+
 echo "Setting executable permissions..."
 find "dist/${APP_NAME}.app/Contents/Resources" -type f -name "aw-*" -exec chmod +x {} \;
 
