@@ -178,7 +178,7 @@ jobs:
           # Notarize
           make dist/notarize
         fi
-        mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_TAG:-$(scripts/package/getversion.sh)}-macos-x86_64.dmg
+        mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_TAG:-$(scripts/package/getversion.sh)}-macos-$(uname -m).dmg
       env:
         APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
