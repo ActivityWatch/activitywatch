@@ -41,7 +41,12 @@ function get_arch() {
 platform=$(get_platform)
 version=$(get_version)
 arch=$(get_arch)
-echo "Platform: $platform, arch: $arch, version: $version"
+# Suffix to distinguish Tauri builds from aw-qt builds in release assets
+build_suffix=""
+if [[ $TAURI_BUILD == "true" ]]; then
+    build_suffix="-tauri"
+fi
+echo "Platform: $platform, arch: $arch, version: $version, tauri: ${TAURI_BUILD:-false}"
 
 # For Tauri Linux builds, include helper scripts and README
 if [[ $platform == "linux" && $TAURI_BUILD == "true" ]]; then
@@ -51,7 +56,7 @@ fi
 function build_zip() {
     echo "Zipping executables..."
     pushd dist;
-    filename="activitywatch-${version}-${platform}-${arch}.zip"
+    filename="activitywatch${build_suffix}-${version}-${platform}-${arch}.zip"
     echo "Name of package will be: $filename"
 
     if [[ $platform == "windows"* ]]; then
@@ -64,7 +69,7 @@ function build_zip() {
 }
 
 function build_setup() {
-    filename="activitywatch-${version}-${platform}-${arch}-setup.exe"
+    filename="activitywatch${build_suffix}-${version}-${platform}-${arch}-setup.exe"
     echo "Name of package will be: $filename"
 
     innosetupdir="/c/Program Files (x86)/Inno Setup 6"
