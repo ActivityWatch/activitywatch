@@ -73,7 +73,7 @@ if [ $? -eq 0 ]; then
     notarization_method=run_notarytool
 else
     # Fallback to altool
-    xcrun altool >/dev/null 2>&1
+    xcrun -f altool >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "+ Found altool"
         notarization_method=run_altool
