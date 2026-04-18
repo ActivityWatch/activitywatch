@@ -29,8 +29,14 @@ function get_platform() {
     echo $_platform;
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 function get_version() {
-    $(dirname "$0")/getversion.sh;
+    "$SCRIPT_DIR/getversion.sh";
+}
+
+function get_version_no_prefix() {
+    "$SCRIPT_DIR/getversion.sh" --strip-v;
 }
 
 function get_arch() {
@@ -40,13 +46,23 @@ function get_arch() {
 
 platform=$(get_platform)
 version=$(get_version)
+version_no_prefix=$(get_version_no_prefix)
 arch=$(get_arch)
-# Suffix to distinguish Tauri builds from aw-qt builds in release assets
 build_suffix=""
 if [[ $TAURI_BUILD == "true" ]]; then
     build_suffix="-tauri"
 fi
-echo "Platform: $platform, arch: $arch, version: $version, tauri: ${TAURI_BUILD:-false}"
+
+echo "========================================"
+echo "Build Version Information"
+echo "========================================"
+echo "Platform:       $platform"
+echo "Arch:           $arch"
+echo "Version (with v):  $version"
+echo "Version (no v):     $version_no_prefix"
+echo "Tauri build:    ${TAURI_BUILD:-false}"
+echo "========================================"
+echo
 
 # For Tauri Linux builds, include helper scripts and README
 if [[ $platform == "linux" && $TAURI_BUILD == "true" ]]; then
@@ -78,8 +94,6 @@ function build_setup() {
         exit 1
     fi
 
-    # Windows installer version should not include 'v' prefix, see: https://github.com/microsoft/winget-pkgs/pull/17564
-    version_no_prefix="$(echo $version | sed -e 's/^v//')"
     if [[ $TAURI_BUILD == "true" ]]; then
         env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/aw-tauri.iss
     else
