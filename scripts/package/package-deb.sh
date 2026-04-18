@@ -6,11 +6,12 @@ set -e
 set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="$("$SCRIPT_DIR/getversion.sh")"
-VERSION_NUM="$("$SCRIPT_DIR/getversion.sh" --strip-v)"
-echo "Version (with v): $VERSION"
-echo "Version (without v): $VERSION_NUM"
-PKGDIR="activitywatch_$VERSION_NUM"
+
+eval "$("$SCRIPT_DIR/getversion.sh" --env)"
+echo "TAG_VERSION: $TAG_VERSION"
+echo "DISPLAY_VERSION: $DISPLAY_VERSION"
+
+PKGDIR="activitywatch_$DISPLAY_VERSION"
 
 # Package tools
 sudo apt-get install sed jdupes wget
@@ -31,7 +32,7 @@ mkdir -p $PKGDIR/usr/share/applications
 # While storing the control file in a variable here, dumping it in a file is so unnecessarily
 # complicated that it's easier to just dump move and sed.
 cp ./scripts/package/deb/control $PKGDIR/DEBIAN/control
-sed -i "s/SCRIPT_VERSION_HERE/${VERSION_NUM}/" $PKGDIR/DEBIAN/control
+sed -i "s/SCRIPT_VERSION_HERE/${DISPLAY_VERSION}/" $PKGDIR/DEBIAN/control
 
 # Verify the file content
 cat $PKGDIR/DEBIAN/control
@@ -51,4 +52,4 @@ sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/etc/xdg/autostart/
 sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/usr/share/applications/
 
 dpkg-deb --build $PKGDIR
-sudo mv activitywatch_${VERSION_NUM}.deb dist/activitywatch-${VERSION}-linux-x86_64.deb
+sudo mv activitywatch_${DISPLAY_VERSION}.deb dist/activitywatch-${DISPLAY_VERSION}-linux-x86_64.deb

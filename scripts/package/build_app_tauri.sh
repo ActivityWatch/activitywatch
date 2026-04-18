@@ -7,8 +7,11 @@ set -e
 APP_NAME="ActivityWatch"
 BUNDLE_ID="net.activitywatch.ActivityWatch"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="$("$SCRIPT_DIR/getversion.sh" --strip-v)"
+eval "$("$SCRIPT_DIR/getversion.sh" --env)"
 ICON_PATH="aw-tauri/src-tauri/icons/icon.icns"
+
+echo "TAG_VERSION: $TAG_VERSION"
+echo "DISPLAY_VERSION: $DISPLAY_VERSION"
 
 if [[ "$(uname)" != "Darwin" ]]; then
     echo "This script is designed to run on macOS only."
@@ -117,9 +120,9 @@ cat > "dist/${APP_NAME}.app/Contents/Info.plist" << EOF
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>${VERSION}</string>
+    <string>${DISPLAY_VERSION}</string>
     <key>CFBundleVersion</key>
-    <string>${VERSION}</string>
+    <string>${DISPLAY_VERSION}</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>ActivityWatch needs access to monitor application usage</string>
     <key>NSHighResolutionCapable</key>

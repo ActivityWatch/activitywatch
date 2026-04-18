@@ -2,39 +2,84 @@
 set -e
 
 SCRIPT_NAME="$(basename "$0")"
-STRIP_V=false
+MODE=""
 
 show_usage() {
     cat << EOF
-Usage: $SCRIPT_NAME [OPTIONS]
+Usage: $SCRIPT_NAME [MODE]
 
 Get the version of ActivityWatch from git tags or CI environment variables.
+This is the single source of truth for version calculation.
 
-Options:
-    --strip-v, --no-v    Remove the 'v' prefix from the version (if present)
-    --help, -h           Show this help message
+Modes (mutually exclusive, only one allowed):
+    (default)          Output DISPLAY_VERSION (without 'v' prefix)
+    --tag, -t          Output TAG_VERSION (with 'v' prefix, e.g., v0.14.0)
+    --display, -d      Output DISPLAY_VERSION (without 'v' prefix, e.g., 0.14.0)
+    --env, -e          Output shell variables for sourcing (export commands)
+    --json, -j         Output JSON format with both versions
+    --help, -h         Show this help message
 
-Environment Variables (used in CI, checked in priority order):
+Version Components:
+    TAG_VERSION        With 'v' prefix, e.g., v0.14.0 or v0.14.0.dev-abc1234
+    DISPLAY_VERSION    Without 'v' prefix, e.g., 0.14.0 or 0.14.0.dev-abc1234
+                       Used for: Info.plist, zip filenames, installers, deb packages
+
+Environment Variables (checked in priority order for CI):
     GITHUB_REF_NAME      GitHub Actions tag/ref (e.g., "v0.14.0")
     TRAVIS_TAG           Travis CI tag
     APPVEYOR_REPO_TAG_NAME AppVeyor CI tag
 
-Version Format:
-    - Release tag: v0.14.0
-    - Dev version: v0.14.0.dev-abc1234
-    - Beta/RC: v0.14.0b1, v0.14.0rc1
+Fallback Logic:
+    1. Exact git tag match → use that tag
+    2. Latest tag + dev suffix → v0.14.0.dev-abc1234
+    3. No tags → v0.0.0.dev-<commit>
 
 Examples:
-    $SCRIPT_NAME                    # v0.14.0 or v0.14.0.dev-abc1234
-    $SCRIPT_NAME --strip-v          # 0.14.0 or 0.14.0.dev-abc1234
+    # Get DISPLAY_VERSION (default, no 'v')
+    $SCRIPT_NAME                    # 0.14.0 or 0.14.0.dev-abc1234
+    $SCRIPT_NAME --display          # 0.14.0 or 0.14.0.dev-abc1234
+
+    # Get TAG_VERSION (with 'v')
+    $SCRIPT_NAME --tag              # v0.14.0 or v0.14.0.dev-abc1234
+
+    # Output environment variables (for CI)
+    $SCRIPT_NAME --env
+    # export TAG_VERSION="v0.14.0"
+    # export DISPLAY_VERSION="0.14.0"
+
+    # Output JSON
+    $SCRIPT_NAME --json
+    # {"tag_version": "v0.14.0", "display_version": "0.14.0"}
+
+    # Source in CI script
+    eval "\$($SCRIPT_NAME --env)"
+    echo "\$DISPLAY_VERSION"  # 0.14.0
 EOF
 }
 
 parse_args() {
+    local mode_count=0
+    
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --strip-v|--no-v)
-                STRIP_V=true
+            --tag|-t)
+                MODE="tag"
+                mode_count=$((mode_count + 1))
+                shift
+                ;;
+            --display|-d)
+                MODE="display"
+                mode_count=$((mode_count + 1))
+                shift
+                ;;
+            --env|-e)
+                MODE="env"
+                mode_count=$((mode_count + 1))
+                shift
+                ;;
+            --json|-j)
+                MODE="json"
+                mode_count=$((mode_count + 1))
                 shift
                 ;;
             --help|-h)
@@ -48,6 +93,16 @@ parse_args() {
                 ;;
         esac
     done
+    
+    if [[ $mode_count -gt 1 ]]; then
+        echo "ERROR: Only one mode argument allowed (--tag, --display, --env, --json are mutually exclusive)" >&2
+        show_usage >&2
+        exit 1
+    fi
+    
+    if [[ -z "$MODE" ]]; then
+        MODE="display"
+    fi
 }
 
 get_version_internal() {
@@ -73,17 +128,39 @@ get_version_internal() {
     echo "$_version"
 }
 
+strip_v_prefix() {
+    local version="$1"
+    echo "$version" | sed -e 's/^v//'
+}
+
 main() {
     parse_args "$@"
     
-    local version
-    version="$(get_version_internal)"
+    local tag_version
+    local display_version
     
-    if $STRIP_V; then
-        version="$(echo "$version" | sed -e 's/^v//')"
-    fi
+    tag_version="$(get_version_internal)"
+    display_version="$(strip_v_prefix "$tag_version")"
     
-    echo "$version"
+    case "$MODE" in
+        tag)
+            echo "$tag_version"
+            ;;
+        display)
+            echo "$display_version"
+            ;;
+        env)
+            cat << EOF
+export TAG_VERSION="$tag_version"
+export DISPLAY_VERSION="$display_version"
+EOF
+            ;;
+        json)
+            cat << EOF
+{"tag_version": "$tag_version", "display_version": "$display_version"}
+EOF
+            ;;
+    esac
 }
 
 main "$@"

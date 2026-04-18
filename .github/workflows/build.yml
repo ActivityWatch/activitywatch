@@ -59,18 +59,20 @@ jobs:
 
     - name: Determine and output version
       run: |
-        VERSION_WITH_V=$(bash scripts/package/getversion.sh)
-        VERSION_NO_V=$(bash scripts/package/getversion.sh --strip-v)
-        echo "VERSION_WITH_V=${VERSION_WITH_V}" >> $GITHUB_ENV
-        echo "VERSION_NO_V=${VERSION_NO_V}" >> $GITHUB_ENV
+        TAG_VERSION=$(bash scripts/package/getversion.sh --tag)
+        DISPLAY_VERSION=$(bash scripts/package/getversion.sh --display)
+        echo "TAG_VERSION=${TAG_VERSION}" >> $GITHUB_ENV
+        echo "DISPLAY_VERSION=${DISPLAY_VERSION}" >> $GITHUB_ENV
         echo "========================================"
         echo "Build Version Information"
         echo "========================================"
         echo "GitHub ref: ${{ github.ref }}"
         echo "GitHub ref_name: ${{ github.ref_name }}"
-        echo "Version (with v):  ${VERSION_WITH_V}"
-        echo "Version (no v):     ${VERSION_NO_V}"
+        echo "TAG_VERSION:        ${TAG_VERSION} (with 'v' prefix, for git tags)"
+        echo "DISPLAY_VERSION:    ${DISPLAY_VERSION} (without 'v', for all products)"
         echo "========================================"
+        echo ""
+        echo "All products (zip, installer, Info.plist) will use: ${DISPLAY_VERSION}"
 
     - name: Set up Python
       uses: actions/setup-python@v6
