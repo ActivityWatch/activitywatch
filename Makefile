@@ -138,13 +138,59 @@ test:
 		fi; \
 	done
 
+.PHONY: test-integration test-integration-help
+
+test-integration-help:
+	@echo "==========================================================================="
+	@echo "ActivityWatch Integration Tests"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Usage:"
+	@echo "  make test-integration                    # Use aw-server from PATH"
+	@echo "  AW_SERVER_BIN=./path/to/aw-server make test-integration  # Use specific binary"
+	@echo ""
+	@echo "Environment Variables (all optional):"
+	@echo "  AW_SERVER_BIN     Path to aw-server binary (default: 'aw-server' from PATH)"
+	@echo "                    Examples: ./dist/activitywatch/aw-server-rust/aw-server"
+	@echo "                              ./dist/activitywatch/aw-server"
+	@echo "  AW_SERVER_PORT    Port to use (default: 5666 for testing)"
+	@echo "  AW_SERVER_TIMEOUT Startup timeout in seconds (default: 30)"
+	@echo "  AW_SERVER_POLL    Poll interval in seconds (default: 1.0)"
+	@echo "  AW_LOG_LINES      Number of log lines to show on failure (default: 100)"
+	@echo "  AW_SERVER_ARGS    Extra arguments (default: '--testing')"
+	@echo ""
+	@echo "Examples:"
+	@echo "  # Run with aw-server from PATH"
+	@echo "  make test-integration"
+	@echo ""
+	@echo "  # Run with Tauri-built aw-server-rust"
+	@echo "  AW_SERVER_BIN=./dist/activitywatch/aw-server-rust/aw-server make test-integration"
+	@echo ""
+	@echo "  # Run with custom port and longer timeout"
+	@echo "  AW_SERVER_PORT=5777 AW_SERVER_TIMEOUT=60 make test-integration"
+	@echo ""
+	@echo "What it tests:"
+	@echo "  1. Server starts and responds to /api/0/info (no fixed sleep)"
+	@echo "  2. /api/0/info returns version and hostname"
+	@echo "  3. /api/0/buckets returns valid data"
+	@echo "  4. No ERROR/panic indicators in logs"
+	@echo ""
+	@echo "On failure/timeout:"
+	@echo "  - Prints last N lines of stdout and stderr for diagnosis"
+	@echo "  - Shows which API call failed and why"
+	@echo "==========================================================================="
+
 test-integration:
-	# TODO: Move "integration tests" to aw-client
-	# FIXME: For whatever reason the script stalls on Appveyor
-	#        Example: https://ci.appveyor.com/project/ErikBjare/activitywatch/build/1.0.167/job/k1ulexsc5ar5uv4v
-	# aw-server-python
 	@echo "== Integration testing aw-server =="
-	@pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
+	@echo ""
+	@echo "Environment:"
+	@echo "  AW_SERVER_BIN:     ${AW_SERVER_BIN:-aw-server (from PATH)}"
+	@echo "  AW_SERVER_PORT:    ${AW_SERVER_PORT:-5666}"
+	@echo "  AW_SERVER_TIMEOUT: ${AW_SERVER_TIMEOUT:-30}s"
+	@echo ""
+	@echo "For help: make test-integration-help"
+	@echo ""
+	@pytest scripts/tests/integration_tests.py -v
 
 %/.git:
 	git submodule update --init --recursive
