@@ -10,7 +10,7 @@ APPLE_PASSWORD=${APPLE_PASSWORD:-}
 APPLE_TEAMID=${APPLE_TEAMID:-}
 APPLE_PERSONALID=${APPLE_PERSONALID:-}
 
-KEYCHAIN_PROFILE="activitywatch-$APPLE_PERSONALID"
+KEYCHAIN_PROFILE="activitywatch-notarization"
 BUNDLE_ID="net.activitywatch.ActivityWatch"
 APP_PATH="dist/ActivityWatch.app"
 DMG_PATH="dist/ActivityWatch.dmg"
@@ -124,7 +124,6 @@ EOF
         log_info "  APPLE_PASSWORD: $(if [[ -n "$APPLE_PASSWORD" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
         log_info "  APPLE_TEAMID: $(if [[ -n "$APPLE_TEAMID" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
         log_info "  APPLE_PERSONALID: $(if [[ -n "$APPLE_PERSONALID" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
-        log_info "  KEYCHAIN_PROFILE: $KEYCHAIN_PROFILE"
     fi
 }
 
@@ -186,13 +185,13 @@ run_notarytool() {
     log_info "Notarizing $dist_name using notarytool..."
     
     if $DRY_RUN; then
-        log_info "[DRY-RUN] Would store credentials to keychain profile: $KEYCHAIN_PROFILE"
+        log_info "[DRY-RUN] Would store credentials to keychain profile"
         log_info "[DRY-RUN] Would submit $dist_path to notary service and wait"
         log_info "[DRY-RUN] Notarization would complete for $dist_name"
         return $EXIT_SUCCESS
     fi
     
-    log_info "Storing credentials to keychain profile: $KEYCHAIN_PROFILE"
+    log_info "Storing credentials to keychain profile"
     if ! xcrun notarytool store-credentials "$KEYCHAIN_PROFILE" \
         --apple-id "$APPLE_EMAIL" \
         --team-id "$APPLE_TEAMID" \
@@ -240,14 +239,14 @@ run_altool() {
     log_info "Notarizing $dist_name using altool (Xcode < 13)..."
     
     if $DRY_RUN; then
-        log_info "[DRY-RUN] Would store password to keychain item: $KEYCHAIN_PROFILE"
+        log_info "[DRY-RUN] Would store password to keychain item"
         log_info "[DRY-RUN] Would submit $dist_path for notarization"
         log_info "[DRY-RUN] Would poll for status using UUID"
         log_info "[DRY-RUN] Notarization would complete for $dist_name"
         return $EXIT_SUCCESS
     fi
     
-    log_info "Storing password to keychain item: $KEYCHAIN_PROFILE"
+    log_info "Storing password to keychain item"
     if ! xcrun altool --store-password-in-keychain-item "$KEYCHAIN_PROFILE" \
         -u "$APPLE_EMAIL" -p "$APPLE_PASSWORD"; then
         log_error "Failed to store password in keychain"
