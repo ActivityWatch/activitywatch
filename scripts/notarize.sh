@@ -71,12 +71,13 @@ xcrun notarytool >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo "+ Found notarytool"
     notarization_method=run_notarytool
-fi
-# Fallbqck to altool
-output=xcrun altool >/dev/null 2>&1
-if [ $? -eq 0 ]; then
-    echo "+ Found altool"
-    notarization_method=run_altool
+else
+    # Fallback to altool
+    xcrun -f altool >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "+ Found altool"
+        notarization_method=run_altool
+    fi
 fi
 
 if [ $notarization_method = "exit" ]; then
