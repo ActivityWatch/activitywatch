@@ -120,9 +120,10 @@ EOF
     
     log_info "All required credentials are present"
     if $VERBOSE; then
-        log_info "  APPLE_EMAIL: $APPLE_EMAIL"
-        log_info "  APPLE_TEAMID: $APPLE_TEAMID"
-        log_info "  APPLE_PERSONALID: $APPLE_PERSONALID"
+        log_info "  APPLE_EMAIL: $(if [[ -n "$APPLE_EMAIL" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
+        log_info "  APPLE_PASSWORD: $(if [[ -n "$APPLE_PASSWORD" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
+        log_info "  APPLE_TEAMID: $(if [[ -n "$APPLE_TEAMID" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
+        log_info "  APPLE_PERSONALID: $(if [[ -n "$APPLE_PERSONALID" ]]; then echo "✓ set"; else echo "✗ not set"; fi)"
         log_info "  KEYCHAIN_PROFILE: $KEYCHAIN_PROFILE"
     fi
 }
@@ -361,37 +362,39 @@ run_stapler() {
 }
 
 notarize_and_staple() {
-    local dist_path="$1"
+    local original_path="$1"
     local notarization_method="$2"
-    local is_app=false
+    local submission_path="$original_path"
     local zip_path=""
     
-    if [[ -d "$dist_path" && "$dist_path" == *.app ]]; then
-        is_app=true
-        zip_path="${dist_path}.zip"
+    if [[ -d "$original_path" && "$original_path" == *.app ]]; then
+        zip_path="${original_path}.zip"
         
-        log_info "Creating ZIP archive from .app bundle: $dist_path"
+        log_info "Creating ZIP archive from .app bundle: $original_path"
         if $DRY_RUN; then
-            log_info "[DRY-RUN] Would run: ditto -c -k --keepParent \"$dist_path\" \"$zip_path\""
+            log_info "[DRY-RUN] Would run: ditto -c -k --keepParent \"$original_path\" \"$zip_path\""
         else
-            ditto -c -k --keepParent "$dist_path" "$zip_path"
+            ditto -c -k --keepParent "$original_path" "$zip_path"
         fi
-        dist_path="$zip_path"
+        submission_path="$zip_path"
     fi
     
-    if ! $notarization_method "$dist_path"; then
-        if $is_app && [[ -n "$zip_path" ]]; then
+    log_info "Submitting for notarization: $submission_path"
+    if ! $notarization_method "$submission_path"; then
+        if [[ -n "$zip_path" ]] && [[ -f "$zip_path" ]]; then
+            log_info "Cleaning up temporary zip: $zip_path"
             rm -f "$zip_path" 2>/dev/null || true
         fi
         return $EXIT_NOTARIZATION_FAILED
     fi
     
-    if $is_app && [[ -n "$zip_path" ]] && ! $DRY_RUN; then
-        rm -f "$zip_path"
-        dist_path="${dist_path%.zip}"
+    if [[ -n "$zip_path" ]] && [[ -f "$zip_path" ]]; then
+        log_info "Cleaning up temporary zip: $zip_path"
+        rm -f "$zip_path" 2>/dev/null || true
     fi
     
-    if ! run_stapler "$dist_path"; then
+    log_info "Stapling notarization ticket to original file: $original_path"
+    if ! run_stapler "$original_path"; then
         return $EXIT_ERROR
     fi
     
@@ -414,6 +417,18 @@ main() {
     detect_tools
     log_info "Selected notarization method: $NOTARIZATION_METHOD"
     echo
+    
+    if $DRY_RUN; then
+        log_info "========================================"
+        log_info "DRY-RUN CHECKS PASSED"
+        log_info "========================================"
+        log_info "Credentials:  ✓ All required variables set"
+        log_info "Tools:        ✓ notarytool/stapler available"
+        log_info ""
+        log_info "Note: Dry-run does not check for .app/.dmg files"
+        log_info "      and does not perform any actual operations."
+        exit $EXIT_SUCCESS
+    fi
     
     local has_app=false
     local has_dmg=false
@@ -472,9 +487,6 @@ main() {
     log_info "========================================"
     if [[ $overall_status -eq $EXIT_SUCCESS ]]; then
         log_info "NOTARIZATION COMPLETED SUCCESSFULLY"
-        if $DRY_RUN; then
-            log_info "(Dry run - no actual submissions were made)"
-        fi
     else
         log_error "NOTARIZATION FAILED"
     fi
