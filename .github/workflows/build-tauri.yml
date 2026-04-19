@@ -55,6 +55,21 @@ jobs:
         run: |
           echo "VERSION_TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
 
+      - name: Determine and output version
+        run: |
+          VERSION_WITH_V=$(bash scripts/package/getversion.sh)
+          VERSION_NO_V=$(bash scripts/package/getversion.sh --strip-v)
+          echo "VERSION_WITH_V=${VERSION_WITH_V}" >> $GITHUB_ENV
+          echo "VERSION_NO_V=${VERSION_NO_V}" >> $GITHUB_ENV
+          echo "========================================"
+          echo "Build Version Information (Tauri)"
+          echo "========================================"
+          echo "GitHub ref: ${{ github.ref }}"
+          echo "GitHub ref_name: ${{ github.ref_name }}"
+          echo "Version (with v):  ${VERSION_WITH_V}"
+          echo "Version (no v):     ${VERSION_NO_V}"
+          echo "========================================"
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:

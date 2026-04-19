@@ -1,15 +1,15 @@
 #!/usr/bin/bash
-# Setting the shell is required, as `sh` doesn't support slicing.
 
 # Fail fast
 set -e
 # Verbose commands for CI verification
 set -x
 
-VERSION=$(scripts/package/getversion.sh)
-# Slice off the "v" from the tag, which is probably guaranteed
-VERSION_NUM=${VERSION:1}
-echo $VERSION_NUM
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="$("$SCRIPT_DIR/getversion.sh")"
+VERSION_NUM="$("$SCRIPT_DIR/getversion.sh" --strip-v)"
+echo "Version (with v): $VERSION"
+echo "Version (without v): $VERSION_NUM"
 PKGDIR="activitywatch_$VERSION_NUM"
 
 # Package tools
