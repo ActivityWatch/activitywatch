@@ -7,7 +7,7 @@ set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION="$("$SCRIPT_DIR/getversion.sh")"
-VERSION_NUM="$("$SCRIPT_DIR/getversion.sh" --strip-v)"
+VERSION_NUM="$(echo "$VERSION" | sed -e 's/^v//')"
 echo "Version (with v): $VERSION"
 echo "Version (without v): $VERSION_NUM"
 PKGDIR="activitywatch_$VERSION_NUM"
