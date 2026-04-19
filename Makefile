@@ -140,6 +140,9 @@ test:
 
 .PHONY: test-integration test-integration-help
 
+AW_TEST_TIMEOUT ?= 180
+AW_PYTEST_TIMEOUT ?= 120
+
 test-integration-help:
 	@echo "==========================================================================="
 	@echo "ActivityWatch Integration Tests"
@@ -154,10 +157,12 @@ test-integration-help:
 	@echo "                    Examples: ./dist/activitywatch/aw-server-rust/aw-server"
 	@echo "                              ./dist/activitywatch/aw-server"
 	@echo "  AW_SERVER_PORT    Port to use (default: 5666 for testing)"
-	@echo "  AW_SERVER_TIMEOUT Startup timeout in seconds (default: 30)"
+	@echo "  AW_SERVER_TIMEOUT Server startup timeout in seconds (default: 30)"
 	@echo "  AW_SERVER_POLL    Poll interval in seconds (default: 1.0)"
 	@echo "  AW_LOG_LINES      Number of log lines to show on failure (default: 100)"
 	@echo "  AW_SERVER_ARGS    Extra arguments (default: '--testing')"
+	@echo "  AW_TEST_TIMEOUT   Global test timeout in seconds (default: 180)"
+	@echo "  AW_PYTEST_TIMEOUT Per-test pytest timeout in seconds (default: 120)"
 	@echo ""
 	@echo "Examples:"
 	@echo "  # Run with aw-server from PATH"
@@ -167,7 +172,7 @@ test-integration-help:
 	@echo "  AW_SERVER_BIN=./dist/activitywatch/aw-server-rust/aw-server make test-integration"
 	@echo ""
 	@echo "  # Run with custom port and longer timeout"
-	@echo "  AW_SERVER_PORT=5777 AW_SERVER_TIMEOUT=60 make test-integration"
+	@echo "  AW_SERVER_PORT=5777 AW_SERVER_TIMEOUT=60 AW_TEST_TIMEOUT=300 make test-integration"
 	@echo ""
 	@echo "What it tests:"
 	@echo "  1. Server starts and responds to /api/0/info (no fixed sleep)"
@@ -175,22 +180,61 @@ test-integration-help:
 	@echo "  3. /api/0/buckets returns valid data"
 	@echo "  4. No ERROR/panic indicators in logs"
 	@echo ""
+	@echo "Timeout Protection (prevents hanging in CI):"
+	@echo "  - Global timeout: $(AW_TEST_TIMEOUT)s (entire test run)"
+	@echo "  - Per-test timeout: $(AW_PYTEST_TIMEOUT)s (individual test)"
+	@echo "  - Server startup timeout: $(AW_SERVER_TIMEOUT)s (default)"
+	@echo ""
+	@echo "Error Classification (diagnosable):"
+	@echo "  - LAUNCH_FAILED:    Server binary not found or failed to start"
+	@echo "  - EARLY_EXIT:       Server started but exited with error"
+	@echo "  - STARTUP_TIMEOUT:  Server never became responsive"
+	@echo "  - API_ERROR:        API request returned non-200 status"
+	@echo "  - ASSERTION_FAILED: API assertion failed (missing fields)"
+	@echo "  - LOG_ERROR:        Server logs contain ERROR/panic"
+	@echo ""
 	@echo "On failure/timeout:"
 	@echo "  - Prints last N lines of stdout and stderr for diagnosis"
-	@echo "  - Shows which API call failed and why"
+	@echo "  - Shows error type classification"
+	@echo "  - Shows server PID, port, exit code"
 	@echo "==========================================================================="
 
 test-integration:
-	@echo "== Integration testing aw-server =="
+	@echo "==========================================================================="
+	@echo "Integration Testing ActivityWatch Server"
+	@echo "==========================================================================="
 	@echo ""
 	@echo "Environment:"
 	@echo "  AW_SERVER_BIN:     ${AW_SERVER_BIN:-aw-server (from PATH)}"
 	@echo "  AW_SERVER_PORT:    ${AW_SERVER_PORT:-5666}"
 	@echo "  AW_SERVER_TIMEOUT: ${AW_SERVER_TIMEOUT:-30}s"
+	@echo "  AW_TEST_TIMEOUT:   $(AW_TEST_TIMEOUT)s (global)"
+	@echo "  AW_PYTEST_TIMEOUT: $(AW_PYTEST_TIMEOUT)s (per-test)"
 	@echo ""
 	@echo "For help: make test-integration-help"
+	@echo "==========================================================================="
 	@echo ""
-	@pytest scripts/tests/integration_tests.py -v
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		if command -v gtimeout >/dev/null 2>&1; then \
+			echo "Using gtimeout for global timeout protection..."; \
+			gtimeout --signal=SIGKILL $(AW_TEST_TIMEOUT) \
+				pytest scripts/tests/integration_tests.py -v \
+					--timeout=$(AW_PYTEST_TIMEOUT) \
+					-o timeout_method=thread; \
+		else \
+			echo "Note: gtimeout not found (install with: brew install coreutils)"; \
+			echo "Running without global timeout wrapper, relying on pytest-timeout..."; \
+			pytest scripts/tests/integration_tests.py -v \
+				--timeout=$(AW_PYTEST_TIMEOUT) \
+				-o timeout_method=thread; \
+		fi; \
+	else \
+		echo "Using timeout for global timeout protection..."; \
+		timeout --signal=SIGKILL $(AW_TEST_TIMEOUT) \
+			pytest scripts/tests/integration_tests.py -v \
+				--timeout=$(AW_PYTEST_TIMEOUT) \
+				-o timeout_method=thread; \
+	fi
 
 %/.git:
 	git submodule update --init --recursive

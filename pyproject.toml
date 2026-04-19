@@ -23,6 +23,7 @@ mypy = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-benchmark = "*"
+pytest-timeout = "*"
 psutil = "*"
 pywin32-ctypes = {version = "*", platform = "win32"}
 pefile = {version = "*", platform = "win32"}
