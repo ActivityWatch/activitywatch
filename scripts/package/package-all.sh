@@ -7,13 +7,26 @@
 # initial packaging steps in the Makefile.
 #
 # Environment Variables:
-#   TAURI_BUILD:    Set to "true" for Tauri builds
-#   SKIP_WEBUI:     Set to "true" to skip web UI
+#   TAURI_BUILD:           Set to "true" for Tauri builds
+#   SKIP_WEBUI:            Set to "true" to skip web UI
+#   WINDOWS_VERIFY_STRICT: Set to "true" for strict Windows artifact verification
+#                           (exits with non-zero code if zip vs source directory differ)
 #
 # Exit Codes:
 #   0:  Success
 #   1:  Error (e.g., missing dependencies)
+#   2:  Windows verification failed (only with WINDOWS_VERIFY_STRICT=true)
 #
+# Windows Artifact Consistency:
+#   - Source directory: dist/activitywatch/
+#   - Zip contents:     activitywatch/ (same structure as source)
+#   - Inno Setup input: {#DistDir}\activitywatch\* (same as source)
+#   - Installer output: {app}\ (same structure as source)
+#   All three should contain the same files for consistency.
+#
+#   See activitywatch-setup.iss and aw-tauri.iss for Inno Setup source paths.
+#   Both use: Source: "{#DistDir}\activitywatch\*"; DestDir: "{app}"; Flags: recursesubdirs
+#   This means the installer installs the same files that are in the zip.
 
 set -euo pipefail
 
@@ -200,6 +213,53 @@ if [[ $platform == "windows" ]]; then
     log_ok "Installer renamed"
     log_info "  File: $installer_filename"
     log_info "  Size: $(du -h "dist/$installer_filename" | cut -f1)"
+    
+    # =====================================
+    # Windows Artifact Verification
+    # =====================================
+    log_section "Verifying Windows Artifact Consistency"
+    
+    log_info "Checking that zip contents match source directory..."
+    log_info "  Source: dist/activitywatch/"
+    log_info "  Zip:    dist/$zip_filename"
+    log_info ""
+    log_info "WINDOWS_VERIFY_STRICT: ${WINDOWS_VERIFY_STRICT:-false}"
+    log_info ""
+    
+    # Build arguments for verify script
+    VERIFY_ARGS=()
+    if [[ ${WINDOWS_VERIFY_STRICT:-false} == "true" ]]; then
+        VERIFY_ARGS+=("--strict")
+        log_info "  Running in STRICT mode (exits on differences)"
+    else
+        log_info "  Running in report-only mode (use WINDOWS_VERIFY_STRICT=true to exit on differences)"
+    fi
+    
+    log_action "Calling: $SCRIPT_DIR/verify-windows-artifacts.sh ${VERIFY_ARGS[*]:-}"
+    
+    # Temporarily disable set -e to capture verification result
+    set +e
+    
+    if [[ ${TAURI_BUILD:-false} == "true" ]]; then
+        TAURI_BUILD=true DIST_DIR=./dist "$SCRIPT_DIR/verify-windows-artifacts.sh" "${VERIFY_ARGS[@]}"
+    else
+        DIST_DIR=./dist "$SCRIPT_DIR/verify-windows-artifacts.sh" "${VERIFY_ARGS[@]}"
+    fi
+    
+    VERIFY_EXIT_CODE=$?
+    
+    # Re-enable set -e
+    set -e
+    
+    if [[ $VERIFY_EXIT_CODE -eq 0 ]]; then
+        log_ok "Windows artifact verification completed successfully"
+    elif [[ $VERIFY_EXIT_CODE -eq 2 ]]; then
+        log_error "Windows artifact verification found differences (strict mode)"
+        log_error "Exiting with non-zero code (WINDOWS_VERIFY_STRICT=true)"
+        exit 2
+    else
+        log_warn "Windows artifact verification completed with non-zero exit code: $VERIFY_EXIT_CODE"
+    fi
 fi
 
 # =====================================

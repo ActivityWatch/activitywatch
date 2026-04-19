@@ -164,11 +164,27 @@ jobs:
         echo "========================================"
         echo "Running package with STRICT mode (CI)"
         echo "========================================"
-        echo "PACKAGE_STRICT=true make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}"
-        echo ""
         
-        # Use PACKAGE_STRICT=true for CI - fails on any verification errors
-        PACKAGE_STRICT=true make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+        # For Windows, also enable WINDOWS_VERIFY_STRICT=true
+        # This ensures zip contents match source directory before installer creation
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          echo "WINDOWS_VERIFY_STRICT=true PACKAGE_STRICT=true make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}"
+          echo ""
+          echo "Windows-specific: Also verifying that zip contents match source directory"
+          echo ""
+          
+          # Use PACKAGE_STRICT=true and WINDOWS_VERIFY_STRICT=true for CI
+          # - PACKAGE_STRICT=true: Fail on any verification errors
+          # - WINDOWS_VERIFY_STRICT=true: Fail if zip contents differ from source
+          # If verification fails, build will fail and artifacts will NOT be uploaded
+          WINDOWS_VERIFY_STRICT=true PACKAGE_STRICT=true make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+        else
+          echo "PACKAGE_STRICT=true make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}"
+          echo ""
+          
+          # Use PACKAGE_STRICT=true for CI - fails on any verification errors
+          PACKAGE_STRICT=true make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+        fi
 
     - name: Package dmg
       if: runner.os == 'macOS'

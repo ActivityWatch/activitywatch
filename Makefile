@@ -539,10 +539,19 @@ package: package-pre-check
 	@echo "==========================================================================="
 	@echo ""
 	@echo "Configuration:"
-	@echo "  TAURI_BUILD:  $(TAURI_BUILD)"
-	@echo "  RELEASE:      $(RELEASE)"
-	@echo "  Target:       $(targetdir)"
-	@echo "  Packageables: $(PACKAGEABLES)"
+	@echo "  TAURI_BUILD:           $(TAURI_BUILD)"
+	@echo "  RELEASE:               $(RELEASE)"
+	@echo "  Target:                $(targetdir)"
+	@echo "  Packageables:          $(PACKAGEABLES)"
+	@echo "  PACKAGE_STRICT:        $(PACKAGE_STRICT:-false)"
+	@echo "  WINDOWS_VERIFY_STRICT: $(WINDOWS_VERIFY_STRICT:-false)"
+	@echo ""
+	@echo "Verification Modes:"
+	@echo "  - PACKAGE_STRICT=true:         Fail on any verification errors (general)"
+	@echo "  - WINDOWS_VERIFY_STRICT=true:  Fail if zip contents differ from source (Windows only)"
+	@echo ""
+	@echo "Recommended for CI:"
+	@echo "  make package PACKAGE_STRICT=true WINDOWS_VERIFY_STRICT=true"
 	@echo ""
 	@echo "---------------------------------------------------------------------------"
 	@echo "[CLEAN] Removing old dist directory..."
@@ -648,7 +657,18 @@ endif
 	@echo "[PACKAGE] Building distribution artifacts (zip, installer)..."
 	@echo "  [ACTION] bash scripts/package/package-all.sh"
 	@echo ""
-	bash scripts/package/package-all.sh
+	@echo "Configuration:"
+	@echo "  WINDOWS_VERIFY_STRICT: $(WINDOWS_VERIFY_STRICT:-false)"
+	@echo ""
+	@if [ -n "$(WINDOWS_VERIFY_STRICT)" ] && [ "$(WINDOWS_VERIFY_STRICT)" = "true" ]; then \
+		echo "  [INFO] Windows verification in STRICT mode"; \
+		echo "       If zip contents differ from source directory, build will fail."; \
+	else \
+		echo "  [INFO] Windows verification in report-only mode"; \
+		echo "       Use WINDOWS_VERIFY_STRICT=true to fail on differences (CI recommended)."; \
+	fi
+	@echo ""
+	WINDOWS_VERIFY_STRICT=$(WINDOWS_VERIFY_STRICT:-false) TAURI_BUILD=$(TAURI_BUILD) bash scripts/package/package-all.sh
 
 	@echo ""
 	@echo "---------------------------------------------------------------------------"
