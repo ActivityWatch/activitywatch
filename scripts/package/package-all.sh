@@ -1,102 +1,237 @@
 #!/bin/bash
+#
+# ActivityWatch Package All Script
+# =================================
+#
+# This script builds distribution artifacts (zip, installer) after the
+# initial packaging steps in the Makefile.
+#
+# Environment Variables:
+#   TAURI_BUILD:    Set to "true" for Tauri builds
+#   SKIP_WEBUI:     Set to "true" to skip web UI
+#
+# Exit Codes:
+#   0:  Success
+#   1:  Error (e.g., missing dependencies)
+#
 
-set -e
+set -euo pipefail
 
-echoerr() { echo "$@" 1>&2; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-function get_platform() {
-    # Will return "linux" for GNU/Linux
-    #   I'd just like to interject for a moment...
-    #   https://wiki.installgentoo.com/index.php/Interjection
-    # Will return "macos" for macOS/OS X
-    # Will return "windows" for Windows/MinGW/msys
+# =====================================
+# Logging Functions
+# =====================================
 
-    _platform=$(uname | tr '[:upper:]' '[:lower:]')
-    if [[ $_platform == "darwin" ]]; then
-        _platform="macos";
-    elif [[ $_platform == "msys"* ]]; then
-        _platform="windows";
-    elif [[ $_platform == "mingw"* ]]; then
-        _platform="windows";
-    elif [[ $_platform == "linux" ]]; then
-        # Nothing to do
-        true;
-    else
-        echoerr "ERROR: $_platform is not a valid platform";
-        exit 1;
-    fi
-
-    echo $_platform;
+log_info() {
+    echo "[INFO] $@"
 }
 
-function get_version() {
-    $(dirname "$0")/getversion.sh;
+log_action() {
+    echo "[ACTION] $@"
+}
+
+log_ok() {
+    echo "[✓] $@"
+}
+
+log_warn() {
+    echo "[⚠] $@"
+}
+
+log_error() {
+    echo "[✗] $@" >&2
+}
+
+log_header() {
+    echo ""
+    echo "========================================"
+    echo "$@"
+    echo "========================================"
+}
+
+log_section() {
+    echo ""
+    echo "---------------------------------------------------------------------------"
+    echo "$@"
+    echo "---------------------------------------------------------------------------"
+}
+
+# =====================================
+# Helper Functions
+# =====================================
+
+function get_platform() {
+    local _platform
+    _platform=$(uname | tr '[:upper:]' '[:lower:]')
+    if [[ $_platform == "darwin" ]]; then
+        _platform="macos"
+    elif [[ $_platform == "msys"* ]] || [[ $_platform == "mingw"* ]]; then
+        _platform="windows"
+    elif [[ $_platform != "linux" ]]; then
+        log_error "Unknown platform: $_platform"
+        exit 1
+    fi
+    echo "$_platform"
 }
 
 function get_arch() {
+    local _arch
     _arch="$(uname -m)"
-    echo $_arch;
+    echo "$_arch"
 }
 
+# =====================================
+# Main
+# =====================================
+
+log_header "ActivityWatch Package All"
+
+# Load version from authority
+log_section "Loading Version Information"
+log_action "Sourcing version from authority: $SCRIPT_DIR/getversion.sh --env"
+
+# Use eval to get TAG_VERSION and DISPLAY_VERSION from the authority
+eval "$("$SCRIPT_DIR/getversion.sh" --env)"
+
+log_ok "Version loaded successfully"
+log_info "  TAG_VERSION:     $TAG_VERSION"
+log_info "  DISPLAY_VERSION: $DISPLAY_VERSION"
+
+# Detect platform and arch
+log_section "Detecting Platform"
 platform=$(get_platform)
-version=$(get_version)
 arch=$(get_arch)
-# Suffix to distinguish Tauri builds from aw-qt builds in release assets
+
+# Build suffix for Tauri builds
 build_suffix=""
-if [[ $TAURI_BUILD == "true" ]]; then
+if [[ ${TAURI_BUILD:-false} == "true" ]]; then
     build_suffix="-tauri"
 fi
-echo "Platform: $platform, arch: $arch, version: $version, tauri: ${TAURI_BUILD:-false}"
+
+log_ok "Platform detected"
+log_info "  Platform:       $platform"
+log_info "  Architecture:   $arch"
+log_info "  Tauri build:    ${TAURI_BUILD:-false}"
+log_info "  Build suffix:   $build_suffix"
+log_info ""
+log_info "Artifact naming:"
+log_info "  Zip:        activitywatch${build_suffix}-${DISPLAY_VERSION}-${platform}-${arch}.zip"
+log_info "  Installer:  activitywatch${build_suffix}-${DISPLAY_VERSION}-${platform}-${arch}-setup.exe"
 
 # For Tauri Linux builds, include helper scripts and README
-if [[ $platform == "linux" && $TAURI_BUILD == "true" ]]; then
-    cp scripts/package/README.txt scripts/package/move-to-aw-modules.sh dist/activitywatch/
+if [[ $platform == "linux" ]] && [[ ${TAURI_BUILD:-false} == "true" ]]; then
+    log_section "Copying Tauri Linux Helper Scripts"
+    log_action "Copying scripts/package/README.txt → dist/activitywatch/"
+    cp "$SCRIPT_DIR/README.txt" dist/activitywatch/
+    log_ok "README.txt copied"
+    
+    log_action "Copying scripts/package/move-to-aw-modules.sh → dist/activitywatch/"
+    cp "$SCRIPT_DIR/move-to-aw-modules.sh" dist/activitywatch/
+    log_ok "move-to-aw-modules.sh copied"
 fi
 
-function build_zip() {
-    echo "Zipping executables..."
-    pushd dist;
-    filename="activitywatch${build_suffix}-${version}-${platform}-${arch}.zip"
-    echo "Name of package will be: $filename"
+# =====================================
+# Build Zip
+# =====================================
+log_section "Building Zip Archive"
 
-    if [[ $platform == "windows"* ]]; then
-        7z a $filename activitywatch;
-    else
-        zip -r $filename activitywatch;
-    fi
-    popd;
-    echo "Zip built!"
-}
+zip_filename="activitywatch${build_suffix}-${DISPLAY_VERSION}-${platform}-${arch}.zip"
 
-function build_setup() {
-    filename="activitywatch${build_suffix}-${version}-${platform}-${arch}-setup.exe"
-    echo "Name of package will be: $filename"
+log_info "Zip filename: $zip_filename"
+log_action "Entering dist directory"
 
+pushd dist >/dev/null
+
+log_action "Compressing activitywatch/ → $zip_filename"
+
+if [[ $platform == "windows" ]]; then
+    log_action "Using 7z for compression (Windows)"
+    7z a "$zip_filename" activitywatch
+else
+    log_action "Using zip for compression (Unix)"
+    zip -r "$zip_filename" activitywatch
+fi
+
+log_ok "Zip built successfully"
+log_info "  File: $zip_filename"
+log_info "  Size: $(du -h "$zip_filename" | cut -f1)"
+
+popd >/dev/null
+
+# =====================================
+# Build Installer (Windows only)
+# =====================================
+if [[ $platform == "windows" ]]; then
+    log_section "Building Windows Installer"
+    
+    installer_filename="activitywatch${build_suffix}-${DISPLAY_VERSION}-${platform}-${arch}-setup.exe"
+    log_info "Installer filename: $installer_filename"
+    
     innosetupdir="/c/Program Files (x86)/Inno Setup 6"
-    if [ ! -d "$innosetupdir" ]; then
-        echo "ERROR: Couldn't find innosetup which is needed to build the installer. We suggest you install it using chocolatey. Exiting."
+    
+    log_action "Checking for Inno Setup"
+    if [[ ! -d "$innosetupdir" ]]; then
+        log_error "Couldn't find Inno Setup in: $innosetupdir"
+        log_info ""
+        log_info "Inno Setup is required to build the Windows installer."
+        log_info "Install using chocolatey:"
+        log_info "  choco install innosetup"
         exit 1
     fi
-
-    # Windows installer version should not include 'v' prefix, see: https://github.com/microsoft/winget-pkgs/pull/17564
-    version_no_prefix="$(echo $version | sed -e 's/^v//')"
-    if [[ $TAURI_BUILD == "true" ]]; then
-        env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/aw-tauri.iss
+    log_ok "Inno Setup found: $innosetupdir"
+    
+    # Windows installer version should NOT include 'v' prefix
+    # DISPLAY_VERSION is already without 'v' prefix, so we use it directly
+    log_info "Installer version: $DISPLAY_VERSION (no 'v' prefix)"
+    
+    log_action "Running Inno Setup compiler"
+    if [[ ${TAURI_BUILD:-false} == "true" ]]; then
+        log_info "  Using Tauri installer script: scripts/package/aw-tauri.iss"
+        env AW_VERSION="$DISPLAY_VERSION" "$innosetupdir/iscc.exe" "$SCRIPT_DIR/aw-tauri.iss"
     else
-        env AW_VERSION=$version_no_prefix "$innosetupdir/iscc.exe" scripts/package/activitywatch-setup.iss
+        log_info "  Using standard installer script: scripts/package/activitywatch-setup.iss"
+        env AW_VERSION="$DISPLAY_VERSION" "$innosetupdir/iscc.exe" "$SCRIPT_DIR/activitywatch-setup.iss"
     fi
-    mv dist/activitywatch-setup.exe dist/$filename
-    echo "Setup built!"
-}
-
-build_zip
-if [[ $platform == "windows"* ]]; then
-    build_setup
+    log_ok "Inno Setup compilation complete"
+    
+    log_action "Renaming installer: activitywatch-setup.exe → $installer_filename"
+    mv dist/activitywatch-setup.exe "dist/$installer_filename"
+    log_ok "Installer renamed"
+    log_info "  File: $installer_filename"
+    log_info "  Size: $(du -h "dist/$installer_filename" | cut -f1)"
 fi
 
-echo
-echo "-------------------------------------"
-echo "Contents of ./dist"
-ls -l dist
-echo "-------------------------------------"
+# =====================================
+# List Contents
+# =====================================
+log_section "Package Contents"
 
+log_info "Listing dist/ directory contents:"
+echo ""
+ls -lh dist/*.zip dist/*.exe dist/*.dmg 2>/dev/null || log_warn "No artifacts found in dist root"
+echo ""
+
+# =====================================
+# Summary
+# =====================================
+log_header "Package All Complete"
+
+log_ok "Artifacts built successfully"
+log_info ""
+log_info "Summary:"
+log_info "  Platform:       $platform"
+log_info "  Architecture:   $arch"
+log_info "  Version:        $DISPLAY_VERSION"
+log_info "  Tauri build:    ${TAURI_BUILD:-false}"
+log_info ""
+log_info "Artifacts:"
+if [[ -f "dist/$zip_filename" ]]; then
+    log_info "  ✅ $zip_filename ($(du -h "dist/$zip_filename" | cut -f1))"
+fi
+if [[ $platform == "windows" ]] && [[ -f "dist/$installer_filename" ]]; then
+    log_info "  ✅ $installer_filename ($(du -h "dist/$installer_filename" | cut -f1))"
+fi
+log_info ""
+log_info "Note: Version consistency check will be performed by verify-package.sh"
+log_info ""

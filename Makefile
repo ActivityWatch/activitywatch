@@ -7,11 +7,225 @@
 #
 # We recommend creating and activating a Python virtualenv before building.
 # Instructions on how to do this can be found in the guide linked above.
-.PHONY: build install test clean clean_all
+.PHONY: build install test clean clean_all doctor venv-check
 
 SHELL := /usr/bin/env bash
 
 OS := $(shell uname -s)
+
+# =====================================
+# Helper Functions & Checks
+# =====================================
+
+# Check if running in a Python virtual environment
+# Returns: 0 if in venv, 1 otherwise
+# Usage: $(call in_venv)
+define in_venv
+$(shell python3 -c "import sys; print(1 if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix) else 0)" 2>/dev/null || echo 0)
+endef
+
+# Get Python version (major.minor)
+# Usage: $(call python_version)
+define python_version
+$(shell python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
+endef
+
+# Get setuptools version
+# Usage: $(call setuptools_version)
+define setuptools_version
+$(shell python3 -c "import setuptools; print(setuptools.__version__)" 2>/dev/null || echo "0.0.0")
+endef
+
+# Compare versions (returns 1 if v1 > v2, 0 otherwise)
+# Usage: $(call version_gt,<v1>,<v2>)
+define version_gt
+$(shell python3 -c "from packaging.version import Version; print(1 if Version('$1') > Version('$2') else 0)" 2>/dev/null || python3 -c "import sys; print(1 if tuple(map(int, '$1'.split('.'))) > tuple(map(int, '$2'.split('.'))) else 0)" 2>/dev/null || echo 0)
+endef
+
+# =====================================
+# Virtual Environment Check
+# =====================================
+
+VENVS := .venv venv
+ACTIVE_VENV := $(firstword $(wildcard $(VENVS)))
+
+venv-check:
+	@echo "Checking virtual environment..."
+	@IN_VENV=$(call in_venv); \
+	if [ "$$IN_VENV" != "1" ]; then \
+		echo ""; \
+		echo "==========================================================================="; \
+		echo "[ERROR] Not running in a Python virtual environment!"; \
+		echo "==========================================================================="; \
+		echo ""; \
+		echo "Running make build outside a venv can:"; \
+		echo "  - Pollute your global Python environment"; \
+		echo "  - Cause version conflicts with other packages"; \
+		echo "  - Require root/sudo privileges"; \
+		echo ""; \
+		echo "Recommended setup:"; \
+		echo ""; \
+		echo "  # Create a virtual environment (do this once)"; \
+		if [ -n "$(ACTIVE_VENV)" ]; then \
+			echo "  python3 -m venv $(ACTIVE_VENV)      # <-- already exists"; \
+		else \
+			echo "  python3 -m venv .venv"; \
+		fi; \
+		echo ""; \
+		echo "  # Activate the virtual environment (do this in every new shell)"; \
+		if [ "$$(basename $$SHELL)" = "fish" ]; then \
+			echo "  source .venv/bin/activate.fish   # for fish shell"; \
+		else \
+			echo "  source .venv/bin/activate        # for bash/zsh"; \
+		fi; \
+		echo ""; \
+		echo "  # Then run:"; \
+		echo "  make build"; \
+		echo ""; \
+		echo "==========================================================================="; \
+		echo ""; \
+		echo "If you KNOW what you're doing and want to skip this check:"; \
+		echo "  export SKIP_VENV_CHECK=1"; \
+		echo "  make build"; \
+		echo ""; \
+		echo "==========================================================================="; \
+		exit 1; \
+	else \
+		echo "  ✓ Running in virtual environment"; \
+		echo "    VIRTUAL_ENV: $$VIRTUAL_ENV"; \
+	fi; \
+	echo ""
+
+# =====================================
+# Doctor: Check all dependencies
+# =====================================
+
+doctor: venv-check
+	@echo "==========================================================================="
+	@echo "ActivityWatch Build Environment Doctor"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "--- Python Environment ---"
+	@echo ""
+	@echo -n "  Python: "
+	@if command -v python3 >/dev/null 2>&1; then \
+		PY_VER=$$(python3 --version 2>&1); \
+		echo "✓ $$PY_VER"; \
+	else \
+		echo "✗ python3 not found in PATH"; \
+		ERRORS=1; \
+	fi
+
+	@echo -n "  pip: "
+	@if python3 -m pip --version >/dev/null 2>&1; then \
+		PIP_VER=$$(python3 -m pip --version 2>&1 | cut -d' ' -f2); \
+		echo "✓ $$PIP_VER"; \
+	else \
+		echo "✗ pip not available"; \
+		ERRORS=1; \
+	fi
+
+	@echo -n "  poetry: "
+	@if command -v poetry >/dev/null 2>&1; then \
+		POETRY_VER=$$(poetry --version 2>&1 | sed 's/.*version \([0-9.]*\).*/\1/'); \
+		echo "✓ $$POETRY_VER"; \
+	else \
+		echo "✗ poetry not found in PATH"; \
+		echo "    Install with: pip3 install poetry==1.4.2"; \
+		ERRORS=1; \
+	fi
+
+	@echo -n "  setuptools: "
+	@SETUPTOOLS_VER=$(call setuptools_version); \
+	if [ -n "$$SETUPTOOLS_VER" ] && [ "$$SETUPTOOLS_VER" != "0.0.0" ]; then \
+		echo "✓ $$SETUPTOOLS_VER"; \
+		NEEDS_UPDATE=$(call version_gt,49.1.1,$$SETUPTOOLS_VER); \
+		if [ "$$NEEDS_UPDATE" = "1" ]; then \
+			echo "    ⚠ Version <= 49.1.1, may cause issues (see: pypa/setuptools#1963)"; \
+			echo "      Will be automatically updated during make build"; \
+		fi; \
+	else \
+		echo "✗ Could not determine setuptools version"; \
+		ERRORS=1; \
+	fi
+
+	@echo ""
+	@echo "--- Node.js Environment (for web UI) ---"
+	@echo ""
+	@echo -n "  node: "
+	@if command -v node >/dev/null 2>&1; then \
+		NODE_VER=$$(node --version 2>&1); \
+		echo "✓ $$NODE_VER"; \
+	else \
+		echo "⚠ node not found in PATH (only needed for web UI build)"; \
+		echo "    SKIP_WEBUI=true can be used to skip web UI build"; \
+	fi
+
+	@echo -n "  npm: "
+	@if command -v npm >/dev/null 2>&1; then \
+		NPM_VER=$$(npm --version 2>&1); \
+		echo "✓ $$NPM_VER"; \
+	else \
+		echo "⚠ npm not found (only needed for web UI build)"; \
+	fi
+
+	@echo ""
+	@echo "--- Rust Environment (for aw-server-rust) ---"
+	@echo ""
+	@echo -n "  rustc: "
+	@if command -v rustc >/dev/null 2>&1; then \
+		RUST_VER=$$(rustc --version 2>&1); \
+		echo "✓ $$RUST_VER"; \
+	else \
+		echo "⚠ rustc not found in PATH (only needed for aw-server-rust)"; \
+		echo "    SKIP_SERVER_RUST=true can be used to skip Rust build"; \
+	fi
+
+	@echo -n "  cargo: "
+	@if command -v cargo >/dev/null 2>&1; then \
+		CARGO_VER=$$(cargo --version 2>&1 | cut -d' ' -f2); \
+		echo "✓ $$CARGO_VER"; \
+	else \
+		echo "⚠ cargo not found (only needed for aw-server-rust)"; \
+	fi
+
+	@echo ""
+	@echo "--- Git Submodules ---"
+	@echo ""
+	@for module in aw-core aw-client aw-server; do \
+		echo -n "  $$module: "; \
+		if [ -d "$$module/.git" ]; then \
+			echo "✓ initialized"; \
+		else \
+			echo "✗ not initialized"; \
+			echo "    Run: git submodule update --init --recursive"; \
+			ERRORS=1; \
+		fi; \
+	done
+
+	@echo ""
+	@echo "==========================================================================="
+	@echo "Summary"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Virtual environment: ✓ Active"
+	@echo "  Path: $$VIRTUAL_ENV"
+	@echo ""
+	@if [ -n "$$ERRORS" ]; then \
+		echo "❌ Some issues found. Please fix them before building."; \
+		exit 1; \
+	else \
+		echo "✅ All required dependencies look good!"; \
+		echo ""; \
+		echo "   You can now run:"; \
+		echo "     make build"; \
+		echo ""; \
+		echo "   Or with options:"; \
+		echo "     make build SKIP_WEBUI=true"; \
+		echo "     make build SKIP_SERVER_RUST=true"; \
+		echo "     make build RELEASE=true"; \
+		echo ""; \
+	fi
 
 ifeq ($(TAURI_BUILD),true)
 	SUBMODULES := aw-core aw-client aw-server aw-server-rust aw-watcher-afk aw-watcher-window aw-tauri
@@ -63,23 +277,65 @@ endif
 # What it does:
 #  - Installs all the Python modules
 #  - Builds the web UI and bundles it with aw-server
-build: aw-core/.git
-#	needed due to https://github.com/pypa/setuptools/issues/1963
-#	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
-	pip install 'setuptools>49.1.1'
-	for module in $(SUBMODULES); do \
+build: build-pre-check aw-core/.git
+	@echo "==========================================================================="
+	@echo "Building ActivityWatch"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Configuration:"
+	@echo "  RELEASE: $(RELEASE)"
+	@echo "  TAURI_BUILD: $(TAURI_BUILD)"
+	@echo "  SKIP_WEBUI: $(SKIP_WEBUI)"
+	@echo "  SKIP_SERVER_RUST: $(SKIP_SERVER_RUST)"
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "Checking setuptools version..."
+	@SETUPTOOLS_VER=$(call setuptools_version); \
+	NEEDS_UPDATE=$(call version_gt,49.1.1,$$SETUPTOOLS_VER); \
+	if [ "$$NEEDS_UPDATE" = "1" ]; then \
+		echo "  ⚠ setuptools version $$SETUPTOOLS_VER is <= 49.1.1"; \
+		echo "    Updating to avoid issue: pypa/setuptools#1963"; \
+		python3 -m pip install 'setuptools>49.1.1'; \
+	else \
+		echo "  ✓ setuptools version $$SETUPTOOLS_VER is OK (> 49.1.1)"; \
+		echo "    Skipping setuptools update workaround"; \
+	fi
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "Building submodules..."
+	@for module in $(SUBMODULES); do \
+		echo ""; \
+		echo "==========================================================================="; \
 		echo "Building $$module"; \
+		echo "==========================================================================="; \
 		if [ "$$module" = "aw-server-rust" ] && [ "$(TAURI_BUILD)" = "true" ]; then \
 			make --directory=$$module aw-sync SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module aw-sync"; exit 2; }; \
 		else \
 			make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module build"; exit 2; }; \
 		fi; \
 	done
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "Finalizing build..."
 #   The below is needed due to: https://github.com/ActivityWatch/activitywatch/issues/173
 	make --directory=aw-client build
 	make --directory=aw-core build
 #	Needed to ensure that the server has the correct version set
-	python -c "import aw_server; print(aw_server.__version__)"
+	python3 -c "import aw_server; print('aw_server version:', aw_server.__version__)"
+	@echo ""
+	@echo "==========================================================================="
+	@echo "Build complete!"
+	@echo "==========================================================================="
+
+# build-pre-check: venv check, but allow skip via SKIP_VENV_CHECK
+build-pre-check:
+	@if [ -z "$(SKIP_VENV_CHECK)" ] || [ "$(SKIP_VENV_CHECK)" = "0" ]; then \
+		$(MAKE) venv-check; \
+	else \
+		echo "⚠ SKIP_VENV_CHECK=1 is set, skipping venv check"; \
+		echo "  This may pollute your global Python environment."; \
+		echo ""; \
+	fi
 
 
 # Install
@@ -276,35 +532,180 @@ dist/ActivityWatch.dmg: dist/ActivityWatch.app
 dist/notarize:
 	./scripts/notarize.sh
 
-package:
+package: package-pre-check
+	@echo ""
+	@echo "==========================================================================="
+	@echo "ActivityWatch Packaging"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Configuration:"
+	@echo "  TAURI_BUILD:  $(TAURI_BUILD)"
+	@echo "  RELEASE:      $(RELEASE)"
+	@echo "  Target:       $(targetdir)"
+	@echo "  Packageables: $(PACKAGEABLES)"
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[CLEAN] Removing old dist directory..."
+	@echo "  [ACTION] rm -rf dist"
 	rm -rf dist
+	@echo "  [OK] dist directory removed"
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[CREATE] Creating directory structure..."
+	@echo "  [ACTION] mkdir -p dist/activitywatch"
 	mkdir -p dist/activitywatch
-	for dir in $(PACKAGEABLES); do \
-		make --directory=$$dir package; \
-		cp -r $$dir/dist/$$dir dist/activitywatch; \
+	@echo "  [OK] dist/activitywatch created"
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[PACKAGE] Building submodules..."
+	@for dir in $(PACKAGEABLES); do \
+		echo ""; \
+		echo "==========================================================================="; \
+		echo "[SUBMODULE] $$dir"; \
+		echo "==========================================================================="; \
+		echo "  [ACTION] make --directory=$$dir package"; \
+		if make --directory=$$dir package; then \
+			echo "  [OK] $$dir packaged successfully"; \
+		else \
+			echo "  [ERROR] Failed to package $$dir"; \
+			exit 2; \
+		fi; \
+		echo ""; \
+		echo "  [ACTION] cp -r $$dir/dist/$$dir dist/activitywatch"; \
+		if cp -r $$dir/dist/$$dir dist/activitywatch; then \
+			echo "  [OK] Copied $$dir to dist/activitywatch"; \
+			find dist/activitywatch/$$dir -type f -name "*" | head -10; \
+		else \
+			echo "  [ERROR] Failed to copy $$dir"; \
+			exit 2; \
+		fi; \
 	done
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[POST-PROCESS] Additional steps..."
+
 ifeq ($(TAURI_BUILD),true)
-# Copy aw-sync binary for Tauri builds
+	@echo ""
+	@echo "==========================================================================="
+	@echo "[TAURI] Tauri-specific packaging"
+	@echo "==========================================================================="
+	@echo "  [ACTION] mkdir -p dist/activitywatch/aw-server-rust"
 	mkdir -p dist/activitywatch/aw-server-rust
+	@echo "  [OK] dist/activitywatch/aw-server-rust created"
+	@echo ""
+	@echo "  [ACTION] cp aw-server-rust/target/$(targetdir)/aw-sync dist/activitywatch/aw-server-rust/aw-sync"
 	cp aw-server-rust/target/$(targetdir)/aw-sync dist/activitywatch/aw-server-rust/aw-sync
+	@echo "  [OK] aw-sync copied from aw-server-rust/target/$(targetdir)/aw-sync"
+	@echo "  [INFO] Source: aw-server-rust/target/$(targetdir)/aw-sync"
+	@echo "  [INFO] Target: dist/activitywatch/aw-server-rust/aw-sync"
 else
-# Move aw-qt to the root of the dist folder
+	@echo ""
+	@echo "==========================================================================="
+	@echo "[NON-TAURI] aw-qt rearrangement"
+	@echo "==========================================================================="
+	@echo "  [ACTION] mv dist/activitywatch/aw-qt aw-qt-tmp"
 	mv dist/activitywatch/aw-qt aw-qt-tmp
+	@echo "  [OK] aw-qt moved to aw-qt-tmp"
+	@echo ""
+	@echo "  [ACTION] mv aw-qt-tmp/* dist/activitywatch"
 	mv aw-qt-tmp/* dist/activitywatch
+	@echo "  [OK] aw-qt contents moved to dist/activitywatch"
+	@echo ""
+	@echo "  [ACTION] rmdir aw-qt-tmp"
 	rmdir aw-qt-tmp
+	@echo "  [OK] aw-qt-tmp removed"
 endif
-# Remove problem-causing binaries
-	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
-	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
-# These should be provided by the distro itself
-# Had to be removed due to otherwise causing the error:
-#   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
+
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[CLEANUP] Removing problem-causing files..."
+	@echo "  [ACTION] Removing libraries that cause runtime issues..."
+	@echo ""
+	@echo "  - libdrm.so.2 (see: https://github.com/ActivityWatch/activitywatch/issues/161)"
+	rm -f dist/activitywatch/libdrm.so.2
+	@echo "    [OK] libdrm.so.2 removed"
+	
+	@echo "  - libharfbuzz.so.0 (see: https://github.com/ActivityWatch/activitywatch/issues/660)"
+	rm -f dist/activitywatch/libharfbuzz.so.0
+	@echo "    [OK] libharfbuzz.so.0 removed"
+	
+	@echo "  - libfontconfig.so.1 (symbol lookup error)"
 	rm -f dist/activitywatch/libfontconfig.so.1
+	@echo "    [OK] libfontconfig.so.1 removed"
+	
+	@echo "  - libfreetype.so.6 (symbol lookup error)"
 	rm -f dist/activitywatch/libfreetype.so.6
-# Remove unnecessary files
+	@echo "    [OK] libfreetype.so.6 removed"
+	
+	@echo "  - pytz (unnecessary)"
 	rm -rf dist/activitywatch/pytz
-# Builds zips and setups
+	@echo "    [OK] pytz removed"
+	@echo ""
+	@echo "  [OK] Problem-causing files cleaned up"
+
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[PACKAGE] Building distribution artifacts (zip, installer)..."
+	@echo "  [ACTION] bash scripts/package/package-all.sh"
+	@echo ""
 	bash scripts/package/package-all.sh
+
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[VERIFY] Running package verification..."
+	@echo "  [ACTION] bash scripts/package/verify-package.sh"
+	@echo ""
+	@if [ -n "$(PACKAGE_STRICT)" ] && [ "$(PACKAGE_STRICT)" = "true" ]; then \
+		echo "  [INFO] Running in STRICT mode (will exit on errors)"; \
+		bash scripts/package/verify-package.sh --strict; \
+	else \
+		echo "  [INFO] Running in report-only mode (use PACKAGE_STRICT=true for strict)"; \
+		bash scripts/package/verify-package.sh; \
+	fi
+
+	@echo ""
+	@echo "==========================================================================="
+	@echo "[DONE] Packaging complete!"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Output location: $(PWD)/dist"
+	@ls -lh dist/*.zip dist/*.exe dist/*.dmg 2>/dev/null || echo "  (No artifacts found in dist root)"
+	@echo ""
+
+package-pre-check:
+	@echo "==========================================================================="
+	@echo "Packaging Pre-Check"
+	@echo "==========================================================================="
+	@echo ""
+	@if [ -z "$(SKIP_VENV_CHECK)" ] || [ "$(SKIP_VENV_CHECK)" = "0" ]; then \
+		IN_VENV=$$(python3 -c "import sys; print(1 if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix) else 0)" 2>/dev/null || echo 0); \
+		if [ "$$IN_VENV" != "1" ]; then \
+			echo "[ERROR] Not running in a Python virtual environment!"; \
+			echo ""; \
+			echo "Run these commands first:"; \
+			echo "  python3 -m venv .venv"; \
+			echo "  source .venv/bin/activate"; \
+			echo ""; \
+			echo "Or skip this check: SKIP_VENV_CHECK=1 make package"; \
+			exit 1; \
+		else \
+			echo "  [OK] Running in virtual environment"; \
+		fi; \
+	else \
+		echo "  [SKIP] Virtual environment check skipped (SKIP_VENV_CHECK=1)"; \
+	fi
+	@echo ""
+	@if [ ! -d "aw-core" ] || [ ! -f "aw-core/.git" ]; then \
+		echo "[ERROR] Submodules not initialized!"; \
+		echo ""; \
+		echo "Run: git submodule update --init --recursive"; \
+		exit 1; \
+	else \
+		echo "  [OK] Submodules initialized"; \
+	fi
+	@echo ""
+	@echo "Pre-check passed."
+	@echo "==========================================================================="
 
 clean:
 	rm -rf build dist
