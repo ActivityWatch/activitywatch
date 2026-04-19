@@ -6,7 +6,25 @@ on:
   #pull_request:
   #  branches: [ master ]
   workflow_dispatch:
-
+    inputs:
+      skip_build:
+        description: "Skip build and use downloaded binary instead"
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      version:
+        description: "Version to download when skip_build=true (e.g., v0.14.0)"
+        required: false
+        default: 'latest'
+        type: string
+      test_timeout:
+        description: "Global test timeout in seconds"
+        required: false
+        default: '300'
+        type: string
 
 
 jobs:
@@ -172,4 +190,257 @@ jobs:
           cat log-old.txt || true
           echo "\n---\n"
           cat log-new.txt || true
+
+
+  # Integration tests using make test-integration
+  integration:
+    name: Integration (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python_version: ['3.12']
+
+    env:
+      TEST_TIMEOUT: ${{ inputs.test_timeout || '300' }}
+      AW_SERVER_TIMEOUT: '60'
+      AW_PYTEST_TIMEOUT: '120'
+      AW_LOG_LINES: '200'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Print environment info
+        run: |
+          echo "OS: ${{ matrix.os }}"
+          echo "Runner: $RUNNER_OS"
+          echo "Architecture: $(uname -m)"
+          echo "Python version: ${{ matrix.python_version }}"
+          echo ""
+          echo "Test Configuration:"
+          echo "  Global timeout: ${TEST_TIMEOUT}s"
+          echo "  Server startup timeout: ${AW_SERVER_TIMEOUT}s"
+          echo "  Pytest timeout: ${AW_PYTEST_TIMEOUT}s"
+          echo "  Log lines on failure: ${AW_LOG_LINES}"
+          echo "  Skip build: ${{ inputs.skip_build }}"
+          echo "  Version: ${{ inputs.version }}"
+
+      - name: Install coreutils (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install coreutils
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Set up Rust
+        if: ${{ inputs.skip_build != 'true' }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Install Poetry
+        run: |
+          pip3 install poetry==1.4.2
+
+      - name: Create virtual environment
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          poetry install
+
+      - name: Download ActivityWatch binary (skip_build=true)
+        if: ${{ inputs.skip_build == 'true' }}
+        shell: bash
+        run: |
+          set -e
+          mkdir -p dist
+          cd dist
+
+          OS=${{ matrix.os }}
+          if [ "$OS" = "ubuntu-latest" ] || [ "$OS" = "Linux" ]; then
+            PLATFORM="linux"
+          elif [ "$OS" = "macos-latest" ] || [ "$OS" = "macOS" ]; then
+            PLATFORM="macos"
+          else
+            echo "ERROR: Unsupported OS: $OS"
+            exit 1
+          fi
+
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            ARCH="x86_64"
+          elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
+            ARCH="arm64"
+          fi
+
+          VERSION="${{ inputs.version }}"
+          if [ "$VERSION" = "latest" ] || [ -z "$VERSION" ]; then
+            echo "Fetching latest release..."
+            LATEST_JSON=$(curl -s https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest)
+            VERSION=$(echo "$LATEST_JSON" | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
+            echo "Latest version: $VERSION"
+          fi
+
+          # Remove 'v' prefix for filename if present
+          VERSION_NO_V=$(echo "$VERSION" | sed -e 's/^v//')
+
+          ZIP_FILE="activitywatch-${VERSION_NO_V}-${PLATFORM}-${ARCH}.zip"
+          DOWNLOAD_URL="https://github.com/ActivityWatch/activitywatch/releases/download/${VERSION}/${ZIP_FILE}"
+
+          echo "Platform: $PLATFORM"
+          echo "Arch: $ARCH"
+          echo "Version: $VERSION"
+          echo "Version (no v): $VERSION_NO_V"
+          echo "Download URL: $DOWNLOAD_URL"
+
+          echo ""
+          echo "Downloading $ZIP_FILE..."
+          curl -f -L -o "$ZIP_FILE" "$DOWNLOAD_URL"
+
+          echo ""
+          echo "Unzipping..."
+          unzip -q "$ZIP_FILE"
+          ls -la activitywatch/
+
+          echo ""
+          echo "Done. Binary location: $(pwd)/activitywatch/"
+
+      - name: Build ActivityWatch (skip_build=false)
+        if: ${{ inputs.skip_build != 'true' }}
+        run: |
+          source venv/bin/activate
+          make build SKIP_WEBUI=true SKIP_SERVER_RUST=false
+          ls -la dist/
+
+      - name: Find server binary
+        shell: bash
+        run: |
+          set -e
+          echo "Looking for server binary..."
+          echo ""
+
+          SERVER_BIN=""
+
+          # Try aw-server-rust first (most likely for Tauri build)
+          if [ -f "dist/activitywatch/aw-server-rust/aw-server" ]; then
+            SERVER_BIN="dist/activitywatch/aw-server-rust/aw-server"
+          elif [ -f "dist/activitywatch/aw-server-rust/aw-server.exe" ]; then
+            SERVER_BIN="dist/activitywatch/aw-server-rust/aw-server.exe"
+          # Try aw-server (Python)
+          elif [ -f "dist/activitywatch/aw-server/aw-server" ]; then
+            SERVER_BIN="dist/activitywatch/aw-server/aw-server"
+          elif [ -f "dist/activitywatch/aw-server/aw-server.exe" ]; then
+            SERVER_BIN="dist/activitywatch/aw-server/aw-server.exe"
+          fi
+
+          if [ -z "$SERVER_BIN" ]; then
+            echo "ERROR: Could not find server binary"
+            echo ""
+            echo "Contents of dist/:"
+            ls -la dist/ 2>/dev/null || echo "(dist/ not found)"
+            echo ""
+            echo "Contents of dist/activitywatch/ (if exists):"
+            ls -la dist/activitywatch/ 2>/dev/null || echo "(dist/activitywatch/ not found)"
+            exit 1
+          fi
+
+          echo "Found server binary: $SERVER_BIN"
+          echo "AW_SERVER_BIN=${SERVER_BIN}" >> $GITHUB_ENV
+
+      - name: Determine and output version
+        run: |
+          source venv/bin/activate
+
+          TAG_VERSION=$(bash scripts/package/getversion.sh --tag)
+          DISPLAY_VERSION=$(bash scripts/package/getversion.sh --display)
+
+          echo "TAG_VERSION=${TAG_VERSION}" >> $GITHUB_ENV
+          echo "DISPLAY_VERSION=${DISPLAY_VERSION}" >> $GITHUB_ENV
+
+          echo "========================================"
+          echo "Build Version Information"
+          echo "========================================"
+          echo "GitHub ref: ${{ github.ref }}"
+          echo "GitHub ref_name: ${{ github.ref_name }}"
+          echo "TAG_VERSION:        ${TAG_VERSION}"
+          echo "DISPLAY_VERSION:    ${DISPLAY_VERSION}"
+          echo "========================================"
+
+      - name: Run integration tests
+        id: integration_tests
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          source venv/bin/activate
+
+          echo "========================================"
+          echo "Running Integration Tests"
+          echo "========================================"
+          echo "Server binary: $AW_SERVER_BIN"
+          echo "Server port: ${AW_SERVER_PORT:-5666}"
+          echo "Server timeout: ${AW_SERVER_TIMEOUT}s"
+          echo "Global test timeout: ${TEST_TIMEOUT}s"
+          echo ""
+
+          export AW_SERVER_BIN="$AW_SERVER_BIN"
+          export AW_SERVER_TIMEOUT="$AW_SERVER_TIMEOUT"
+          export AW_LOG_LINES="$AW_LOG_LINES"
+          export AW_TEST_TIMEOUT="$TEST_TIMEOUT"
+          export AW_PYTEST_TIMEOUT="$AW_PYTEST_TIMEOUT"
+
+          # Run tests with timeout protection
+          # Using timeout/gtimeout with SIGKILL as last resort
+          # Also using pytest-timeout as per-test protection
+
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            timeout --signal=SIGKILL "$TEST_TIMEOUT" \
+              pytest scripts/tests/integration_tests.py -v \
+                --timeout="$AW_PYTEST_TIMEOUT" \
+                -o timeout_method=thread
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            gtimeout --signal=SIGKILL "$TEST_TIMEOUT" \
+              pytest scripts/tests/integration_tests.py -v \
+                --timeout="$AW_PYTEST_TIMEOUT" \
+                -o timeout_method=thread
+          else
+            # Windows (though we're not testing Windows yet)
+            pytest scripts/tests/integration_tests.py -v \
+              --timeout="$AW_PYTEST_TIMEOUT" \
+              -o timeout_method=thread
+          fi
+
+      - name: Output test result
+        if: always()
+        run: |
+          echo "========================================"
+          echo "Integration Tests Result"
+          echo "========================================"
+          echo "OS: ${{ matrix.os }}"
+          echo "Python: ${{ matrix.python_version }}"
+          echo ""
+          echo "Test Status (from step.outcome): ${{ steps.integration_tests.outcome }}"
+          echo ""
+          if [ "${{ steps.integration_tests.outcome }}" = "success" ]; then
+            echo "✅ Tests PASSED"
+          elif [ "${{ steps.integration_tests.outcome }}" = "failure" ]; then
+            echo "❌ Tests FAILED"
+          elif [ "${{ steps.integration_tests.outcome }}" = "cancelled" ]; then
+            echo "⏹️ Tests CANCELLED (possibly timeout)"
+          else
+            echo "⚠️ Tests: ${{ steps.integration_tests.outcome }}"
+          fi
+          echo ""
+          echo "Timeout protection in place:"
+          echo "  - Global: ${TEST_TIMEOUT}s (via timeout/gtimeout)"
+          echo "  - Per-test: ${AW_PYTEST_TIMEOUT}s (via pytest-timeout)"
+          echo "========================================"
 
