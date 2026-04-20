@@ -525,11 +525,97 @@ else
 endif
 
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
-	# NOTE: This does not codesign the dmg, that is done in the CI config
+	@echo ""
+	@echo "==========================================================================="
+	@echo "Building ActivityWatch.dmg"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Configuration:"
+	@echo "  AW_SIGN:     $(AW_SIGN:-false)"
+	@echo "  AW_NOTARIZE: $(AW_NOTARIZE:-false)"
+	@echo "  AW_IDENTITY: $(if $(AW_IDENTITY),$(AW_IDENTITY),$(if $(APPLE_PERSONALID),$(APPLE_PERSONALID),not set))"
+	@echo ""
+	@if [ -n "$(AW_SIGN)" ] && [ "$(AW_SIGN)" = "true" ]; then \
+		echo "[INFO] AW_SIGN=true: Will sign .app and .dmg after building"; \
+		echo "       Identity: $(if $(AW_IDENTITY),$(AW_IDENTITY),$(if $(APPLE_PERSONALID),$(APPLE_PERSONALID),not set))"; \
+	fi
+	@if [ -n "$(AW_NOTARIZE)" ] && [ "$(AW_NOTARIZE)" = "true" ]; then \
+		echo "[INFO] AW_NOTARIZE=true: Will notarize .app and .dmg after building"; \
+		echo "       Requires: APPLE_EMAIL, APPLE_PASSWORD, APPLE_TEAMID"; \
+	fi
+	@echo ""
+	@echo "---------------------------------------------------------------------------"
+	@echo "[BUILD] Creating DMG with dmgbuild..."
+	@echo "  [ACTION] pip install dmgbuild"
+	@echo "  [ACTION] dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app \"ActivityWatch\" dist/ActivityWatch.dmg"
+	@echo ""
 	pip install dmgbuild
 	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
+	@echo ""
+	@echo "[OK] DMG created: dist/ActivityWatch.dmg"
+	
+	# Optional: Sign .app and .dmg (if AW_SIGN=true)
+	@if [ -n "$(AW_SIGN)" ] && [ "$(AW_SIGN)" = "true" ]; then \
+		echo ""; \
+		echo "---------------------------------------------------------------------------"; \
+		echo "[SIGN] Signing .app bundle (inside-out order)..."; \
+		echo ""; \
+		AW_SIGN=true AW_IDENTITY="$(if $(AW_IDENTITY),$(AW_IDENTITY),$(if $(APPLE_PERSONALID),$(APPLE_PERSONALID),))" \
+			AW_NOTARIZE=false AW_DRY_RUN="$(if $(AW_DRY_RUN),$(AW_DRY_RUN),false)" \
+			bash scripts/notarize.sh; \
+	fi
+	
+	# Optional: Notarize (if AW_NOTARIZE=true)
+	@if [ -n "$(AW_NOTARIZE)" ] && [ "$(AW_NOTARIZE)" = "true" ]; then \
+		echo ""; \
+		echo "---------------------------------------------------------------------------"; \
+		echo "[NOTARIZE] Submitting to Apple for notarization..."; \
+		echo "  Note: This may take several minutes"; \
+		echo ""; \
+		AW_SIGN="$(if $(AW_SIGN),$(AW_SIGN),false)" \
+			AW_NOTARIZE=true \
+			AW_DRY_RUN="$(if $(AW_DRY_RUN),$(AW_DRY_RUN),false)" \
+			bash scripts/notarize.sh; \
+	fi
+	
+	@echo ""
+	@echo "==========================================================================="
+	@echo "ActivityWatch.dmg Build Complete"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Output:"
+	@echo "  dist/ActivityWatch.app"
+	@echo "  dist/ActivityWatch.dmg"
+	@echo ""
+	@echo "Troubleshooting Commands:"
+	@echo "  # Verify signature:"
+	@echo "    codesign -v --verify --strict dist/ActivityWatch.app"
+	@echo "    codesign -v --verify --strict dist/ActivityWatch.dmg"
+	@echo ""
+	@echo "  # Show signature details:"
+	@echo "    codesign -dvvv dist/ActivityWatch.app"
+	@echo ""
+	@echo "  # Check notarization history:"
+	@echo "    xcrun notarytool history --keychain-profile activitywatch-notarization"
+	@echo ""
+	@echo "  # Check stapler validation:"
+	@echo "    xcrun stapler validate dist/ActivityWatch.app"
+	@echo "    xcrun stapler validate dist/ActivityWatch.dmg"
+	@echo ""
+	@echo "==========================================================================="
 
 dist/notarize:
+	@echo ""
+	@echo "==========================================================================="
+	@echo "Notarizing ActivityWatch"
+	@echo "==========================================================================="
+	@echo ""
+	@echo "Usage:"
+	@echo "  make dist/notarize                           # Run notarize.sh"
+	@echo "  make dist/notarize AW_SIGN=true              # Also sign first"
+	@echo "  make dist/notarize AW_NOTARIZE=true          # Also notarize"
+	@echo "  make dist/notarize AW_SIGN=true AW_NOTARIZE=true  # Sign and notarize"
+	@echo ""
 	./scripts/notarize.sh
 
 package: package-pre-check
