@@ -57,7 +57,7 @@
   <br>
 
   <a href="https://activitywatch.net/donate/">
-    <img title="Donated" src="https://img.shields.io/badge/budget-%24201%2Fmo%20from%2040%20supporters-orange.svg" />
+    <img title="Donated" src="https://img.shields.io/badge/budget-~%24275%2Fmo%20from%2044%20supporters-orange.svg" />
   </a>
   <a href="https://doi.org/10.5281/zenodo.4957165">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.4957165.svg" />
