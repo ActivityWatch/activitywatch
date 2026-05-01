@@ -188,7 +188,7 @@ jobs:
           CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
       - name: Upload packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}
           path: dist/activitywatch-*.*
@@ -230,7 +230,7 @@ jobs:
           mv changelog.md release_notes.md
 
       - name: Upload release notes
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release_notes_tauri
           path: release_notes.md
