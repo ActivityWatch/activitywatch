@@ -159,6 +159,22 @@ jobs:
           poetry install
           make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      - name: Package Linux (Tauri bundles)
+        if: runner.os == 'Linux'
+        run: |
+          # aw-tauri's bundler produces .AppImage/.deb/.rpm under
+          # dist/activitywatch/aw-tauri/ via `make package`. Copy them out with
+          # versioned, arch-suffixed filenames so they match the
+          # `dist/activitywatch-*.*` upload pattern below.
+          ARCH=$(uname -m)
+          shopt -s nullglob
+          for src in dist/activitywatch/aw-tauri/*.AppImage \
+                     dist/activitywatch/aw-tauri/*.deb \
+                     dist/activitywatch/aw-tauri/*.rpm; do
+            ext="${src##*.}"
+            cp -v "$src" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}.${ext}"
+          done
+
       - name: Package dmg
         if: runner.os == 'macOS'
         run: |
