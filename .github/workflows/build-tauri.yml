@@ -187,6 +187,24 @@ jobs:
           CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
           CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
+      - name: Package AppImage and deb (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # aw-tauri's package target produces AppImage/deb alongside the zip;
+          # copy them to dist/ so the Upload step picks them up as standalone artifacts.
+          APPIMAGE=$(find dist/activitywatch/aw-tauri -name "*.AppImage" 2>/dev/null | head -1)
+          if [ -n "$APPIMAGE" ]; then
+            cp "$APPIMAGE" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-$(uname -m).AppImage"
+            echo "Packaged AppImage: dist/activitywatch-tauri-${VERSION_WITH_V}-linux-$(uname -m).AppImage"
+          else
+            echo "Warning: no AppImage found in dist/activitywatch/aw-tauri/"
+          fi
+          DEB=$(find dist/activitywatch/aw-tauri -name "*.deb" 2>/dev/null | head -1)
+          if [ -n "$DEB" ]; then
+            cp "$DEB" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-$(uname -m).deb"
+            echo "Packaged deb: dist/activitywatch-tauri-${VERSION_WITH_V}-linux-$(uname -m).deb"
+          fi
+
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
