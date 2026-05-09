@@ -168,11 +168,13 @@ jobs:
           # `dist/activitywatch-*.*` upload pattern below.
           ARCH=$(uname -m)
           shopt -s nullglob
-          for src in dist/activitywatch/aw-tauri/*.AppImage \
-                     dist/activitywatch/aw-tauri/*.deb \
-                     dist/activitywatch/aw-tauri/*.rpm; do
-            ext="${src##*.}"
-            cp -v "$src" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}.${ext}"
+          for ext in AppImage deb rpm; do
+            files=( dist/activitywatch/aw-tauri/*.${ext} )
+            case ${#files[@]} in
+              0) continue ;;
+              1) cp -v "${files[0]}" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}.${ext}" ;;
+              *) echo "ERROR: expected at most 1 .${ext} bundle, found ${#files[@]}" >&2; exit 1 ;;
+            esac
           done
 
       - name: Package dmg
