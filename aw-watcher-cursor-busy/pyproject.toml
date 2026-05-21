@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aw-watcher-cursor-busy"
+dynamic = ["version"]
+description = "ActivityWatch watcher that tracks time spent with the Windows busy cursor."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "ActivityWatch Cursor Busy contributors" }]
+dependencies = ["aw-client"]
+
+[project.scripts]
+aw-cursor-busy-report = "aw_watcher_cursor_busy.report:main"
+
+[project.gui-scripts]
+aw-watcher-cursor-busy = "aw_watcher_cursor_busy.__main__:main"
+
+[tool.hatch.version]
+path = "src/aw_watcher_cursor_busy/__about__.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
