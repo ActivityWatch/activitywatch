@@ -85,6 +85,22 @@ jobs:
           fi
 
           next_base=$(bump_version "${latest_stable#v}" "$RELEASE_LINE")
+
+          # If a prerelease for a version ahead of next_base already exists, continue
+          # that release line instead of starting a new one from the stable bump.
+          # e.g. latest_stable=v0.13.2 + patch → v0.13.3, but if v0.14.0b1 already
+          # exists we should produce v0.14.0b2, not v0.13.3b1.
+          highest_prerelease=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+b[0-9]+$' | head -1 || true)
+          if [ -n "$highest_prerelease" ]; then
+            hp_base="${highest_prerelease%%b*}"
+            hp_base="${hp_base#v}"
+            if [ "$(printf '%s\n%s\n' "$hp_base" "$next_base" | sort -V | tail -1)" = "$hp_base" ] && \
+               [ "$hp_base" != "$next_base" ]; then
+              echo "Existing prerelease $highest_prerelease is ahead of computed v${next_base}; continuing that release line."
+              next_base="$hp_base"
+            fi
+          fi
+
           prerelease_pattern="^v${next_base//./\\.}b[0-9]+$"
           last_prerelease=$(git tag --sort=-version:refname | grep -E "$prerelease_pattern" | head -1 || true)
 
