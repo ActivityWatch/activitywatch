@@ -1,3 +1,5 @@
+[![en](README.md)](/README.md) | [![zh](README.zh.md)](/README.zh.md)
+
 <img title="ActivityWatch" src="https://activitywatch.net/img/banner.png" align="center">
 
 <p align="center">

@@ -1,3 +1,5 @@
+[![en](CONTRIBUTING.md)](/CONTRIBUTING.md) | [![zh](CONTRIBUTING.zh.md)](/CONTRIBUTING.zh.md)
+
 How to Contribute
 =================
 

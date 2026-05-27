@@ -1,3 +1,5 @@
+[![en](CODE_OF_CONDUCT.md)](/CODE_OF_CONDUCT.md) | [![zh](CODE_OF_CONDUCT.zh.md)](/CODE_OF_CONDUCT.zh.md)
+
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge
