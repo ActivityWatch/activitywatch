@@ -1,4 +1,4 @@
-[![en](CONTRIBUTING.md)](/CONTRIBUTING.md) | [![zh](CONTRIBUTING.zh.md)](/CONTRIBUTING.zh.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](/CONTRIBUTING.md) | [![zh](https://img.shields.io/badge/lang-zh--CN-yellow.svg)](/CONTRIBUTING.zh.md)
 
 How to Contribute
 =================

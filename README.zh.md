@@ -1,11 +1,11 @@
-[![English](README.md) | ![中文](README.zh.md)](README.zh.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](/README.md) | [![zh](https://img.shields.io/badge/lang-zh--CN-yellow.svg)](/README.zh.md)
 
 <img title="ActivityWatch" src="https://activitywatch.net/img/banner.png" align="center">
 
 <p align="center">
-  <b>Records what you do</b> so that you can <i>know how you've spent your time</i>.
+  <b>记录你所做的事</b>，让你 <i>了解自己的时间去向</i>。
   <br>
-  All in a secure way where <i>you control the data</i>.
+  一切安全可靠，<i>数据由你掌控</i>。
 </p>
 
 <p align="center">

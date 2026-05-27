@@ -1,4 +1,4 @@
-[![English](CONTRIBUTING.md)](/CONTRIBUTING.md) | [![中文](CONTRIBUTING.zh.md)](/CONTRIBUTING.zh.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](/CONTRIBUTING.md) | [![zh](https://img.shields.io/badge/lang-zh--CN-yellow.svg)](/CONTRIBUTING.zh.md)
 
 如何贡献
 ============

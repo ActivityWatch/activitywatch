@@ -1,4 +1,4 @@
-[![en](CODE_OF_CONDUCT.md)](/CODE_OF_CONDUCT.md) | [![zh](CODE_OF_CONDUCT.zh.md)](/CODE_OF_CONDUCT.zh.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](/CODE_OF_CONDUCT.md) | [![zh](https://img.shields.io/badge/lang-zh--CN-yellow.svg)](/CODE_OF_CONDUCT.zh.md)
 
 # Contributor Covenant Code of Conduct
 

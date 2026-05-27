@@ -1,4 +1,4 @@
-[![en](README.md)](/README.md) | [![zh](README.zh.md)](/README.zh.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](/README.md) | [![zh](https://img.shields.io/badge/lang-zh--CN-yellow.svg)](/README.zh.md)
 
 <img title="ActivityWatch" src="https://activitywatch.net/img/banner.png" align="center">
 
