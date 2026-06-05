@@ -48,7 +48,7 @@
     <img title="Latest release" src="https://img.shields.io/github/release-pre/ActivityWatch/activitywatch.svg">
   </a>
   <a href="https://github.com/ActivityWatch/activitywatch/releases">
-    <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/ActivityWatch/activitywatch/total.svg" />
+    <img title="Total downloads (GitHub Releases)" src="https://img.shields.io/github/downloads/Activitywatch/activitywatch/total.svg" />
   </a>
   <a href="https://discord.gg/vDskV9q">
     <img title="Discord" src="https://img.shields.io/discord/755040852727955476" />
@@ -63,13 +63,6 @@
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.4957165.svg" />
   </a>
 </p>
-
-<!--
-# TODO: Best practices badge that we should work towards, see issue #42.
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/873/badge)](https://bestpractices.coreinfrastructure.org/projects/873)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FActivityWatch%2Factivitywatch?ref=badge_shield)
--->
-
 
 *Do you want to receive email updates on major announcements?*<br>
 ***[Signup for the newsletter](http://eepurl.com/cTU6QX)!***
@@ -137,44 +130,48 @@ Yes, but we found that most time trackers lack one or more important features.
 
 We have a plan to address all of these and we're well on our way. See the table below for our progress.
 
+> **Note:** A newer open source alternative worth knowing about is [HPR (Human Pattern Recorder)](https://github.com/plexescor/HPR) — a compiled C++23 tracker with native Wayland support across Hyprland, GNOME, KDE, Cinnamon and niri, a sandboxed Lua 5.4 extension engine, built-in browser tab tracking without a browser extension, and a ~5 MB binary with no Python runtime or embedded web server. It trades ActivityWatch's maturity and sync for a significantly smaller footprint and broader Wayland coverage.
 
 ### Feature comparison
 
 ##### Basics
 
-|               | User owns data     | GUI                | Sync                       | Open Source        |
-| ------------- |:------------------:|:------------------:|:--------------------------:|:------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | [WIP][sync], decentralized | :white_check_mark: |
-| [Selfspy]       | :white_check_mark: | :x:                | :x:                        | :white_check_mark: |
-| [ulogme]        | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
-| [RescueTime]    | :x:                | :white_check_mark: | Centralized                | :x:                |
-| [WakaTime]      | :x:                | :white_check_mark: | Centralized                | Clients            |
+|               | User owns data     | GUI                | Sync                       | Open Source        | Binary size | RAM (approx)  | Native Wayland     | Launch time     |
+| ------------- |:------------------:|:------------------:|:--------------------------:|:------------------:|:-----------:|:-------------:|:------------------:|:---------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | [WIP][sync], decentralized | :white_check_mark: | 200 MB+     | 200 MB+       | Partial            | Several seconds |
+| [HPR]         | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: | ~5 MB       | ~27 MB private / ~47 MB reported (Linux), ~8 MB (Windows) | :white_check_mark: | Instant |
+| [Selfspy]     | :white_check_mark: | :x:                | :x:                        | :white_check_mark: | —           | —             | :x:                | —               |
+| [ulogme]      | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: | —           | —             | :x:                | —               |
+| [RescueTime]  | :x:                | :white_check_mark: | Centralized                | :x:                | Cloud       | N/A           | N/A                | —               |
+| [WakaTime]    | :x:                | :white_check_mark: | Centralized                | Clients            | Cloud       | N/A           | N/A                | —               |
 
 [sync]: https://github.com/ActivityWatch/activitywatch/issues/35
+[HPR]: https://github.com/plexescor/HPR
 [Selfspy]: https://github.com/selfspy/selfspy
 [ulogme]: https://github.com/karpathy/ulogme
 [RescueTime]: https://www.rescuetime.com/
 [WakaTime]: https://wakatime.com/
 
 ##### Platforms
-<!-- TODO: Replace Platform names with icons  -->
 
-|               | Windows            | macOS              | Linux              | Android            | iOS                 |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:-------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |:x:                  |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
-| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
+|               | Windows            | macOS              | Linux              | Android            | iOS                  |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:--------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                  |
+| [HPR]         | :white_check_mark: | :x:                | :white_check_mark: | :x:                | :x:                  |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                  |
+| ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                | :x:                  |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | Limited functionality|
 
 ##### Tracking
 
-|               | App & Window Title | AFK                | Browser Extensions | Editor Plugins     | Extensible            |
-| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:---------------------:|
-| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark:    |
-| Selfspy       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
-| ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
-| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
-| WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
+|               | App & Window Title | AFK                | Browser Extensions | Editor Plugins     | Extensible              | Browser tab tracking (no extension) | VS Code project tracking (no extension) | Per-app limits & goals |
+| ------------- |:------------------:|:------------------:|:------------------:|:------------------:|:-----------------------:|:------------------------------------:|:----------------------------------------:|:----------------------:|
+| ActivityWatch | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark:      | :x:                                  | Via plugin                               | :x:                    |
+| [HPR]         | :white_check_mark: | :x:                | :x:                | :x:                | :white_check_mark: (Lua 5.4) | :white_check_mark:              | :white_check_mark:                       | :white_check_mark:     |
+| Selfspy       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                     | :x:                                  | :x:                                      | :x:                    |
+| ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                     | :x:                                  | :x:                                      | :x:                    |
+| RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                     | Required extension                   | :x:                                      | Limits only (premium)  |
+| WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors   | :x:                                  | :x:                                      | :x:                    |
 
 For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
@@ -273,4 +270,3 @@ Want to help? Great! Check out the [CONTRIBUTING.md file](./CONTRIBUTING.md)!
 ## Questions and support
 
 Have a question, suggestion, problem, or just want to say hi? Post on [the forum](https://forum.activitywatch.net/)!
-
