@@ -257,58 +257,17 @@ jobs:
         run: |
           echo "VERSION_TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
 
-      - name: Determine and output version
-        run: |
-          VERSION_WITH_V=$(bash scripts/package/getversion.sh)
-          VERSION_NO_V="${VERSION_WITH_V#v}"
-          echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
-          echo "========================================"
-          echo "Build Version Information"
-          echo "========================================"
-          echo "GitHub ref: ${{ github.ref }}"
-          echo "GitHub ref_name: ${{ github.ref_name }}"
-          echo "Version (with v):  ${VERSION_WITH_V}"
-          echo "Version (no v):     ${VERSION_NO_V}"
-          echo "========================================"
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up build environment
+        uses: ./.github/actions/setup-aw-build
         with:
           python-version: ${{ matrix.python_version }}
-
-      - name: Set up Node
-        if: ${{ !matrix.skip_webui }}
-        uses: actions/setup-node@v6
-        with:
           node-version: ${{ matrix.node_version }}
+          skip-rust: ${{ matrix.skip_rust }}
+          skip-webui: ${{ matrix.skip_webui }}
+          node-cache-paths: aw-server-rust/aw-webui/node_modules
+          cargo-cache-paths: aw-server-rust/target
 
-      - name: Set up Rust
-        if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@master
-        id: toolchain
-        with:
-          toolchain: stable
-
-      - name: Cache node_modules
-        uses: actions/cache@v5
-        if: ${{ !matrix.skip_webui }}
-        with:
-          path: aw-server-rust/aw-webui/node_modules
-          key: ${{ matrix.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ matrix.os }}-node_modules-
-
-      - name: Cache cargo build
-        uses: actions/cache@v5
-        env:
-          cache-name: cargo-build-target
-        with:
-          path: aw-server-rust/target
-          key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
-
-      - name: Install APT dependencies
+      - name: Install APT dependencies (Qt)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -330,13 +289,6 @@ jobs:
             libxi-dev \
             libxrandr-dev \
             libxrender-dev
-
-      - name: Install dependencies
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            choco install innosetup
-          fi
-          pip3 install poetry==1.4.2
 
       - name: Build
         run: |
@@ -452,62 +404,21 @@ jobs:
         run: |
           echo "VERSION_TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
 
-      - name: Determine and output version
-        run: |
-          VERSION_WITH_V=$(bash scripts/package/getversion.sh)
-          VERSION_NO_V="${VERSION_WITH_V#v}"
-          echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
-          echo "========================================"
-          echo "Build Version Information (Tauri)"
-          echo "========================================"
-          echo "GitHub ref: ${{ github.ref }}"
-          echo "GitHub ref_name: ${{ github.ref_name }}"
-          echo "Version (with v):  ${VERSION_WITH_V}"
-          echo "Version (no v):     ${VERSION_NO_V}"
-          echo "========================================"
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up build environment
+        uses: ./.github/actions/setup-aw-build
         with:
           python-version: ${{ matrix.python_version }}
-
-      - name: Set up Node
-        if: ${{ !matrix.skip_webui }}
-        uses: actions/setup-node@v6
-        with:
           node-version: ${{ matrix.node_version }}
-
-      - name: Set up Rust
-        if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@master
-        id: toolchain
-        with:
-          toolchain: stable
-
-      - name: Cache node_modules
-        uses: actions/cache@v5
-        if: ${{ !matrix.skip_webui }}
-        with:
-          path: |
+          skip-rust: ${{ matrix.skip_rust }}
+          skip-webui: ${{ matrix.skip_webui }}
+          node-cache-paths: |
             aw-server-rust/aw-webui/node_modules
             aw-tauri/node_modules
-          key: ${{ matrix.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ matrix.os }}-node_modules-
-
-      - name: Cache cargo build
-        uses: actions/cache@v5
-        env:
-          cache-name: cargo-build-target
-        with:
-          path: |
+          cargo-cache-paths: |
             aw-server-rust/target
             aw-tauri/src-tauri/target
-          key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
-      - name: Install APT dependencies
+      - name: Install APT dependencies (Tauri)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -526,13 +437,6 @@ jobs:
             libjavascriptcoregtk-4.1-dev=2.44.0-2 \
             gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
             gir1.2-webkit2-4.1=2.44.0-2
-
-      - name: Install dependencies
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            choco install innosetup
-          fi
-          pip3 install poetry==1.4.2
 
       - name: Build
         uses: nick-fields/retry@v4

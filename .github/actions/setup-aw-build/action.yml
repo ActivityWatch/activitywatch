@@ -1,0 +1,107 @@
+name: 'Set up ActivityWatch build environment'
+description: >
+  Installs Python, Node, and Rust toolchains; restores caches; installs
+  poetry and (on Windows) Inno Setup; and determines the build version.
+  Used by both the Qt and Tauri build jobs in release.yml.
+  Platform-specific APT packages are intentionally left to each job because
+  the Qt and Tauri builds require different system libraries.
+
+inputs:
+  python-version:
+    description: 'Python version to install'
+    required: false
+    default: '3.9'
+  node-version:
+    description: 'Node version to install'
+    required: false
+    default: '22'
+  skip-rust:
+    description: 'Set to "true" to skip Rust toolchain installation'
+    required: false
+    default: 'false'
+  skip-webui:
+    description: 'Set to "true" to skip Node installation'
+    required: false
+    default: 'false'
+  node-cache-paths:
+    description: 'Newline-separated paths to cache as node_modules'
+    required: false
+    default: 'aw-server-rust/aw-webui/node_modules'
+  cargo-cache-paths:
+    description: 'Newline-separated paths to cache as cargo build target'
+    required: false
+    default: 'aw-server-rust/target'
+
+outputs:
+  version-with-v:
+    description: 'Full version string including the leading v (e.g. v0.13.3b1)'
+    value: ${{ steps.version.outputs.version_with_v }}
+  rustc-hash:
+    description: 'Rust toolchain cache key component (empty when skip-rust is true)'
+    value: ${{ steps.toolchain.outputs.rustc_hash }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Set up Node
+      if: inputs.skip-webui != 'true'
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Set up Rust
+      if: inputs.skip-rust != 'true'
+      uses: dtolnay/rust-toolchain@master
+      id: toolchain
+      with:
+        toolchain: stable
+
+    - name: Cache node_modules
+      if: inputs.skip-webui != 'true'
+      uses: actions/cache@v5
+      with:
+        path: ${{ inputs.node-cache-paths }}
+        key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node_modules-
+
+    - name: Cache cargo build
+      if: inputs.skip-rust != 'true'
+      uses: actions/cache@v5
+      env:
+        cache-name: cargo-build-target
+      with:
+        path: ${{ inputs.cargo-cache-paths }}
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+
+    - name: Install Python build tools
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          choco install innosetup
+        fi
+        pip3 install poetry==1.4.2
+
+    - name: Determine and output version
+      id: version
+      shell: bash
+      run: |
+        VERSION_WITH_V=$(bash scripts/package/getversion.sh)
+        VERSION_NO_V="${VERSION_WITH_V#v}"
+        echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
+        echo "version_with_v=${VERSION_WITH_V}" >> "$GITHUB_OUTPUT"
+        echo "========================================"
+        echo "Build Version Information"
+        echo "========================================"
+        echo "GitHub ref: ${{ github.ref }}"
+        echo "GitHub ref_name: ${{ github.ref_name }}"
+        echo "Version (with v):  ${VERSION_WITH_V}"
+        echo "Version (no v):     ${VERSION_NO_V}"
+        echo "========================================"
