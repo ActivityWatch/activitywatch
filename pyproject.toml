@@ -29,8 +29,8 @@ pyinstaller = {version = "*", python = "^3.9,<3.14"}
 # we need this unreleased commit: https://github.com/pyinstaller/pyinstaller-hooks-contrib/commit/0f40dc6e74086e5472aee75070b9077b4c17ab18
 pyinstaller-hooks-contrib = {git = "https://github.com/pyinstaller/pyinstaller-hooks-contrib.git", branch="master"}
 
-# Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
-#setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
+# PyInstaller still imports pkg_resources, which setuptools removed in 81+.
+setuptools = ">=78.1.1,<81"
 
 [build-system]
 requires = ["poetry-core"]
