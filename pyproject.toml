@@ -6,7 +6,7 @@ authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho
 license = "MPL-2.0"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 # Installing them from here won't work
 #aw-core = {path = "aw-core"}
 #aw-client = {path = "aw-client"}
@@ -14,9 +14,6 @@ python = "^3.8"
 #aw-watcher-window = {path = "aw-watcher-window"}
 #aw-server = {path = "aw-server"}
 #aw-qt = {path = "aw-qt"}
-
-# https://github.com/ionrock/cachecontrol/issues/292
-urllib3 = "<2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
@@ -27,13 +24,13 @@ psutil = "*"
 pywin32-ctypes = {version = "*", platform = "win32"}
 pefile = {version = "*", platform = "win32"}
 
-pyinstaller = {version = "*", python = "^3.8,<3.14"}
+pyinstaller = {version = "*", python = "^3.9,<3.14"}
 # releases are very infrequent, so good idea to use the master branch
 # we need this unreleased commit: https://github.com/pyinstaller/pyinstaller-hooks-contrib/commit/0f40dc6e74086e5472aee75070b9077b4c17ab18
 pyinstaller-hooks-contrib = {git = "https://github.com/pyinstaller/pyinstaller-hooks-contrib.git", branch="master"}
 
-# Won't be respected due to https://github.com/python-poetry/poetry/issues/1584
-#setuptools = ">49.1.1"  # needed due to https://github.com/pypa/setuptools/issues/1963
+# PyInstaller still imports pkg_resources, which setuptools removed in 81+.
+setuptools = ">=78.1.1,<81"
 
 [build-system]
 requires = ["poetry-core"]
