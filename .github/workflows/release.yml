@@ -284,7 +284,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
         id: toolchain
         with:
           toolchain: stable
@@ -479,7 +479,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
         id: toolchain
         with:
           toolchain: stable
@@ -535,7 +535,7 @@ jobs:
           pip3 install poetry==1.4.2
 
       - name: Build
-        uses: nick-fields/retry@v4
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
           timeout_minutes: 60
           max_attempts: 3
@@ -548,7 +548,7 @@ jobs:
             pip freeze
 
       - name: Run tests
-        uses: nick-fields/retry@v4
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
           timeout_minutes: 60
           max_attempts: 3
@@ -625,7 +625,7 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      - uses: ActivityWatch/check-version-format-action@v2
+      - uses: ActivityWatch/check-version-format-action@5b223bd718c4c00466359532cf944474f069625a # v2.0.1
         id: version
         with:
           prefix: 'v'
@@ -673,13 +673,13 @@ jobs:
         run: ls -R
         working-directory: dist
 
-      - uses: ActivityWatch/check-version-format-action@v2
+      - uses: ActivityWatch/check-version-format-action@5b223bd718c4c00466359532cf944474f069625a # v2.0.1
         id: version
         with:
           prefix: 'v'
 
       - name: Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
         with:
           draft: true
           files: dist/*/activitywatch-*.*

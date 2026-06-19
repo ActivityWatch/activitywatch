@@ -20,7 +20,7 @@ jobs:
           git clone https://github.com/ActivityWatch/docs
           git clone https://github.com/ActivityWatch/activitywatch.github.io
       - name: Update diagram
-        uses: githubocto/repo-visualizer@main
+        uses: githubocto/repo-visualizer@a999615bdab757559bf94bda1fe6eef232765f85 # main
         with:
           commit_message: 'chore: update diagram [skip ci]'
           file_colors: '{"rs": "#b7410e", "py": "#229922", "rst": "pink", "txt": "pink", "md": "pink", "css": "purple", "scss": "purple"}'
