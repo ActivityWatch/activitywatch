@@ -266,6 +266,7 @@ jobs:
           skip-webui: ${{ matrix.skip_webui }}
           node-cache-paths: aw-server-rust/aw-webui/node_modules
           cargo-cache-paths: aw-server-rust/target
+          os-label: ${{ matrix.os }}
 
       - name: Install APT dependencies (Qt)
         if: runner.os == 'Linux'
@@ -417,6 +418,7 @@ jobs:
           cargo-cache-paths: |
             aw-server-rust/target
             aw-tauri/src-tauri/target
+          os-label: ${{ matrix.os }}
 
       - name: Install APT dependencies (Tauri)
         if: runner.os == 'Linux'

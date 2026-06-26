@@ -31,6 +31,10 @@ inputs:
     description: 'Newline-separated paths to cache as cargo build target'
     required: false
     default: 'aw-server-rust/target'
+  os-label:
+    description: 'OS label used in cache keys — pass matrix.os to preserve cache continuity across runs'
+    required: false
+    default: ${{ runner.os }}
 
 outputs:
   version-with-v:
@@ -66,9 +70,9 @@ runs:
       uses: actions/cache@v5
       with:
         path: ${{ inputs.node-cache-paths }}
-        key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ inputs.os-label }}-node_modules-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node_modules-
+          ${{ inputs.os-label }}-node_modules-
 
     - name: Cache cargo build
       if: inputs.skip-rust != 'true'
@@ -77,9 +81,9 @@ runs:
         cache-name: cargo-build-target
       with:
         path: ${{ inputs.cargo-cache-paths }}
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ inputs.os-label }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+          ${{ inputs.os-label }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
 
     - name: Install Python build tools
       shell: bash
