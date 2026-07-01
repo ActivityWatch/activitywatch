@@ -368,6 +368,12 @@ jobs:
         run: |
           if [ -n "$APPLE_EMAIL" ]; then
             ./scripts/ci/import-macos-p12.sh
+            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\\(.*\\)"/\\1/p' | head -1)
+            if [ -z "$APPLE_PERSONALID" ]; then
+              echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
+              exit 1
+            fi
+            export APPLE_PERSONALID
           fi
 
           source venv/bin/activate
@@ -386,7 +392,7 @@ jobs:
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }}
+          APPLE_PERSONALID: ""
           APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
           CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
           CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
@@ -586,6 +592,12 @@ jobs:
         run: |
           if [ -n "$APPLE_EMAIL" ]; then
             ./scripts/ci/import-macos-p12.sh
+            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\\(.*\\)"/\\1/p' | head -1)
+            if [ -z "$APPLE_PERSONALID" ]; then
+              echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
+              exit 1
+            fi
+            export APPLE_PERSONALID
           fi
 
           source venv/bin/activate
@@ -604,7 +616,7 @@ jobs:
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_PERSONALID: ${{ secrets.APPLE_TEAMID }}
+          APPLE_PERSONALID: ""
           APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
           CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
           CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
