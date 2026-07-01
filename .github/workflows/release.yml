@@ -228,7 +228,7 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     env:
       AW_EXTRAS: true
-      MACOSX_DEPLOYMENT_TARGET: 10.9
+      MACOSX_DEPLOYMENT_TARGET: 10.12
     defaults:
       run:
         shell: bash
@@ -421,7 +421,7 @@ jobs:
     env:
       AW_EXTRAS: true
       TAURI_BUILD: true
-      MACOSX_DEPLOYMENT_TARGET: 10.9
+      MACOSX_DEPLOYMENT_TARGET: 10.12
     defaults:
       run:
         shell: bash
