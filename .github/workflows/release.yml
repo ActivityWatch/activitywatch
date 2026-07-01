@@ -368,7 +368,7 @@ jobs:
         run: |
           if [ -n "$APPLE_EMAIL" ]; then
             ./scripts/ci/import-macos-p12.sh
-            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\\(.*\\)"/\\1/p' | head -1)
+            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
             if [ -z "$APPLE_PERSONALID" ]; then
               echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
               exit 1
@@ -380,7 +380,7 @@ jobs:
           make dist/ActivityWatch.dmg
 
           if [ -n "$APPLE_EMAIL" ]; then
-            codesign --force --verbose --timestamp -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
 
             brew install akeru-inc/tap/xcnotary
             xcnotary precheck dist/ActivityWatch.app
@@ -592,7 +592,7 @@ jobs:
         run: |
           if [ -n "$APPLE_EMAIL" ]; then
             ./scripts/ci/import-macos-p12.sh
-            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\\(.*\\)"/\\1/p' | head -1)
+            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
             if [ -z "$APPLE_PERSONALID" ]; then
               echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
               exit 1
@@ -604,7 +604,7 @@ jobs:
           make dist/ActivityWatch.dmg
 
           if [ -n "$APPLE_EMAIL" ]; then
-            codesign --force --verbose --timestamp -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
 
             brew install akeru-inc/tap/xcnotary
             xcnotary precheck dist/ActivityWatch.app
