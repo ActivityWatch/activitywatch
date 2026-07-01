@@ -4,6 +4,10 @@ version = "0.14.0"
 description = "The free and open-source automated time tracker. Cross-platform, extensible, privacy-focused."
 authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho.lt>"]
 license = "MPL-2.0"
+# This is an aggregator project (deps only, no `activitywatch` package to build).
+# Poetry 2.x defaults to package-mode and would fail with "No file/folder found
+# for package activitywatch"; disable it so `poetry install` only manages deps.
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"
