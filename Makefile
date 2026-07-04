@@ -132,7 +132,7 @@ test:
 	@for module in $(TESTABLES); do \
 		echo "Running tests for $$module"; \
 		if [ -f "$$module/pyproject.toml" ]; then \
-			(cd $$module && poetry run make test) || { echo "Error in $$module tests"; exit 2; }; \
+			(cd $$module && poetry install && poetry run make test) || { echo "Error in $$module tests"; exit 2; }; \
 		else \
 			make -C $$module test || { echo "Error in $$module tests"; exit 2; }; \
 		fi; \
