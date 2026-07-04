@@ -14,7 +14,9 @@ updates:
       interval: "monthly"
 
   # Maintain dependencies for pip/poetry
-  # NOTE: too noisy, easier to update by hand
+  # NOTE: version updates are too noisy and easier to update by hand.
+  # Security updates are still controlled by the repository security settings;
+  # this entry exists so Dependabot can attach the pytest ignore rule below.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
