@@ -368,7 +368,18 @@ jobs:
       - name: Package dmg
         if: runner.os == 'macOS'
         run: |
-          if [ -n "$APPLE_EMAIL" ]; then
+          SIGN_MACOS=false
+          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+            SIGN_MACOS=true
+          fi
+
+          if [ "$SIGN_MACOS" = true ]; then
+            for var in APPLE_EMAIL APPLE_PASSWORD APPLE_TEAMID CERTIFICATE_MACOS_P12_BASE64 CERTIFICATE_MACOS_P12_PASSWORD; do
+              if [ -z "${!var:-}" ]; then
+                echo "ERROR: $var is required to sign macOS release artifacts" >&2
+                exit 1
+              fi
+            done
             ./scripts/ci/import-macos-p12.sh
             APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
             if [ -z "$APPLE_PERSONALID" ]; then
@@ -381,7 +392,7 @@ jobs:
           source venv/bin/activate
           make dist/ActivityWatch.dmg
 
-          if [ -n "$APPLE_EMAIL" ]; then
+          if [ "$SIGN_MACOS" = true ]; then
             codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
 
             brew install akeru-inc/tap/xcnotary
@@ -592,7 +603,18 @@ jobs:
       - name: Package dmg
         if: runner.os == 'macOS'
         run: |
-          if [ -n "$APPLE_EMAIL" ]; then
+          SIGN_MACOS=false
+          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+            SIGN_MACOS=true
+          fi
+
+          if [ "$SIGN_MACOS" = true ]; then
+            for var in APPLE_EMAIL APPLE_PASSWORD APPLE_TEAMID CERTIFICATE_MACOS_P12_BASE64 CERTIFICATE_MACOS_P12_PASSWORD; do
+              if [ -z "${!var:-}" ]; then
+                echo "ERROR: $var is required to sign macOS release artifacts" >&2
+                exit 1
+              fi
+            done
             ./scripts/ci/import-macos-p12.sh
             APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
             if [ -z "$APPLE_PERSONALID" ]; then
@@ -605,7 +627,7 @@ jobs:
           source venv/bin/activate
           make dist/ActivityWatch.dmg
 
-          if [ -n "$APPLE_EMAIL" ]; then
+          if [ "$SIGN_MACOS" = true ]; then
             codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
 
             brew install akeru-inc/tap/xcnotary
