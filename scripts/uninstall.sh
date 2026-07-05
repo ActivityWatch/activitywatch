@@ -1,6 +1,6 @@
 #!/bin/bash
 
-modules=$(pip3 list --format=legacy | grep 'aw-' | grep -o '^aw-[^ ]*')
+modules=$(pip3 list --format=freeze | grep '^aw-' | cut -d'=' -f1)
 
 for module in $modules; do
     pip3 uninstall -y $module
