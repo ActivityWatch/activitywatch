@@ -15,7 +15,13 @@ updates:
 
   # Maintain dependencies for pip/poetry
   # NOTE: too noisy, easier to update by hand
-  #- package-ecosystem: "pip"
-  #  directory: "/"
-  #  schedule:
-  #    interval: "monthly"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
+    ignore:
+      # pytest 9.0.3 is the first non-vulnerable release, but it requires
+      # Python >=3.10 while ActivityWatch still builds/releases on Python 3.9.
+      - dependency-name: "pytest"
+        versions: [">=9"]
