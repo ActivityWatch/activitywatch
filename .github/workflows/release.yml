@@ -47,7 +47,7 @@ jobs:
       commits_since_ref: ${{ steps.preflight.outputs.commits_since_ref }}
       head_sha: ${{ steps.preflight.outputs.head_sha }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: master
           fetch-depth: 0
@@ -194,7 +194,7 @@ jobs:
       group: dev-release
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.preflight.outputs.head_sha }}
           fetch-depth: 1
@@ -245,7 +245,7 @@ jobs:
         experimental: [false]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
           fetch-depth: 0
@@ -456,7 +456,7 @@ jobs:
         experimental: [false]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -656,7 +656,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
           fetch-depth: 0
