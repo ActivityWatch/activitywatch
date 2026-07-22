@@ -237,7 +237,7 @@ jobs:
       matrix:
         # Build Linux Qt/AppImage artifacts on the oldest supported runner to
         # keep the bundled glibc baseline compatible with older distributions.
-        os: [ubuntu-22.04, windows-latest, macos-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest, macos-15-intel]
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
@@ -448,6 +448,7 @@ jobs:
             ubuntu-24.04-arm,
             windows-latest,
             macos-latest,
+            macos-15-intel,
           ]
         python_version: [3.9]
         node_version: [22]
