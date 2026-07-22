@@ -380,7 +380,7 @@ def build(
     output_changelog = f"""
 # Changelog
 
-Changes since {since}:
+Changes since [{since}](https://github.com/{org}/{repo}/releases/tag/{since}):
 
 {output_changelog}
     """.strip()
