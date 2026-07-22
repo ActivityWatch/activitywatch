@@ -3,7 +3,10 @@
 applemail=$APPLE_EMAIL # Email address used for Apple ID
 password=$APPLE_PASSWORD # See apps-specific password https://support.apple.com/en-us/HT204397
 teamid=$APPLE_TEAMID # Team idenitifer (if single developer, then set to developer identifier)
-keychain_profile="activitywatch-$APPLE_PERSONALID"  # name of the keychain profile to use
+# Name of the keychain profile to use. Must not contain spaces: APPLE_PERSONALID
+# holds the full codesign identity ("Developer ID Application: ..."), so use the
+# team ID instead.
+keychain_profile="activitywatch-$APPLE_TEAMID"
 bundleid=net.activitywatch.ActivityWatch # Match aw.spec
 app=dist/ActivityWatch.app
 dmg=dist/ActivityWatch.dmg
@@ -12,13 +15,13 @@ dmg=dist/ActivityWatch.dmg
 run_notarytool() {
     dist=$1
     # Setup the credentials for notarization
-    xcrun notarytool store-credentials $keychain_profile --apple-id $applemail --team-id $teamid --password $password
+    xcrun notarytool store-credentials "$keychain_profile" --apple-id "$applemail" --team-id "$teamid" --password "$password"
     # Notarize and wait; tee to a temp file so output streams in real-time
     # while we can still inspect it afterward for failure details.
     echo "Notarization: starting for $dist"
     echo "Notarization: in progress for $dist"
     tmpfile=$(mktemp)
-    xcrun notarytool submit $dist --keychain-profile $keychain_profile --wait 2>&1 | tee "$tmpfile"
+    xcrun notarytool submit "$dist" --keychain-profile "$keychain_profile" --wait 2>&1 | tee "$tmpfile"
     submission_exit=${PIPESTATUS[0]}
     submission_output=$(cat "$tmpfile")
     rm -f "$tmpfile"
@@ -29,7 +32,7 @@ run_notarytool() {
         if [ -n "$uuid" ]; then
             echo ""
             echo "=== Notarization rejected (status: Invalid) — fetching rejection log for $uuid ==="
-            xcrun notarytool log "$uuid" --keychain-profile $keychain_profile 2>&1 || true
+            xcrun notarytool log "$uuid" --keychain-profile "$keychain_profile" 2>&1 || true
             echo "=== End of rejection log ==="
         fi
         return 1
