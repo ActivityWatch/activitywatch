@@ -127,7 +127,7 @@ cat > "dist/${APP_NAME}.app/Contents/Info.plist" << EOF
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>LSMinimumSystemVersion</key>
-    <string>10.14</string>
+    <string>${MACOSX_DEPLOYMENT_TARGET:-12.0}</string>
 </dict>
 </plist>
 EOF
