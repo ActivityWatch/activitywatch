@@ -181,7 +181,17 @@ endif
 dist/ActivityWatch.dmg: dist/ActivityWatch.app
 	# NOTE: This does not codesign the dmg, that is done in the CI config
 	pip install dmgbuild
-	dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg
+	@for attempt in 1 2 3; do \
+		rm -f dist/ActivityWatch.dmg; \
+		if dmgbuild -s scripts/package/dmgbuild-settings.py -D app=dist/ActivityWatch.app "ActivityWatch" dist/ActivityWatch.dmg; then \
+			exit 0; \
+		fi; \
+		if [ $$attempt -eq 3 ]; then \
+			exit 1; \
+		fi; \
+		echo "dmgbuild attempt $$attempt failed; retrying after macOS releases the disk image" >&2; \
+		sleep 5; \
+	done
 
 dist/notarize:
 	./scripts/notarize.sh
