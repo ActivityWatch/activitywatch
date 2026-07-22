@@ -338,7 +338,7 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             choco install innosetup
           fi
-          pip3 install poetry==1.4.2
+          pip3 install poetry==2.2.1
 
       - name: Build
         run: |
@@ -552,7 +552,7 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             choco install innosetup
           fi
-          pip3 install poetry==1.4.2
+          pip3 install poetry==2.2.1
 
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
