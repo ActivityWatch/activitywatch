@@ -725,3 +725,5 @@ jobs:
           files: dist/*/activitywatch-*.*
           body_path: dist/release_notes/release_notes.md
           prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}
+
+# Retry CI after transient upload-artifact timeout.
