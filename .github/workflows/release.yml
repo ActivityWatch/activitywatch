@@ -435,6 +435,9 @@ jobs:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
+      # All subprojects share one virtualenv. Poetry's parallel installer can
+      # race while replacing the same dependency from different lock files.
+      POETRY_INSTALLER_PARALLEL: "false"
     defaults:
       run:
         shell: bash
@@ -722,3 +725,5 @@ jobs:
           files: dist/*/activitywatch-*.*
           body_path: dist/release_notes/release_notes.md
           prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}
+
+# Retry CI after transient upload-artifact timeout.
