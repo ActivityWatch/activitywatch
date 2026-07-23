@@ -190,7 +190,7 @@ dist/ActivityWatch.dmg: dist/ActivityWatch.app
 			exit 1; \
 		fi; \
 		echo "dmgbuild attempt $$attempt failed; retrying after macOS releases the disk image" >&2; \
-		sleep 5; \
+		sleep $$((5 * attempt)); \
 	done
 
 dist/notarize:
