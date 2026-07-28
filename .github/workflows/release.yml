@@ -20,6 +20,14 @@ on:
         options:
           - patch
           - minor
+      edition:
+        description: 'Build edition: research enables privacy filter in aw-watcher-window by default'
+        required: false
+        type: choice
+        options:
+          - standard
+          - research
+        default: standard
   push:
     branches: [master]
     tags:
@@ -223,12 +231,13 @@ jobs:
 
   build-qt:
     name: Build Qt artifacts
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
+      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.edition == 'research' }}
     defaults:
       run:
         shell: bash
@@ -340,6 +349,16 @@ jobs:
           fi
           pip3 install poetry==2.2.1
 
+      - name: Patch research edition defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          config=aw-watcher-window/aw_watcher_window/config.py
+          grep -q '^research_enabled = false$' "$config"
+          sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
+          rm "$config.bak"
+          grep -q '^research_enabled = true$' "$config"
+          python3 scripts/patch_research_edition_config.py "$config"
+
       - name: Build
         run: |
           python3 -m venv venv
@@ -369,7 +388,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           SIGN_MACOS=false
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/v* || "$AW_RESEARCH_EDITION" == "true" ]]; then
             SIGN_MACOS=true
           fi
 
@@ -401,7 +420,9 @@ jobs:
 
             make dist/notarize
           fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          EDITION_SUFFIX=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_WITH_V}-macos-$(uname -m)${EDITION_SUFFIX}.dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -414,11 +435,19 @@ jobs:
         if: startsWith(runner.os, 'linux')
         run: |
           ./scripts/package/package-appimage.sh
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            mv dist/activitywatch-linux-x86_64.AppImage \
+              dist/activitywatch-linux-x86_64-research-edition.AppImage
+          fi
 
       - name: Package deb
         if: startsWith(runner.os, 'linux')
         run: |
           ./scripts/package/package-deb.sh
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            deb="dist/activitywatch-${VERSION_WITH_V}-linux-x86_64.deb"
+            mv "$deb" "${deb%.deb}-research-edition.deb"
+          fi
 
       - name: Upload packages
         uses: actions/upload-artifact@v7
@@ -428,13 +457,14 @@ jobs:
 
   build-tauri:
     name: Build Tauri artifacts
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
+      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.edition == 'research' }}
       # All subprojects share one virtualenv. Poetry's parallel installer can
       # race while replacing the same dependency from different lock files.
       POETRY_INSTALLER_PARALLEL: "false"
@@ -557,6 +587,16 @@ jobs:
           fi
           pip3 install poetry==2.2.1
 
+      - name: Patch research edition defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          config=aw-watcher-window/aw_watcher_window/config.py
+          grep -q '^research_enabled = false$' "$config"
+          sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
+          rm "$config.bak"
+          grep -q '^research_enabled = true$' "$config"
+          python3 scripts/patch_research_edition_config.py "$config"
+
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
@@ -580,6 +620,29 @@ jobs:
             source venv/bin/activate || source venv/Scripts/activate
             make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      - name: Import macOS signing certificate
+        if: runner.os == 'macOS' && (startsWith(github.ref, 'refs/tags/v') || env.AW_RESEARCH_EDITION == 'true')
+        run: |
+          for var in APPLE_EMAIL APPLE_PASSWORD APPLE_TEAMID CERTIFICATE_MACOS_P12_BASE64 CERTIFICATE_MACOS_P12_PASSWORD; do
+            if [ -z "${!var:-}" ]; then
+              echo "ERROR: $var is required to sign macOS release artifacts" >&2
+              exit 1
+            fi
+          done
+          ./scripts/ci/import-macos-p12.sh
+          APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
+          if [ -z "$APPLE_PERSONALID" ]; then
+            echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
+            exit 1
+          fi
+          echo "APPLE_PERSONALID=$APPLE_PERSONALID" >> "$GITHUB_ENV"
+        env:
+          APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+          CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
+          CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
+
       - name: Package
         run: |
           source venv/bin/activate || source venv/Scripts/activate
@@ -595,11 +658,13 @@ jobs:
           # `dist/activitywatch-*.*` upload pattern below.
           ARCH=$(uname -m)
           shopt -s nullglob
+          EDITION_SUFFIX=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
           for ext in AppImage deb rpm; do
             files=( dist/activitywatch/aw-tauri/*.${ext} )
             case ${#files[@]} in
               0) continue ;;
-              1) cp -v "${files[0]}" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}.${ext}" ;;
+              1) cp -v "${files[0]}" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}${EDITION_SUFFIX}.${ext}" ;;
               *) echo "ERROR: expected at most 1 .${ext} bundle, found ${#files[@]}" >&2; exit 1 ;;
             esac
           done
@@ -608,24 +673,8 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           SIGN_MACOS=false
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/v* || "$AW_RESEARCH_EDITION" == "true" ]]; then
             SIGN_MACOS=true
-          fi
-
-          if [ "$SIGN_MACOS" = true ]; then
-            for var in APPLE_EMAIL APPLE_PASSWORD APPLE_TEAMID CERTIFICATE_MACOS_P12_BASE64 CERTIFICATE_MACOS_P12_PASSWORD; do
-              if [ -z "${!var:-}" ]; then
-                echo "ERROR: $var is required to sign macOS release artifacts" >&2
-                exit 1
-              fi
-            done
-            ./scripts/ci/import-macos-p12.sh
-            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
-            if [ -z "$APPLE_PERSONALID" ]; then
-              echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
-              exit 1
-            fi
-            export APPLE_PERSONALID
           fi
 
           source venv/bin/activate
@@ -640,14 +689,13 @@ jobs:
 
             make dist/notarize
           fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-tauri-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          EDITION_SUFFIX=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-tauri-${VERSION_WITH_V}-macos-$(uname -m)${EDITION_SUFFIX}.dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_PERSONALID: ""
           APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
-          CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
-          CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
       - name: Upload packages
         uses: actions/upload-artifact@v7

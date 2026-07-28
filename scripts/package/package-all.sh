@@ -52,6 +52,9 @@ build_suffix=""
 if [[ $TAURI_BUILD == "true" ]]; then
     build_suffix="-tauri"
 fi
+if [[ $AW_RESEARCH_EDITION == "true" ]]; then
+    build_suffix="${build_suffix}-research-edition"
+fi
 
 echo "========================================"
 echo "Build Version Information"
