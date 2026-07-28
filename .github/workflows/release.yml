@@ -20,11 +20,14 @@ on:
         options:
           - patch
           - minor
-      research_edition:
-        description: 'Build Research Edition (research_enabled=true by default in aw-watcher-window)'
+      edition:
+        description: 'Build edition: research enables privacy filter in aw-watcher-window by default'
         required: false
-        type: boolean
-        default: false
+        type: choice
+        options:
+          - standard
+          - research
+        default: standard
   push:
     branches: [master]
     tags:
@@ -234,7 +237,7 @@ jobs:
     env:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.research_edition == true }}
+      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.edition == 'research' }}
     defaults:
       run:
         shell: bash
@@ -414,7 +417,9 @@ jobs:
 
             make dist/notarize
           fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          EDITION_SUFFIX=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_WITH_V}-macos-$(uname -m)${EDITION_SUFFIX}.dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -448,7 +453,7 @@ jobs:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.research_edition == true }}
+      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.edition == 'research' }}
       # All subprojects share one virtualenv. Poetry's parallel installer can
       # race while replacing the same dependency from different lock files.
       POETRY_INSTALLER_PARALLEL: "false"
@@ -616,11 +621,13 @@ jobs:
           # `dist/activitywatch-*.*` upload pattern below.
           ARCH=$(uname -m)
           shopt -s nullglob
+          EDITION_SUFFIX=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
           for ext in AppImage deb rpm; do
             files=( dist/activitywatch/aw-tauri/*.${ext} )
             case ${#files[@]} in
               0) continue ;;
-              1) cp -v "${files[0]}" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}.${ext}" ;;
+              1) cp -v "${files[0]}" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}${EDITION_SUFFIX}.${ext}" ;;
               *) echo "ERROR: expected at most 1 .${ext} bundle, found ${#files[@]}" >&2; exit 1 ;;
             esac
           done
@@ -661,7 +668,9 @@ jobs:
 
             make dist/notarize
           fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-tauri-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          EDITION_SUFFIX=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-tauri-${VERSION_WITH_V}-macos-$(uname -m)${EDITION_SUFFIX}.dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
