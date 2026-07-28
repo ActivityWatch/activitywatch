@@ -351,13 +351,7 @@ jobs:
 
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
-        run: |
-          config=aw-watcher-window/aw_watcher_window/config.py
-          grep -q '^research_enabled = false$' "$config"
-          sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
-          rm "$config.bak"
-          grep -q '^research_enabled = true$' "$config"
-          python3 scripts/patch_research_edition_config.py "$config"
+        run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
 
       - name: Build
         run: |
@@ -589,13 +583,7 @@ jobs:
 
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
-        run: |
-          config=aw-watcher-window/aw_watcher_window/config.py
-          grep -q '^research_enabled = false$' "$config"
-          sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
-          rm "$config.bak"
-          grep -q '^research_enabled = true$' "$config"
-          python3 scripts/patch_research_edition_config.py "$config"
+        run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
 
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
