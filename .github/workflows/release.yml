@@ -357,6 +357,7 @@ jobs:
           sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
           rm "$config.bak"
           grep -q '^research_enabled = true$' "$config"
+          python3 scripts/patch_research_edition_config.py "$config"
 
       - name: Build
         run: |
@@ -594,6 +595,7 @@ jobs:
           sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
           rm "$config.bak"
           grep -q '^research_enabled = true$' "$config"
+          python3 scripts/patch_research_edition_config.py "$config"
 
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
