@@ -20,6 +20,11 @@ on:
         options:
           - patch
           - minor
+      research_edition:
+        description: 'Build Research Edition (research_enabled=true by default in aw-watcher-window)'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [master]
     tags:
@@ -223,12 +228,13 @@ jobs:
 
   build-qt:
     name: Build Qt artifacts
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
+      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.research_edition == true }}
     defaults:
       run:
         shell: bash
@@ -340,6 +346,13 @@ jobs:
           fi
           pip3 install poetry==2.2.1
 
+      - name: Patch research edition defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          sed -i 's/research_enabled = false/research_enabled = true/' \
+            aw-watcher-window/aw_watcher_window/config.py
+          grep research_enabled aw-watcher-window/aw_watcher_window/config.py
+
       - name: Build
         run: |
           python3 -m venv venv
@@ -428,13 +441,14 @@ jobs:
 
   build-tauri:
     name: Build Tauri artifacts
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
+      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.research_edition == true }}
       # All subprojects share one virtualenv. Poetry's parallel installer can
       # race while replacing the same dependency from different lock files.
       POETRY_INSTALLER_PARALLEL: "false"
@@ -556,6 +570,13 @@ jobs:
             choco install innosetup
           fi
           pip3 install poetry==2.2.1
+
+      - name: Patch research edition defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          sed -i 's/research_enabled = false/research_enabled = true/' \
+            aw-watcher-window/aw_watcher_window/config.py
+          grep research_enabled aw-watcher-window/aw_watcher_window/config.py
 
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
