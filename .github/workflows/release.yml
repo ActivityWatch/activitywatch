@@ -620,6 +620,29 @@ jobs:
             source venv/bin/activate || source venv/Scripts/activate
             make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      - name: Import macOS signing certificate
+        if: runner.os == 'macOS' && (startsWith(github.ref, 'refs/tags/v') || env.AW_RESEARCH_EDITION == 'true')
+        run: |
+          for var in APPLE_EMAIL APPLE_PASSWORD APPLE_TEAMID CERTIFICATE_MACOS_P12_BASE64 CERTIFICATE_MACOS_P12_PASSWORD; do
+            if [ -z "${!var:-}" ]; then
+              echo "ERROR: $var is required to sign macOS release artifacts" >&2
+              exit 1
+            fi
+          done
+          ./scripts/ci/import-macos-p12.sh
+          APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
+          if [ -z "$APPLE_PERSONALID" ]; then
+            echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
+            exit 1
+          fi
+          echo "APPLE_PERSONALID=$APPLE_PERSONALID" >> "$GITHUB_ENV"
+        env:
+          APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
+          CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
+          CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
+
       - name: Package
         run: |
           source venv/bin/activate || source venv/Scripts/activate
@@ -654,22 +677,6 @@ jobs:
             SIGN_MACOS=true
           fi
 
-          if [ "$SIGN_MACOS" = true ]; then
-            for var in APPLE_EMAIL APPLE_PASSWORD APPLE_TEAMID CERTIFICATE_MACOS_P12_BASE64 CERTIFICATE_MACOS_P12_PASSWORD; do
-              if [ -z "${!var:-}" ]; then
-                echo "ERROR: $var is required to sign macOS release artifacts" >&2
-                exit 1
-              fi
-            done
-            ./scripts/ci/import-macos-p12.sh
-            APPLE_PERSONALID=$(security find-identity -v -p codesigning "${KEY_CHAIN:-build.keychain-db}" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)
-            if [ -z "$APPLE_PERSONALID" ]; then
-              echo "ERROR: no codesigning identity found after importing the macOS certificate" >&2
-              exit 1
-            fi
-            export APPLE_PERSONALID
-          fi
-
           source venv/bin/activate
           make dist/ActivityWatch.dmg
 
@@ -688,10 +695,7 @@ jobs:
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_PERSONALID: ""
           APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
-          CERTIFICATE_MACOS_P12_BASE64: ${{ secrets.CERTIFICATE_MACOS_P12_BASE64 }}
-          CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
       - name: Upload packages
         uses: actions/upload-artifact@v7
