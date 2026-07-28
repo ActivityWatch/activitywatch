@@ -352,9 +352,10 @@ jobs:
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
         run: |
-          sed -i 's/research_enabled = false/research_enabled = true/' \
-            aw-watcher-window/aw_watcher_window/config.py
-          grep research_enabled aw-watcher-window/aw_watcher_window/config.py
+          config=aw-watcher-window/aw_watcher_window/config.py
+          grep -q '^research_enabled = false$' "$config"
+          sed -i 's/^research_enabled = false$/research_enabled = true/' "$config"
+          grep -q '^research_enabled = true$' "$config"
 
       - name: Build
         run: |
@@ -385,7 +386,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           SIGN_MACOS=false
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/v* || "$AW_RESEARCH_EDITION" == "true" ]]; then
             SIGN_MACOS=true
           fi
 
@@ -432,11 +433,19 @@ jobs:
         if: startsWith(runner.os, 'linux')
         run: |
           ./scripts/package/package-appimage.sh
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            mv dist/activitywatch-linux-x86_64.AppImage \
+              dist/activitywatch-linux-x86_64-research-edition.AppImage
+          fi
 
       - name: Package deb
         if: startsWith(runner.os, 'linux')
         run: |
           ./scripts/package/package-deb.sh
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            deb="dist/activitywatch-${VERSION_WITH_V}-linux-x86_64.deb"
+            mv "$deb" "${deb%.deb}-research-edition.deb"
+          fi
 
       - name: Upload packages
         uses: actions/upload-artifact@v7
@@ -579,9 +588,10 @@ jobs:
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
         run: |
-          sed -i 's/research_enabled = false/research_enabled = true/' \
-            aw-watcher-window/aw_watcher_window/config.py
-          grep research_enabled aw-watcher-window/aw_watcher_window/config.py
+          config=aw-watcher-window/aw_watcher_window/config.py
+          grep -q '^research_enabled = false$' "$config"
+          sed -i 's/^research_enabled = false$/research_enabled = true/' "$config"
+          grep -q '^research_enabled = true$' "$config"
 
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
@@ -636,7 +646,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           SIGN_MACOS=false
-          if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+          if [[ "${GITHUB_REF:-}" == refs/tags/v* || "$AW_RESEARCH_EDITION" == "true" ]]; then
             SIGN_MACOS=true
           fi
 
