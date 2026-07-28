@@ -354,7 +354,8 @@ jobs:
         run: |
           config=aw-watcher-window/aw_watcher_window/config.py
           grep -q '^research_enabled = false$' "$config"
-          sed -i 's/^research_enabled = false$/research_enabled = true/' "$config"
+          sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
+          rm "$config.bak"
           grep -q '^research_enabled = true$' "$config"
 
       - name: Build
@@ -590,7 +591,8 @@ jobs:
         run: |
           config=aw-watcher-window/aw_watcher_window/config.py
           grep -q '^research_enabled = false$' "$config"
-          sed -i 's/^research_enabled = false$/research_enabled = true/' "$config"
+          sed -i.bak 's/^research_enabled = false$/research_enabled = true/' "$config"
+          rm "$config.bak"
           grep -q '^research_enabled = true$' "$config"
 
       - name: Build
