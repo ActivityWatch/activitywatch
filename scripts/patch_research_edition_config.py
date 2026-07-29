@@ -641,7 +641,7 @@ CATEGORY_MAP: list[tuple[str, str]] = [
 ]
 
 
-def build_toml_inline_table(entries: list[tuple[str, str]]) -> str:
+def build_toml_table(entries: list[tuple[str, str]]) -> str:
     seen: dict[str, str] = {}
     for pattern, category in entries:
         if pattern not in seen:
@@ -651,7 +651,22 @@ def build_toml_inline_table(entries: list[tuple[str, str]]) -> str:
         k = pattern.replace("\\", "\\\\").replace('"', '\\"')
         v = category.replace("\\", "\\\\").replace('"', '\\"')
         items.append(f'"{k}" = "{v}"')
-    return "{" + ", ".join(items) + "}"
+    return "\n".join(items)
+
+
+def patch_config(text: str) -> str:
+    enabled_line = "research_enabled = false"
+    category_header = "[aw-watcher-window.research_category_map]"
+    if enabled_line not in text:
+        raise ValueError(f"'{enabled_line}' not found")
+    if text.count(category_header) != 1:
+        raise ValueError(f"expected exactly one '{category_header}' section")
+
+    entries = build_toml_table(CATEGORY_MAP)
+    return (
+        text.replace(enabled_line, "research_enabled = true", 1)
+        .replace(category_header, f"{category_header}\n{entries}", 1)
+    )
 
 
 def main() -> None:
@@ -659,12 +674,12 @@ def main() -> None:
         print(f"Error: {CONFIG_FILE} not found", file=sys.stderr)
         sys.exit(1)
     text = CONFIG_FILE.read_text(encoding="utf-8")
-    old_line = "research_category_map = {}"
-    if old_line not in text:
-        print(f"Error: '{old_line}' not found in {CONFIG_FILE}", file=sys.stderr)
+    try:
+        patched = patch_config(text)
+    except ValueError as error:
+        print(f"Error: {error} in {CONFIG_FILE}", file=sys.stderr)
         sys.exit(1)
-    table = build_toml_inline_table(CATEGORY_MAP)
-    CONFIG_FILE.write_text(text.replace(old_line, f"research_category_map = {table}", 1), encoding="utf-8")
+    CONFIG_FILE.write_text(patched, encoding="utf-8")
     unique = len({p for p, _ in CATEGORY_MAP})
     cats = len({c for _, c in CATEGORY_MAP})
     print(f"Injected {unique} unique patterns across {cats} categories into {CONFIG_FILE}")
