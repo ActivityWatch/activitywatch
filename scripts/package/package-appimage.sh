@@ -5,15 +5,6 @@
 ZIP_FILE=`ls ./dist/ -1 | grep zip | sort -r | head -1`
 unzip ./dist/$ZIP_FILE
 
-# Remove the bundled libwayland-client so the host's copy is used instead.
-# The bundled one is older than the bundled Qt Wayland plugin, which made
-# aw-qt crash on startup on newer distros with:
-#   libQt6WaylandClient.so.6: undefined symbol: wl_proxy_marshal_flags
-# (wl_proxy_marshal_flags was added in libwayland 1.20). libwayland-client is
-# meant to come from the host anyway, so dropping it from the bundle is safe.
-# See https://github.com/ActivityWatch/activitywatch/issues/939
-find activitywatch -name 'libwayland-client.so*' -delete
-
 # fetch deps
 wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 chmod +x linuxdeploy-x86_64.AppImage

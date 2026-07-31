@@ -216,6 +216,12 @@ endif
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
+ifeq ($(shell uname),Linux)
+# PyInstaller's Qt bundle may include an older Wayland client than Qt requires.
+# All portable Linux packages are built from this directory, so remove it here
+# and use the distro library instead. See: https://github.com/ActivityWatch/activitywatch/issues/939
+	find dist/activitywatch -name 'libwayland-client.so*' -delete
+endif
 # These should be provided by the distro itself
 # Had to be removed due to otherwise causing the error:
 #   aw-qt: symbol lookup error: /opt/activitywatch/libQt5XcbQpa.so.5: undefined symbol: FT_Get_Font_Format
