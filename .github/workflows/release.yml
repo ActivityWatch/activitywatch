@@ -117,17 +117,11 @@ jobs:
           fi
 
           prerelease_pattern="^v${next_base//./\\.}b[0-9]+$"
-          if [ "$EDITION" = "research" ]; then
-            # Research tags share the bN counter with standard tags so the same
-            # bN number never refers to two different builds.
-            prerelease_pattern="^v${next_base//./\\.}b[0-9]+(-research)?$"
-          fi
           last_prerelease=$(git tag --sort=-version:refname | grep -E "$prerelease_pattern" | head -1 || true)
 
           if [ -n "$last_prerelease" ]; then
             since_ref="$last_prerelease"
             last_prerelease_num=${last_prerelease##*b}
-            last_prerelease_num=${last_prerelease_num%-research}
             next_tag="v${next_base}b$((last_prerelease_num + 1))"
           else
             since_ref="$latest_stable"
@@ -135,10 +129,18 @@ jobs:
           fi
 
           if [ "$EDITION" = "research" ]; then
-            # Make research prereleases unmistakable: suffixed tag, so the
-            # tag-triggered build knows to produce research-edition artifacts
-            # and the release can never be confused with a standard release.
-            next_tag="${next_tag}-research"
+            # A research release is the current standard prerelease lineage
+            # with an edition suffix. It must not consume the next standard bN.
+            if [ -n "$last_prerelease" ]; then
+              next_tag="${last_prerelease}-research"
+            else
+              next_tag="${next_tag}-research"
+            fi
+            if git rev-parse -q --verify "refs/tags/${next_tag}" >/dev/null; then
+              echo "Research tag $next_tag already exists; skipping duplicate release."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
           fi
 
           commits_since_ref=$(git rev-list "${since_ref}..HEAD" --count)
