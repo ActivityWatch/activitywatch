@@ -65,6 +65,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_LINE: ${{ github.event.inputs.release_line || 'patch' }}
+          EDITION: ${{ github.event.inputs.edition || 'standard' }}
         run: |
           set -euo pipefail
 
@@ -125,6 +126,21 @@ jobs:
           else
             since_ref="$latest_stable"
             next_tag="v${next_base}b1"
+          fi
+
+          if [ "$EDITION" = "research" ]; then
+            # A research release is the current standard prerelease lineage
+            # with an edition suffix. It must not consume the next standard bN.
+            if [ -n "$last_prerelease" ]; then
+              next_tag="${last_prerelease}-research"
+            else
+              next_tag="${next_tag}-research"
+            fi
+            if git rev-parse -q --verify "refs/tags/${next_tag}" >/dev/null; then
+              echo "Research tag $next_tag already exists; skipping duplicate release."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
           fi
 
           commits_since_ref=$(git rev-list "${since_ref}..HEAD" --count)
@@ -217,12 +233,19 @@ jobs:
         run: |
           set -euo pipefail
           tag="${{ needs.preflight.outputs.next_tag }}"
-          git tag -a "$tag" -m "Development prerelease $tag"
+          msg="Development prerelease $tag"
+          if [[ "$tag" == *-research ]]; then
+            msg="Development prerelease $tag (research edition)"
+          fi
+          git tag -a "$tag" -m "$msg"
           git push origin "$tag"
           {
             echo "## Dev release created"
             echo ""
             echo "- Tag: \`$tag\`"
+            if [[ "$tag" == *-research ]]; then
+              echo "- Edition: research"
+            fi
             echo "- Changes since: \`${{ needs.preflight.outputs.since_ref }}\`"
             echo "- Commits: \`${{ needs.preflight.outputs.commits_since_ref }}\`"
             echo ""
@@ -237,7 +260,7 @@ jobs:
     env:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.edition == 'research' }}
+      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
     defaults:
       run:
         shell: bash
@@ -458,7 +481,7 @@ jobs:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ github.event_name == 'workflow_dispatch' && inputs.edition == 'research' }}
+      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
       # All subprojects share one virtualenv. Poetry's parallel installer can
       # race while replacing the same dependency from different lock files.
       POETRY_INSTALLER_PARALLEL: "false"
@@ -720,13 +743,67 @@ jobs:
           pip install requests
 
       - name: Generate release notes
+        if: ${{ !endsWith(github.ref_name, '-research') }}
         run: |
           LAST_RELEASE=`STABLE_ONLY=${{ steps.version.outputs.is_stable }} ./scripts/get_latest_release.sh`
           ./scripts/build_changelog.py --range "$LAST_RELEASE...${{ steps.version.outputs.full }}"
 
+      - name: Generate release notes (research edition)
+        if: endsWith(github.ref_name, '-research')
+        run: |
+          # check-version-format-action cannot parse research-suffixed tags,
+          # so derive the range end from the tag name directly. Research
+          # releases are never stable.
+          LAST_RELEASE=$(STABLE_ONLY=false ./scripts/get_latest_release.sh)
+          # get_latest_release.sh only matches standard tags; use git describe
+          # to find the topologically nearest ancestral research release.
+          # Excluding the current tag also ignores newer or unrelated lineages.
+          prev_research=$(git describe --tags --abbrev=0 \
+            --match '*-research' --exclude "${GITHUB_REF_NAME}" \
+            "${GITHUB_REF_NAME}" 2>/dev/null || true)
+          if [ -n "$LAST_RELEASE" ] && [ -n "$prev_research" ] && \
+             git merge-base --is-ancestor "$LAST_RELEASE" "$prev_research"; then
+            LAST_RELEASE="$prev_research"
+          fi
+          ./scripts/build_changelog.py --range "$LAST_RELEASE...${GITHUB_REF_NAME}"
+
       - name: Rename
         run: |
           mv changelog.md release_notes.md
+
+      - name: Adjust release notes for research edition
+        if: endsWith(github.ref_name, '-research')
+        run: |
+          {
+            echo "> [!IMPORTANT]"
+            echo "> **ActivityWatch Research Edition** (\`${GITHUB_REF_NAME}\`) — prerelease build for research-study participants, with the privacy filter and study category map enabled by default (\`research_enabled = true\` in aw-watcher-window)."
+            echo "> Not intended for general use — regular users should install the latest [standard release](https://github.com/ActivityWatch/activitywatch/releases) instead."
+            echo ""
+            cat release_notes.md
+          } > release_notes_research.md
+          mv release_notes_research.md release_notes.md
+          # The generated Downloads section hardcodes standard-edition asset
+          # filenames, which do not exist on research releases (research
+          # artifacts carry a research-edition suffix). Point at the asset
+          # list instead of linking to 404s.
+          python3 - <<'PY'
+          import re
+
+          path = "release_notes.md"
+          notes = open(path).read()
+          notes = re.sub(
+              r"(?m)^ - \[\*\*(Windows|macOS|Linux)\*\*\]\([^)]*\)[^\n]*\n?",
+              "",
+              notes,
+          )
+          notes = notes.replace(
+              "# Downloads\n",
+              "# Downloads\n\nResearch Edition installers are attached to this"
+              " release as assets below (filenames contain `research`)."
+              " Standard-release download links do not apply to this build.\n",
+          )
+          open(path, "w").write(notes)
+          PY
 
       - name: Upload release notes
         uses: actions/upload-artifact@v7
@@ -758,8 +835,13 @@ jobs:
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
         with:
           draft: true
+          # Empty name falls back to the tag name (standard releases unchanged).
+          name: ${{ endsWith(github.ref_name, '-research') && format('{0} (Research Edition)', github.ref_name) || '' }}
           files: dist/*/activitywatch-*.*
           body_path: dist/release_notes/release_notes.md
+          # check-version-format-action leaves is_stable unset/false for
+          # research-suffixed tags, so this stays prerelease for them too.
           prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}
 
 # Retry CI after transient upload-artifact timeout.
+
