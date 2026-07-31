@@ -597,6 +597,11 @@ jobs:
             poetry install
             make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
             pip freeze
+        env:
+          # Signs aw-tauri bundles and emits .sig files for the updater when
+          # createUpdaterArtifacts is enabled in aw-tauri/src-tauri/tauri.conf.json.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Run tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
@@ -685,11 +690,54 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
 
+      - name: Package Tauri updater artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p dist/updater
+          VERSION="${VERSION_WITH_V#v}"
+
+          case "$RUNNER_OS" in
+            macOS) OS_NAME="darwin" ;;
+            Linux) OS_NAME="linux" ;;
+            Windows) OS_NAME="windows" ;;
+          esac
+          case "$(uname -m)" in
+            arm64|aarch64) ARCH_NAME="aarch64" ;;
+            x86_64|amd64) ARCH_NAME="x86_64" ;;
+            *) ARCH_NAME="$(uname -m)" ;;
+          esac
+          PLATFORM_KEY="${OS_NAME}-${ARCH_NAME}"
+
+          # Only the bundle formats Tauri's updater consumes — avoids picking up
+          # .sig files for .deb/.rpm/.dmg if those ever get signed too.
+          found=0
+          while IFS= read -r -d '' sig; do
+            artifact="${sig%.sig}"
+            if [ -f "$artifact" ]; then
+              base="${artifact##*/}"
+              ext="${base#*.}" # everything after the first dot, e.g. "app.tar.gz"
+              out="dist/updater/activitywatch-tauri-${VERSION}-${PLATFORM_KEY}.${ext}"
+              cp "$artifact" "$out"
+              cp "$sig" "$out.sig"
+              found=$((found + 1))
+            fi
+          done < <(find aw-tauri/src-tauri/target -type f \( \
+            -path "*/release/bundle/macos/*.sig" -o \
+            -path "*/release/bundle/appimage/*.sig" -o \
+            -path "*/release/bundle/nsis/*.sig" -o \
+            -path "*/release/bundle/msi/*.sig" \
+            \) -print0)
+
+          echo "Found $found Tauri updater artifact(s) for $PLATFORM_KEY"
+          ls -la dist/updater/ || true
+
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
           name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}
-          path: dist/activitywatch-*.*
+          path: |
+            dist/activitywatch-*.*
+            dist/updater/*
 
   release-notes:
     name: Generate release notes
@@ -740,6 +788,10 @@ jobs:
     needs: [build-qt, build-tauri, release-notes]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
@@ -754,11 +806,25 @@ jobs:
         with:
           prefix: 'v'
 
+      - name: Generate latest.json
+        run: |
+          python3 scripts/package/generate_latest_json.py \
+            --version "$(bash scripts/package/getversion.sh | sed 's/^v//')" \
+            --notes "ActivityWatch ${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --tag "${{ github.ref_name }}" \
+            --dist dist \
+            --output dist/latest.json
+          cat dist/latest.json
+
       - name: Release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
         with:
           draft: true
-          files: dist/*/activitywatch-*.*
+          files: |
+            dist/*/activitywatch-*.*
+            dist/*/updater/*
+            dist/latest.json
           body_path: dist/release_notes/release_notes.md
           prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}
 
