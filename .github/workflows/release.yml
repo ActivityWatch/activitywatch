@@ -755,11 +755,18 @@ jobs:
           # so derive the range end from the tag name directly. Research
           # releases are never stable.
           LAST_RELEASE=$(STABLE_ONLY=false ./scripts/get_latest_release.sh)
-          # get_latest_release.sh only matches standard tags; if a previous
+          # get_latest_release.sh only matches standard tags; if an ancestral
           # research tag is newer, use it as the range base so back-to-back
-          # research releases don't repeat already-released changes.
-          prev_research=$(git for-each-ref --sort=creatordate --format '%(refname:short)' refs/tags \
-            | grep -E -- '-research$' | grep -vx "${GITHUB_REF_NAME}" | tail -n1 || true)
+          # research releases don't repeat already-released changes. Ignore
+          # research tags from newer or unrelated release lineages.
+          prev_research=""
+          while IFS= read -r candidate; do
+            if [ "$candidate" != "${GITHUB_REF_NAME}" ] && \
+               git merge-base --is-ancestor "$candidate" "${GITHUB_REF_NAME}"; then
+              prev_research="$candidate"
+            fi
+          done < <(git for-each-ref --sort=creatordate --format '%(refname:short)' refs/tags \
+            | grep -E -- '-research$' || true)
           if [ -n "$LAST_RELEASE" ] && [ -n "$prev_research" ] && \
              git merge-base --is-ancestor "$LAST_RELEASE" "$prev_research"; then
             LAST_RELEASE="$prev_research"
