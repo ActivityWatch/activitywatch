@@ -753,13 +753,22 @@ jobs:
           # so derive the range end from the tag name directly. Research
           # releases are never stable.
           LAST_RELEASE=$(STABLE_ONLY=false ./scripts/get_latest_release.sh)
+          # get_latest_release.sh only matches standard tags; if a previous
+          # research tag is newer, use it as the range base so back-to-back
+          # research releases don't repeat already-released changes.
+          prev_research=$(git for-each-ref --sort=creatordate --format '%(refname:short)' refs/tags \
+            | grep -E -- '-research$' | grep -vx "${GITHUB_REF_NAME}" | tail -n1 || true)
+          if [ -n "$LAST_RELEASE" ] && [ -n "$prev_research" ] && \
+             git merge-base --is-ancestor "$LAST_RELEASE" "$prev_research"; then
+            LAST_RELEASE="$prev_research"
+          fi
           ./scripts/build_changelog.py --range "$LAST_RELEASE...${GITHUB_REF_NAME}"
 
       - name: Rename
         run: |
           mv changelog.md release_notes.md
 
-      - name: Add research edition banner
+      - name: Adjust release notes for research edition
         if: endsWith(github.ref_name, '-research')
         run: |
           {
@@ -770,6 +779,28 @@ jobs:
             cat release_notes.md
           } > release_notes_research.md
           mv release_notes_research.md release_notes.md
+          # The generated Downloads section hardcodes standard-edition asset
+          # filenames, which do not exist on research releases (research
+          # artifacts carry a research-edition suffix). Point at the asset
+          # list instead of linking to 404s.
+          python3 - <<'PY'
+          import re
+
+          path = "release_notes.md"
+          notes = open(path).read()
+          notes = re.sub(
+              r"(?m)^ - \[\*\*(Windows|macOS|Linux)\*\*\]\([^)]*\)[^\n]*\n?",
+              "",
+              notes,
+          )
+          notes = notes.replace(
+              "# Downloads\n",
+              "# Downloads\n\nResearch Edition installers are attached to this"
+              " release as assets below (filenames contain `research`)."
+              " Standard-release download links do not apply to this build.\n",
+          )
+          open(path, "w").write(notes)
+          PY
 
       - name: Upload release notes
         uses: actions/upload-artifact@v7
