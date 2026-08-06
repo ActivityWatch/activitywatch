@@ -7,7 +7,14 @@ set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION="$("$SCRIPT_DIR/getversion.sh")"
+# Strip the research tag suffix: the edition gets its own filename token, and
+# a bare "-research" in the Debian version field would parse as a revision.
+VERSION="${VERSION%-research}"
 VERSION_NUM="$(echo "$VERSION" | sed -e 's/^v//')"
+EDITION=""
+if [[ $AW_RESEARCH_EDITION == "true" ]]; then
+    EDITION="-research"
+fi
 echo "Version (with v): $VERSION"
 echo "Version (without v): $VERSION_NUM"
 PKGDIR="activitywatch_$VERSION_NUM"
@@ -51,4 +58,4 @@ sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/etc/xdg/autostart/
 sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/usr/share/applications/
 
 dpkg-deb --build $PKGDIR
-sudo mv activitywatch_${VERSION_NUM}.deb dist/activitywatch-${VERSION}-linux-x86_64.deb
+sudo mv activitywatch_${VERSION_NUM}.deb dist/activitywatch${EDITION}-${VERSION}-linux-x86_64.deb

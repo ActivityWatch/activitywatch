@@ -48,12 +48,17 @@ platform=$(get_platform)
 version=$(get_version)
 version_no_prefix=$(get_version_no_prefix)
 arch=$(get_arch)
+# Research tags are suffixed (e.g. v0.14.0b3-research), but the edition
+# belongs in its own filename token, not in the version part:
+#   activitywatch[-tauri][-research]-<version>-<os>-<arch>[-setup].<ext>
+version="${version%-research}"
+version_no_prefix="${version_no_prefix%-research}"
 build_suffix=""
 if [[ $TAURI_BUILD == "true" ]]; then
     build_suffix="-tauri"
 fi
 if [[ $AW_RESEARCH_EDITION == "true" ]]; then
-    build_suffix="${build_suffix}-research-edition"
+    build_suffix="${build_suffix}-research"
 fi
 
 echo "========================================"
