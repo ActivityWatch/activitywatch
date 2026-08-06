@@ -309,6 +309,41 @@ jobs:
           echo "Version (no v):     ${VERSION_NO_V}"
           echo "========================================"
 
+      - name: Verify aw-server-rust submodule version matches release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # Fail fast if the aw-server-rust submodule is pinned to an older
+          # release line than the one we're tagging. The Windows 0.14 Tauri
+          # bundle shipped with aw-server-rust v0.13.1 (activitywatch#1380);
+          # catch the same class of mismatch here before spending ~30 min on a
+          # full Tauri build.
+          #
+          # The bundled binary's version lives in
+          # aw-server-rust/aw-server/Cargo.toml (the workspace-level
+          # aw-server-rust/Cargo.toml has no [package].version field).
+          BUNDLED_VERSION=$(grep -m1 '^version = ' aw-server-rust/aw-server/Cargo.toml | sed -E 's/^version = "(.*)".*/\1/')
+          if [ -z "$BUNDLED_VERSION" ]; then
+            echo "ERROR: could not read aw-server version from aw-server-rust/aw-server/Cargo.toml" >&2
+            exit 1
+          fi
+
+          AW_VERSION="${VERSION_NO_V}"  # e.g. "0.14.0b3"
+          AW_MAJOR_MINOR=$(echo "$AW_VERSION" | cut -d'.' -f1-2)  # "0.14"
+          AWS_MAJOR_MINOR=$(echo "$BUNDLED_VERSION" | cut -d'.' -f1-2)  # "0.14"
+
+          echo "AW release tag:       ${AW_VERSION} (major.minor: ${AW_MAJOR_MINOR})"
+          echo "Bundled aw-server:    ${BUNDLED_VERSION} (major.minor: ${AWS_MAJOR_MINOR})"
+
+          if [ "$AW_MAJOR_MINOR" != "$AWS_MAJOR_MINOR" ]; then
+            echo ""
+            echo "ERROR: aw-server-rust major.minor (${AWS_MAJOR_MINOR}) does not match"
+            echo "       AW release major.minor (${AW_MAJOR_MINOR})."
+            echo "       The aw-server-rust submodule is stale for this tag."
+            echo "       Update the submodule (cd aw-server-rust && git pull) and re-tag."
+            exit 1
+          fi
+          echo "OK: aw-server version ${BUNDLED_VERSION} is consistent with AW release ${AW_VERSION}"
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -533,6 +568,41 @@ jobs:
           echo "Version (with v):  ${VERSION_WITH_V}"
           echo "Version (no v):     ${VERSION_NO_V}"
           echo "========================================"
+
+      - name: Verify aw-server-rust submodule version matches release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # Fail fast if the aw-server-rust submodule is pinned to an older
+          # release line than the one we're tagging. The Windows 0.14 Tauri
+          # bundle shipped with aw-server-rust v0.13.1 (activitywatch#1380);
+          # catch the same class of mismatch here before spending ~30 min on a
+          # full Tauri build.
+          #
+          # The bundled binary's version lives in
+          # aw-server-rust/aw-server/Cargo.toml (the workspace-level
+          # aw-server-rust/Cargo.toml has no [package].version field).
+          BUNDLED_VERSION=$(grep -m1 '^version = ' aw-server-rust/aw-server/Cargo.toml | sed -E 's/^version = "(.*)".*/\1/')
+          if [ -z "$BUNDLED_VERSION" ]; then
+            echo "ERROR: could not read aw-server version from aw-server-rust/aw-server/Cargo.toml" >&2
+            exit 1
+          fi
+
+          AW_VERSION="${VERSION_NO_V}"  # e.g. "0.14.0b3"
+          AW_MAJOR_MINOR=$(echo "$AW_VERSION" | cut -d'.' -f1-2)  # "0.14"
+          AWS_MAJOR_MINOR=$(echo "$BUNDLED_VERSION" | cut -d'.' -f1-2)  # "0.14"
+
+          echo "AW release tag:       ${AW_VERSION} (major.minor: ${AW_MAJOR_MINOR})"
+          echo "Bundled aw-server:    ${BUNDLED_VERSION} (major.minor: ${AWS_MAJOR_MINOR})"
+
+          if [ "$AW_MAJOR_MINOR" != "$AWS_MAJOR_MINOR" ]; then
+            echo ""
+            echo "ERROR: aw-server-rust major.minor (${AWS_MAJOR_MINOR}) does not match"
+            echo "       AW release major.minor (${AW_MAJOR_MINOR})."
+            echo "       The aw-server-rust submodule is stale for this tag."
+            echo "       Update the submodule (cd aw-server-rust && git pull) and re-tag."
+            exit 1
+          fi
+          echo "OK: aw-server version ${BUNDLED_VERSION} is consistent with AW release ${AW_VERSION}"
 
       - name: Set up Python
         uses: actions/setup-python@v6
