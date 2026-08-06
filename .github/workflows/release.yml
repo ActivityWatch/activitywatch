@@ -322,7 +322,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         id: toolchain
         with:
           toolchain: stable
@@ -547,7 +547,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         id: toolchain
         with:
           toolchain: stable
