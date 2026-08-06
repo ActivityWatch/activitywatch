@@ -294,6 +294,10 @@ jobs:
       - name: Determine and output version
         run: |
           VERSION_WITH_V=$(bash scripts/package/getversion.sh)
+          # Strip the research tag suffix for filenames: the edition gets its
+          # own token (activitywatch[-tauri][-research]-<version>-...), so the
+          # version part stays a plain version.
+          VERSION_WITH_V="${VERSION_WITH_V%-research}"
           VERSION_NO_V="${VERSION_WITH_V#v}"
           echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
           echo "========================================"
@@ -437,9 +441,9 @@ jobs:
 
             make dist/notarize
           fi
-          EDITION_SUFFIX=""
-          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_WITH_V}-macos-$(uname -m)${EDITION_SUFFIX}.dmg
+          EDITION=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
+          mv dist/ActivityWatch.dmg dist/activitywatch${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -450,21 +454,11 @@ jobs:
 
       - name: Package AppImage
         if: startsWith(runner.os, 'linux')
-        run: |
-          ./scripts/package/package-appimage.sh
-          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
-            mv dist/activitywatch-linux-x86_64.AppImage \
-              dist/activitywatch-linux-x86_64-research-edition.AppImage
-          fi
+        run: ./scripts/package/package-appimage.sh
 
       - name: Package deb
         if: startsWith(runner.os, 'linux')
-        run: |
-          ./scripts/package/package-deb.sh
-          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
-            deb="dist/activitywatch-${VERSION_WITH_V}-linux-x86_64.deb"
-            mv "$deb" "${deb%.deb}-research-edition.deb"
-          fi
+        run: ./scripts/package/package-deb.sh
 
       - name: Upload packages
         uses: actions/upload-artifact@v7
@@ -525,6 +519,10 @@ jobs:
       - name: Determine and output version
         run: |
           VERSION_WITH_V=$(bash scripts/package/getversion.sh)
+          # Strip the research tag suffix for filenames: the edition gets its
+          # own token (activitywatch[-tauri][-research]-<version>-...), so the
+          # version part stays a plain version.
+          VERSION_WITH_V="${VERSION_WITH_V%-research}"
           VERSION_NO_V="${VERSION_WITH_V#v}"
           echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
           echo "========================================"
@@ -669,13 +667,13 @@ jobs:
           # `dist/activitywatch-*.*` upload pattern below.
           ARCH=$(uname -m)
           shopt -s nullglob
-          EDITION_SUFFIX=""
-          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
+          EDITION=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
           for ext in AppImage deb rpm; do
             files=( dist/activitywatch/aw-tauri/*.${ext} )
             case ${#files[@]} in
               0) continue ;;
-              1) cp -v "${files[0]}" "dist/activitywatch-tauri-${VERSION_WITH_V}-linux-${ARCH}${EDITION_SUFFIX}.${ext}" ;;
+              1) cp -v "${files[0]}" "dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-linux-${ARCH}.${ext}" ;;
               *) echo "ERROR: expected at most 1 .${ext} bundle, found ${#files[@]}" >&2; exit 1 ;;
             esac
           done
@@ -700,9 +698,9 @@ jobs:
 
             make dist/notarize
           fi
-          EDITION_SUFFIX=""
-          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION_SUFFIX="-research-edition"; fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-tauri-${VERSION_WITH_V}-macos-$(uname -m)${EDITION_SUFFIX}.dmg
+          EDITION=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
+          mv dist/ActivityWatch.dmg dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -784,7 +782,7 @@ jobs:
           mv release_notes_research.md release_notes.md
           # The generated Downloads section hardcodes standard-edition asset
           # filenames, which do not exist on research releases (research
-          # artifacts carry a research-edition suffix). Point at the asset
+          # artifacts carry a -research token). Point at the asset
           # list instead of linking to 404s.
           python3 - <<'PY'
           import re
