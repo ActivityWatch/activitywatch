@@ -405,6 +405,13 @@ jobs:
           poetry install
           make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      - name: Sign Windows installer
+        if: runner.os == 'Windows'
+        run: bash scripts/ci/sign-windows.sh --installers
+        env:
+          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+
       - name: Package dmg
         if: runner.os == 'macOS'
         run: |

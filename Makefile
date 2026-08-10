@@ -229,6 +229,12 @@ endif
 	rm -f dist/activitywatch/libfreetype.so.6
 # Remove unnecessary files
 	rm -rf dist/activitywatch/pytz
+# Sign Windows binaries before packaging so the .zip and the installer embed
+# signed files (see #632). Fork PRs get a self-signed placeholder cert; tag
+# builds use the real certificate from WINDOWS_CERTIFICATE_BASE64.
+ifeq ($(OS),Windows_NT)
+	bash scripts/ci/sign-windows.sh dist/activitywatch
+endif
 # Builds zips and setups
 	bash scripts/package/package-all.sh
 
