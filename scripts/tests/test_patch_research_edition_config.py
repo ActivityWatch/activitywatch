@@ -20,12 +20,13 @@ research_enabled = false
 """.strip()
 '''
 
-    result = patcher.patch_config(source)
+    result, app_map_injected = patcher.patch_config(source)
 
     assert "research_enabled = true" in result
     assert "research_enabled = false" not in result
     assert '[aw-watcher-window.research_category_map]\n"svenskaspel.se" = "Sensitive / Excluded"' in result
     assert '"kagi" = "Search & Navigation"\n""".strip()' in result
+    assert app_map_injected is False  # source has no research_app_category_map section
 
 
 def test_patch_config_fails_closed_without_category_section():
