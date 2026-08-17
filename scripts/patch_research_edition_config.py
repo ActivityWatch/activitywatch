@@ -21,6 +21,7 @@ APP_CATEGORY_MAP — non-browser app-name → study category mapping:
     section is absent, which means the submodule pin predates PR #136.
 """
 import pathlib
+import re
 import sys
 
 CONFIG_FILE = pathlib.Path(
@@ -754,34 +755,72 @@ def build_toml_table(entries: list[tuple[str, str]]) -> str:
     return "\n".join(items)
 
 
+# The flag must be matched anchored to line start. Since aw-watcher-window #137,
+# config.py also documents the rewrite in a comment containing the literal text
+# `sed -i 's/^research_enabled = false$/research_enabled = true/'`, and that
+# comment appears *before* the real flag. An unanchored replace would patch the
+# comment and leave research_enabled = false -- a green build with the Research
+# Edition silently disabled.
+ENABLED_FLAG_RE = re.compile(r"^research_enabled = false$", re.MULTILINE)
+
+# Anchor for the post-#137 layout: research knobs moved out of `default_config`
+# into a separate template so they are not persisted into every fresh install's
+# config file.
+RESEARCH_DEFAULTS_ANCHOR = 'research_defaults = """'
+
+# Proof that the watcher can actually consume an app map (aw-watcher-window #136).
+# This is a runtime-capability check, not a layout check, so it survives further
+# reshuffling of the config templates.
+APP_MAP_RUNTIME_MARKER = 'config.get("research_app_category_map"'
+
+
 def patch_config(text: str) -> tuple[str, bool]:
     """Patch config.py text.  Returns (patched_text, app_map_injected)."""
-    enabled_line = "research_enabled = false"
     category_header = "[aw-watcher-window.research_category_map]"
     app_category_header = "[aw-watcher-window.research_app_category_map]"
 
-    if enabled_line not in text:
-        raise ValueError(f"'{enabled_line}' not found")
-    if text.count(category_header) != 1:
-        raise ValueError(f"expected exactly one '{category_header}' section")
-    # Fail closed: a missing section means the aw-watcher-window submodule predates
-    # PR #136, so classify_app() does not exist and non-browser apps would keep
-    # their raw names. Skipping the injection there produces a green build that
-    # silently reproduces the exact bug this map fixes -- fail loudly instead.
-    if text.count(app_category_header) != 1:
+    enabled_matches = len(ENABLED_FLAG_RE.findall(text))
+    if enabled_matches != 1:
         raise ValueError(
-            f"expected exactly one '{app_category_header}' section "
-            "(requires aw-watcher-window PR #136 in the submodule pin)"
+            f"expected exactly one line-anchored 'research_enabled = false', found {enabled_matches}"
+        )
+
+    # Fail closed: without the runtime lookup the submodule predates PR #136, so
+    # classify_app() does not exist and non-browser apps would keep their raw
+    # names. Injecting anyway produces a green build that silently reproduces the
+    # exact privacy bug this map fixes -- fail loudly instead.
+    if APP_MAP_RUNTIME_MARKER not in text:
+        raise ValueError(
+            "aw-watcher-window does not read research_app_category_map "
+            "(requires PR #136 in the submodule pin)"
         )
 
     entries = build_toml_table(CATEGORY_MAP)
-    patched = (
-        text.replace(enabled_line, "research_enabled = true", 1)
-        .replace(category_header, f"{category_header}\n{entries}", 1)
-    )
-
     app_entries = build_toml_table(list(APP_CATEGORY_MAP.items()))
-    patched = patched.replace(app_category_header, f"{app_category_header}\n{app_entries}", 1)
+
+    if RESEARCH_DEFAULTS_ANCHOR in text:
+        # Post-#137: the maps belong inside the `research_defaults` template.
+        # That template is parsed standalone and merged into the
+        # [aw-watcher-window] section key-by-key, so its table headers must NOT
+        # carry the section prefix.
+        block = (
+            "research_enabled = true\n\n"
+            f"[research_category_map]\n{entries}\n\n"
+            f"[research_app_category_map]\n{app_entries}"
+        )
+        patched = ENABLED_FLAG_RE.sub(lambda _: block, text, count=1)
+    else:
+        # Pre-#137: the section-prefixed headers are already present in
+        # `default_config`; inject the entries under them.
+        if text.count(category_header) != 1:
+            raise ValueError(f"expected exactly one '{category_header}' section")
+        if text.count(app_category_header) != 1:
+            raise ValueError(f"expected exactly one '{app_category_header}' section")
+        patched = ENABLED_FLAG_RE.sub("research_enabled = true", text, count=1)
+        patched = patched.replace(category_header, f"{category_header}\n{entries}", 1)
+        patched = patched.replace(
+            app_category_header, f"{app_category_header}\n{app_entries}", 1
+        )
 
     return patched, True
 
