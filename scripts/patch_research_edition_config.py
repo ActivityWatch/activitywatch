@@ -17,8 +17,8 @@ APP_CATEGORY_MAP — non-browser app-name → study category mapping:
     classify_app() in PR #136 performs a case-insensitive exact lookup of the
     app name. Non-browser apps are replaced by their study category; unmapped
     apps become 'Excluded'. Ordering within this map is irrelevant (exact lookup).
-    Injection is non-fatal if the [aw-watcher-window.research_app_category_map]
-    section is absent (pre-PR #136 submodule pins).
+    Injection fails closed if the [aw-watcher-window.research_app_category_map]
+    section is absent, which means the submodule pin predates PR #136.
 """
 import pathlib
 import sys
@@ -764,6 +764,15 @@ def patch_config(text: str) -> tuple[str, bool]:
         raise ValueError(f"'{enabled_line}' not found")
     if text.count(category_header) != 1:
         raise ValueError(f"expected exactly one '{category_header}' section")
+    # Fail closed: a missing section means the aw-watcher-window submodule predates
+    # PR #136, so classify_app() does not exist and non-browser apps would keep
+    # their raw names. Skipping the injection there produces a green build that
+    # silently reproduces the exact bug this map fixes -- fail loudly instead.
+    if text.count(app_category_header) != 1:
+        raise ValueError(
+            f"expected exactly one '{app_category_header}' section "
+            "(requires aw-watcher-window PR #136 in the submodule pin)"
+        )
 
     entries = build_toml_table(CATEGORY_MAP)
     patched = (
@@ -771,17 +780,10 @@ def patch_config(text: str) -> tuple[str, bool]:
         .replace(category_header, f"{category_header}\n{entries}", 1)
     )
 
-    # Inject app map when the section exists (requires aw-watcher-window PR #136).
-    # Non-fatal when absent so the script stays compatible with older submodule pins.
-    app_map_injected = False
-    if app_category_header in patched:
-        if patched.count(app_category_header) != 1:
-            raise ValueError(f"expected exactly one '{app_category_header}' section")
-        app_entries = build_toml_table(list(APP_CATEGORY_MAP.items()))
-        patched = patched.replace(app_category_header, f"{app_category_header}\n{app_entries}", 1)
-        app_map_injected = True
+    app_entries = build_toml_table(list(APP_CATEGORY_MAP.items()))
+    patched = patched.replace(app_category_header, f"{app_category_header}\n{app_entries}", 1)
 
-    return patched, app_map_injected
+    return patched, True
 
 
 def main() -> None:
@@ -798,13 +800,8 @@ def main() -> None:
     unique = len({p for p, _ in CATEGORY_MAP})
     cats = len({c for _, c in CATEGORY_MAP})
     print(f"Injected {unique} unique patterns across {cats} categories into {CONFIG_FILE}")
-    if app_map_injected:
-        print(f"Injected {len(APP_CATEGORY_MAP)} app-name entries into {CONFIG_FILE}")
-    else:
-        print(
-            "Note: [aw-watcher-window.research_app_category_map] section not found — "
-            "app map not injected (requires aw-watcher-window PR #136 in submodule)"
-        )
+    assert app_map_injected  # patch_config() now fails closed rather than skipping
+    print(f"Injected {len(APP_CATEGORY_MAP)} app-name entries into {CONFIG_FILE}")
 
 
 if __name__ == "__main__":
