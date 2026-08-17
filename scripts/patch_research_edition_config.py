@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""Patch aw-watcher-window/config.py with Matthias's research edition category map.
+"""Patch aw-watcher-window/config.py with Matthias's research edition category maps.
 
 Run as part of the CI build for research edition:
     python3 scripts/patch_research_edition_config.py <path/to/config.py>
 
-classify_title() in PR #130 checks each pattern against the URL first (when
-available), then the window title. Ordering is critical: first match wins.
-Sensitive exclusions must come first. More specific domains before general
-(music.youtube.com before youtube.com). Video domains before News title keywords
-(svtplay.se domain before the "svt" title keyword).
+Two maps are injected:
+
+CATEGORY_MAP — browser URL/title substring matching:
+    classify_title() in PR #130 checks each pattern against the URL first (when
+    available), then the window title. Ordering is critical: first match wins.
+    Sensitive exclusions must come first. More specific domains before general
+    (music.youtube.com before youtube.com). Video domains before News title keywords
+    (svtplay.se domain before the "svt" title keyword).
+
+APP_CATEGORY_MAP — non-browser app-name → study category mapping:
+    classify_app() in PR #136 performs a case-insensitive exact lookup of the
+    app name. Non-browser apps are replaced by their study category; unmapped
+    apps become 'Excluded'. Ordering within this map is irrelevant (exact lookup).
+    Injection fails closed if the [aw-watcher-window.research_app_category_map]
+    section is absent, which means the submodule pin predates PR #136.
 """
 import pathlib
 import sys
@@ -640,6 +650,96 @@ CATEGORY_MAP: list[tuple[str, str]] = [
     ("kagi", "Search & Navigation"),
 ]
 
+# App-name → study category mapping for non-browser applications.
+# Faithfully derived from Matthias Lehner's APP_TO_CATEGORY dict (classifier 2026-07-06).
+# Keys are lowercase app names (exact match, case-insensitive at runtime).
+# "Excluded" means the app is deliberately suppressed — not a lookup miss.
+APP_CATEGORY_MAP: dict[str, str] = {
+    # AI chatbots & assistants
+    "chatgpt": "AI Chatbots & Assistants",
+    "chatgpt.exe": "AI Chatbots & Assistants",
+    "claude": "AI Chatbots & Assistants",
+    "claude.exe": "AI Chatbots & Assistants",
+    "gemini": "AI Chatbots & Assistants",
+    "microsoft copilot": "AI Chatbots & Assistants",
+    "copilot": "AI Chatbots & Assistants",
+    "perplexity": "AI Chatbots & Assistants",
+    "poe": "AI Chatbots & Assistants",
+    # Work & Productivity — Microsoft Office
+    "microsoft word": "Work & Productivity",
+    "word": "Work & Productivity",
+    "winword.exe": "Work & Productivity",
+    "microsoft excel": "Work & Productivity",
+    "excel": "Work & Productivity",
+    "excel.exe": "Work & Productivity",
+    "microsoft powerpoint": "Work & Productivity",
+    "powerpoint": "Work & Productivity",
+    "powerpnt.exe": "Work & Productivity",
+    # Email — Outlook is email, not productivity
+    "microsoft outlook": "Email",
+    "outlook": "Email",
+    "outlook.exe": "Email",
+    # Work & Productivity — collaboration/notes
+    "microsoft teams": "Work & Productivity",
+    "teams": "Work & Productivity",
+    "zoom": "Work & Productivity",
+    "zoom.us": "Work & Productivity",
+    "notion": "Work & Productivity",
+    "onenote": "Work & Productivity",
+    "adobe acrobat": "Work & Productivity",
+    "acrobat": "Work & Productivity",
+    "preview": "Work & Productivity",
+    "pages": "Work & Productivity",
+    "numbers": "Work & Productivity",
+    "keynote": "Work & Productivity",
+    "libreoffice": "Work & Productivity",
+    # Email — native clients
+    "mail": "Email",
+    "thunderbird": "Email",
+    # Messaging
+    "slack": "Messaging",
+    "signal": "Messaging",
+    "telegram": "Messaging",
+    "whatsapp": "Messaging",
+    "messenger": "Messaging",
+    "discord": "Messaging",
+    # Music & Audio
+    "spotify": "Music & Audio",
+    "music": "Music & Audio",
+    "apple music": "Music & Audio",
+    # Video Streaming — media players
+    "vlc": "Video Streaming",
+    "quicktime player": "Video Streaming",
+    "netflix": "Video Streaming",
+    # Games
+    "steam": "Games",
+    "epic games launcher": "Games",
+    "battle.net": "Games",
+    "roblox": "Games",
+    "minecraft": "Games",
+    "xbox": "Games",
+    # Work & Productivity — creative/professional software
+    "photoshop": "Work & Productivity",
+    "illustrator": "Work & Productivity",
+    "indesign": "Work & Productivity",
+    "lightroom": "Work & Productivity",
+    "premiere pro": "Work & Productivity",
+    "final cut pro": "Work & Productivity",
+    "figma": "Work & Productivity",
+    "blender": "Work & Productivity",
+    "autocad": "Work & Productivity",
+    # System utilities — explicitly excluded (not a lookup miss)
+    "finder": "Excluded",
+    "explorer": "Excluded",
+    "explorer.exe": "Excluded",
+    "system settings": "Excluded",
+    "settings": "Excluded",
+    "system preferences": "Excluded",
+    "terminal": "Excluded",
+    "cmd.exe": "Excluded",
+    "powershell.exe": "Excluded",
+}
+
 
 def build_toml_table(entries: list[tuple[str, str]]) -> str:
     seen: dict[str, str] = {}
@@ -654,19 +754,36 @@ def build_toml_table(entries: list[tuple[str, str]]) -> str:
     return "\n".join(items)
 
 
-def patch_config(text: str) -> str:
+def patch_config(text: str) -> tuple[str, bool]:
+    """Patch config.py text.  Returns (patched_text, app_map_injected)."""
     enabled_line = "research_enabled = false"
     category_header = "[aw-watcher-window.research_category_map]"
+    app_category_header = "[aw-watcher-window.research_app_category_map]"
+
     if enabled_line not in text:
         raise ValueError(f"'{enabled_line}' not found")
     if text.count(category_header) != 1:
         raise ValueError(f"expected exactly one '{category_header}' section")
+    # Fail closed: a missing section means the aw-watcher-window submodule predates
+    # PR #136, so classify_app() does not exist and non-browser apps would keep
+    # their raw names. Skipping the injection there produces a green build that
+    # silently reproduces the exact bug this map fixes -- fail loudly instead.
+    if text.count(app_category_header) != 1:
+        raise ValueError(
+            f"expected exactly one '{app_category_header}' section "
+            "(requires aw-watcher-window PR #136 in the submodule pin)"
+        )
 
     entries = build_toml_table(CATEGORY_MAP)
-    return (
+    patched = (
         text.replace(enabled_line, "research_enabled = true", 1)
         .replace(category_header, f"{category_header}\n{entries}", 1)
     )
+
+    app_entries = build_toml_table(list(APP_CATEGORY_MAP.items()))
+    patched = patched.replace(app_category_header, f"{app_category_header}\n{app_entries}", 1)
+
+    return patched, True
 
 
 def main() -> None:
@@ -675,7 +792,7 @@ def main() -> None:
         sys.exit(1)
     text = CONFIG_FILE.read_text(encoding="utf-8")
     try:
-        patched = patch_config(text)
+        patched, app_map_injected = patch_config(text)
     except ValueError as error:
         print(f"Error: {error} in {CONFIG_FILE}", file=sys.stderr)
         sys.exit(1)
@@ -683,6 +800,8 @@ def main() -> None:
     unique = len({p for p, _ in CATEGORY_MAP})
     cats = len({c for _, c in CATEGORY_MAP})
     print(f"Injected {unique} unique patterns across {cats} categories into {CONFIG_FILE}")
+    assert app_map_injected  # patch_config() now fails closed rather than skipping
+    print(f"Injected {len(APP_CATEGORY_MAP)} app-name entries into {CONFIG_FILE}")
 
 
 if __name__ == "__main__":
