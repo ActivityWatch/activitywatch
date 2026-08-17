@@ -345,7 +345,7 @@ jobs:
           echo "OK: aw-server version ${BUNDLED_VERSION} is consistent with AW release ${AW_VERSION}"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -605,7 +605,7 @@ jobs:
           echo "OK: aw-server version ${BUNDLED_VERSION} is consistent with AW release ${AW_VERSION}"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -802,7 +802,7 @@ jobs:
           echo "${{ steps.version.outputs.full }} (stable: ${{ steps.version.outputs.is_stable }})"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
