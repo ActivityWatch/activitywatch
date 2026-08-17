@@ -23,8 +23,19 @@ time aw-webui sees an event, `app` *is* the category name.
 import importlib.util
 import json
 import pathlib
-import re
 import sys
+
+# Characters that are special to BOTH Python's `re` and JavaScript's RegExp
+# outside a character class. Escaping is deliberately restricted to these.
+#
+# `re.escape()` is not usable here: it escapes space as `\ ` and `&` as `\&`,
+# which are *invalid identity escapes* in JavaScript unicode-mode regex. Names
+# like "AI Chatbots & Assistants" then throw `Invalid escape` under `new
+# RegExp(r, "u")` -- 14 of the 18 study categories do. They happen to compile
+# today only because aw-webui builds the regex without the `u` flag, and the
+# failure would present as "categories don't show", i.e. indistinguishable from
+# the bug this preset exists to fix. Escape only what both engines agree on.
+_REGEX_METACHARACTERS = set(r"\^$.|?*+()[]{}")
 
 PRESET_ID = "research-study"
 PRESET_NAME = "Research Edition study categories"
@@ -41,6 +52,16 @@ def _load_category_source():
     sys.modules["_re_patcher"] = module
     spec.loader.exec_module(module)
     return module
+
+
+def escape_portable(value: str) -> str:
+    """Escape `value` so the result is a literal in both Python and JS regex.
+
+    Portable across engines *and* across JS flag modes, unlike `re.escape()`.
+    """
+    return "".join(
+        "\\" + char if char in _REGEX_METACHARACTERS else char for char in value
+    )
 
 
 def build_preset() -> dict:
@@ -60,7 +81,7 @@ def build_preset() -> dict:
                 "name": [category],
                 "rule": {
                     "type": "regex",
-                    "regex": f"^{re.escape(category)}$",
+                    "regex": f"^{escape_portable(category)}$",
                     "ignore_case": False,
                 },
             }

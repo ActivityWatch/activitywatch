@@ -37,12 +37,31 @@ def test_rules_match_their_own_category_and_nothing_else():
         assert not re.search(pattern, f"{name} extra")
 
 
-def test_regex_metacharacters_in_category_names_are_escaped():
-    """Names carry '&', '/' and '-'; an unescaped name would be a broken rule."""
-    by_name = {c["name"][0]: c for c in emitter.build_preset()["categories"]}
+def test_escaping_is_portable_to_javascript_unicode_mode():
+    """`re.escape` is unusable here: it emits `\\ ` and `\\&`.
 
-    assert by_name["Sensitive / Excluded"]["rule"]["regex"] == r"^Sensitive\ /\ Excluded$"
-    assert re.search(by_name["Shopping - Goods"]["rule"]["regex"], "Shopping - Goods")
+    Those are valid in Python but are *invalid identity escapes* in JavaScript
+    unicode-mode regex, so `new RegExp(r, "u")` throws on 14 of the 18 study
+    categories. aw-webui compiles without the `u` flag today, which is the only
+    reason `re.escape` would appear to work -- and the failure would present as
+    "categories don't show", indistinguishable from the bug this preset fixes.
+    """
+    for category in emitter.build_preset()["categories"]:
+        pattern = category["rule"]["regex"]
+        escaped = {pattern[i + 1] for i, ch in enumerate(pattern[:-1]) if ch == "\\"}
+
+        assert escaped <= emitter._REGEX_METACHARACTERS, (
+            f"{pattern!r} escapes characters JavaScript rejects under the u flag"
+        )
+
+
+def test_escape_portable_still_escapes_real_metacharacters():
+    """A future category name containing a metacharacter must not become a wildcard."""
+    assert emitter.escape_portable("a.b") == r"a\.b"
+    assert emitter.escape_portable("x(y)") == r"x\(y\)"
+    assert emitter.escape_portable("Shopping - Goods") == "Shopping - Goods"
+    assert re.fullmatch(emitter.escape_portable("a.b"), "a.b")
+    assert not re.fullmatch(emitter.escape_portable("a.b"), "axb")
 
 
 def test_output_is_stable_across_runs():
