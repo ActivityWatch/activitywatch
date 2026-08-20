@@ -415,6 +415,18 @@ jobs:
         if: env.AW_RESEARCH_EDITION == 'true'
         run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
 
+      # The watcher rewrites `app` to a study category before storing, but
+      # aw-webui categorises client-side with its own defaults and never sees
+      # the watcher's map -- so without this the Categories panel reads
+      # "Uncategorized" while Top Applications shows the right categories.
+      # Derived from the same map as the step above, so the two cannot drift.
+      - name: Emit research edition category preset for the web UI
+        if: env.AW_RESEARCH_EDITION == 'true'
+        shell: bash
+        run: |
+          preset="$(python3 scripts/emit_research_category_preset.py)"
+          echo "AW_PRESET_CATEGORY_SETS=${preset}" >> "$GITHUB_ENV"
+
       - name: Build
         run: |
           python3 -m venv venv
@@ -675,6 +687,18 @@ jobs:
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
         run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+
+      # The watcher rewrites `app` to a study category before storing, but
+      # aw-webui categorises client-side with its own defaults and never sees
+      # the watcher's map -- so without this the Categories panel reads
+      # "Uncategorized" while Top Applications shows the right categories.
+      # Derived from the same map as the step above, so the two cannot drift.
+      - name: Emit research edition category preset for the web UI
+        if: env.AW_RESEARCH_EDITION == 'true'
+        shell: bash
+        run: |
+          preset="$(python3 scripts/emit_research_category_preset.py)"
+          echo "AW_PRESET_CATEGORY_SETS=${preset}" >> "$GITHUB_ENV"
 
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
