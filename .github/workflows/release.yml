@@ -300,6 +300,7 @@ jobs:
           VERSION_WITH_V="${VERSION_WITH_V%-research}"
           VERSION_NO_V="${VERSION_WITH_V#v}"
           echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
+          echo "VERSION_NO_V=${VERSION_NO_V}" >> "$GITHUB_ENV"
           echo "========================================"
           echo "Build Version Information"
           echo "========================================"
@@ -328,6 +329,10 @@ jobs:
           fi
 
           AW_VERSION="${VERSION_NO_V}"  # e.g. "0.14.0b3"
+          if [ -z "$AW_VERSION" ]; then
+            echo "ERROR: VERSION_NO_V is empty — the 'Determine and output version' step must export it to GITHUB_ENV" >&2
+            exit 1
+          fi
           AW_MAJOR_MINOR=$(echo "$AW_VERSION" | cut -d'.' -f1-2)  # "0.14"
           AWS_MAJOR_MINOR=$(echo "$BUNDLED_VERSION" | cut -d'.' -f1-2)  # "0.14"
 
@@ -572,6 +577,7 @@ jobs:
           VERSION_WITH_V="${VERSION_WITH_V%-research}"
           VERSION_NO_V="${VERSION_WITH_V#v}"
           echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
+          echo "VERSION_NO_V=${VERSION_NO_V}" >> "$GITHUB_ENV"
           echo "========================================"
           echo "Build Version Information (Tauri)"
           echo "========================================"
@@ -600,6 +606,10 @@ jobs:
           fi
 
           AW_VERSION="${VERSION_NO_V}"  # e.g. "0.14.0b3"
+          if [ -z "$AW_VERSION" ]; then
+            echo "ERROR: VERSION_NO_V is empty — the 'Determine and output version' step must export it to GITHUB_ENV" >&2
+            exit 1
+          fi
           AW_MAJOR_MINOR=$(echo "$AW_VERSION" | cut -d'.' -f1-2)  # "0.14"
           AWS_MAJOR_MINOR=$(echo "$BUNDLED_VERSION" | cut -d'.' -f1-2)  # "0.14"
 
