@@ -717,6 +717,7 @@ jobs:
           max_attempts: 3
           shell: bash
           command: |
+            set -e
             python3 -m venv venv
             source venv/bin/activate || source venv/Scripts/activate
             poetry install
@@ -946,4 +947,3 @@ jobs:
           prerelease: ${{ !(steps.version.outputs.is_stable == 'true') }}
 
 # Retry CI after transient upload-artifact timeout.
-
