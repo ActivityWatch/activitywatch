@@ -51,6 +51,21 @@ def manifest_filename(edition: str) -> str:
     return "latest-research.json" if edition == "research" else "latest.json"
 
 
+# Tauri v2 recommends NSIS for Windows updater bundles. When both NSIS and
+# MSI signatures exist for the same platform key, keep NSIS regardless of
+# os.walk order. Unlisted extensions share rank 0 (first one wins).
+WINDOWS_BUNDLE_RANK = {
+    "nsis.zip": 2,
+    "exe": 1,
+    "msi.zip": 0,
+    "msi": 0,
+}
+
+
+def bundle_rank(ext: str) -> int:
+    return WINDOWS_BUNDLE_RANK.get(ext, 0)
+
+
 def collect_platforms(dist: str, version: str, repo: str, tag: str, edition: str) -> dict:
     prefix = asset_prefix(edition)
     # Non-greedy platform group: extensions can be multi-part (.app.tar.gz,
@@ -61,6 +76,7 @@ def collect_platforms(dist: str, version: str, repo: str, tag: str, edition: str
     )
 
     platforms = {}
+    chosen_ext = {}
     for root, _, files in os.walk(dist):
         for name in files:
             if not name.endswith(".sig"):
@@ -69,9 +85,15 @@ def collect_platforms(dist: str, version: str, repo: str, tag: str, edition: str
             m = pattern.match(asset_name)
             if not m:
                 continue
+            platform = m.group("platform")
+            ext = m.group("ext")
+            prev_ext = chosen_ext.get(platform)
+            if prev_ext is not None and bundle_rank(ext) <= bundle_rank(prev_ext):
+                continue
             with open(os.path.join(root, name)) as f:
                 signature = f.read().strip()
-            platforms[m.group("platform")] = {
+            chosen_ext[platform] = ext
+            platforms[platform] = {
                 "signature": signature,
                 "url": (
                     f"https://github.com/{repo}/releases/download/"

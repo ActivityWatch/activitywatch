@@ -843,7 +843,18 @@ jobs:
             artifact="${sig%.sig}"
             if [ -f "$artifact" ]; then
               base="${artifact##*/}"
-              ext="${base#*.}" # everything after the first dot, e.g. "app.tar.gz"
+              # Bundle names embed the crate version (e.g. aw-tauri_0.1.0_amd64.AppImage),
+              # so "everything after the first dot" would yield "1.0_amd64.AppImage".
+              case "$base" in
+                *.app.tar.gz)      ext="app.tar.gz" ;;
+                *.AppImage.tar.gz) ext="AppImage.tar.gz" ;;
+                *.AppImage)        ext="AppImage" ;;
+                *.nsis.zip)        ext="nsis.zip" ;;
+                *.msi.zip)         ext="msi.zip" ;;
+                *.msi)             ext="msi" ;;
+                *.exe)             ext="exe" ;;
+                *) echo "unknown updater bundle: $base" >&2; exit 1 ;;
+              esac
               out="dist/updater/activitywatch-tauri${EDITION}-${VERSION}-${PLATFORM_KEY}.${ext}"
               cp "$artifact" "$out"
               cp "$sig" "$out.sig"

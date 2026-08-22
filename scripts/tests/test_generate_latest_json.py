@@ -103,6 +103,25 @@ def test_research_collect_ignores_standard_artifacts(tmp_path):
     )
 
 
+def test_windows_prefers_nsis_over_msi_regardless_of_walk_order(tmp_path):
+    _write_sig(tmp_path, "activitywatch-tauri-0.14.0-windows-x86_64.msi.zip.sig", "msi-sig")
+    _write_sig(tmp_path, "activitywatch-tauri-0.14.0-windows-x86_64.nsis.zip.sig", "nsis-sig")
+
+    platforms = gen.collect_platforms(
+        str(tmp_path),
+        "0.14.0",
+        "ActivityWatch/activitywatch",
+        "v0.14.0",
+        "standard",
+    )
+
+    assert list(platforms) == ["windows-x86_64"]
+    assert platforms["windows-x86_64"]["signature"] == "nsis-sig"
+    assert platforms["windows-x86_64"]["url"].endswith(
+        "/v0.14.0/activitywatch-tauri-0.14.0-windows-x86_64.nsis.zip"
+    )
+
+
 def test_main_writes_manifest_and_refuses_empty(tmp_path):
     _write_sig(tmp_path, "activitywatch-tauri-0.14.0-windows-x86_64.nsis.zip.sig")
     out = tmp_path / "latest.json"
