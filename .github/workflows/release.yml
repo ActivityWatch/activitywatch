@@ -833,6 +833,8 @@ jobs:
             *) ARCH_NAME="$(uname -m)" ;;
           esac
           PLATFORM_KEY="${OS_NAME}-${ARCH_NAME}"
+          EDITION=""
+          if [[ "${AW_RESEARCH_EDITION:-}" == "true" ]]; then EDITION="-research"; fi
 
           # Only the bundle formats Tauri's updater consumes — avoids picking up
           # .sig files for .deb/.rpm/.dmg if those ever get signed too.
@@ -842,7 +844,7 @@ jobs:
             if [ -f "$artifact" ]; then
               base="${artifact##*/}"
               ext="${base#*.}" # everything after the first dot, e.g. "app.tar.gz"
-              out="dist/updater/activitywatch-tauri-${VERSION}-${PLATFORM_KEY}.${ext}"
+              out="dist/updater/activitywatch-tauri${EDITION}-${VERSION}-${PLATFORM_KEY}.${ext}"
               cp "$artifact" "$out"
               cp "$sig" "$out.sig"
               found=$((found + 1))
@@ -968,7 +970,9 @@ jobs:
     needs: [build-qt, build-tauri, release-notes]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      # Pin checkout in this contents-write job so a moved v7 tag cannot
+      # change the release automation. Build jobs keep actions/checkout@v7.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -986,16 +990,36 @@ jobs:
         with:
           prefix: 'v'
 
-      - name: Generate latest.json
+      # Tag/repo values are passed via env (GITHUB_REF_NAME / GITHUB_REPOSITORY
+      # are set by Actions) rather than interpolated into the shell script, so
+      # a crafted v* tag cannot inject commands into this contents-write job.
+      #
+      # Editions are partitioned by filename so they cannot share an updater
+      # endpoint: standard writes latest.json, research writes latest-research.json.
+      - name: Generate updater manifest
         run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          VERSION="${VERSION%-research}"
+          if [[ "$TAG" == *-research ]]; then
+            EDITION="research"
+            MANIFEST="latest-research.json"
+            NOTES="ActivityWatch ${TAG} (Research Edition)"
+          else
+            EDITION="standard"
+            MANIFEST="latest.json"
+            NOTES="ActivityWatch ${TAG}"
+          fi
           python3 scripts/package/generate_latest_json.py \
-            --version "$(bash scripts/package/getversion.sh | sed 's/^v//')" \
-            --notes "ActivityWatch ${{ github.ref_name }}" \
-            --repo "${{ github.repository }}" \
-            --tag "${{ github.ref_name }}" \
+            --version "$VERSION" \
+            --edition "$EDITION" \
+            --notes "$NOTES" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --tag "$TAG" \
             --dist dist \
-            --output dist/latest.json
-          cat dist/latest.json
+            --output "dist/${MANIFEST}"
+          cat "dist/${MANIFEST}"
 
       - name: Release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
@@ -1007,6 +1031,7 @@ jobs:
             dist/*/activitywatch-*.*
             dist/*/updater/*
             dist/latest.json
+            dist/latest-research.json
           body_path: dist/release_notes/release_notes.md
           # check-version-format-action leaves is_stable unset/false for
           # research-suffixed tags, so this stays prerelease for them too.

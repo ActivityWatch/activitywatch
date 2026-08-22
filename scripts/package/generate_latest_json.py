@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
-"""Assemble a Tauri updater `latest.json` manifest from per-platform .sig files.
+"""Assemble a Tauri updater manifest from per-platform .sig files.
 
-Expects updater artifacts to be named
-`activitywatch-tauri-<version>-<platform-key>.<ext>` with a matching
-`<...>.sig` file alongside it (as produced by the "Package Tauri updater
-artifacts" step in release.yml), where <platform-key> is a Tauri
+Expects updater artifacts named
+`activitywatch-tauri[-research]-<version>-<platform-key>.<ext>` with a
+matching `<...>.sig` file alongside it (as produced by the "Package Tauri
+updater artifacts" step in release.yml), where <platform-key> is a Tauri
 updater platform identifier such as "darwin-aarch64" or "linux-x86_64".
+
+Standard and Research Edition releases are partitioned by filename:
+
+- standard:  `latest.json`           + `activitywatch-tauri-<ver>-...`
+- research:  `latest-research.json`  + `activitywatch-tauri-research-<ver>-...`
+
+so the two lines cannot overwrite each other's GitHub release assets or
+share an updater endpoint.
 """
 import argparse
 import json
@@ -13,28 +21,47 @@ import os
 import re
 from datetime import datetime, timezone
 
+EDITIONS = ("standard", "research")
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--version", required=True)
-    parser.add_argument("--notes", required=True)
-    parser.add_argument(
-        "--repo", required=True, help="e.g. ActivityWatch/activitywatch"
-    )
-    parser.add_argument("--tag", required=True, help="e.g. v0.13.3")
-    parser.add_argument("--dist", required=True, help="directory to search for *.sig files")
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
 
+def normalize_version(version: str) -> str:
+    """Strip a leading 'v' and a trailing '-research' edition suffix."""
+    if version.startswith("v"):
+        version = version[1:]
+    if version.endswith("-research"):
+        version = version[: -len("-research")]
+    return version
+
+
+def infer_edition(tag: str, edition=None) -> str:
+    if edition:
+        if edition not in EDITIONS:
+            raise ValueError(f"unknown edition {edition!r}")
+        return edition
+    return "research" if tag.endswith("-research") else "standard"
+
+
+def asset_prefix(edition: str) -> str:
+    if edition == "research":
+        return "activitywatch-tauri-research"
+    return "activitywatch-tauri"
+
+
+def manifest_filename(edition: str) -> str:
+    return "latest-research.json" if edition == "research" else "latest.json"
+
+
+def collect_platforms(dist: str, version: str, repo: str, tag: str, edition: str) -> dict:
+    prefix = asset_prefix(edition)
     # Non-greedy platform group: extensions can be multi-part (.app.tar.gz,
     # .AppImage.tar.gz, .nsis.zip), so stop at the first dot after the
     # platform key rather than the last.
     pattern = re.compile(
-        rf"^activitywatch-tauri-{re.escape(args.version)}-(?P<platform>.+?)\.(?P<ext>.+)$"
+        rf"^{re.escape(prefix)}-{re.escape(version)}-(?P<platform>.+?)\.(?P<ext>.+)$"
     )
 
     platforms = {}
-    for root, _, files in os.walk(args.dist):
+    for root, _, files in os.walk(dist):
         for name in files:
             if not name.endswith(".sig"):
                 continue
@@ -47,28 +74,59 @@ def main():
             platforms[m.group("platform")] = {
                 "signature": signature,
                 "url": (
-                    f"https://github.com/{args.repo}/releases/download/"
-                    f"{args.tag}/{asset_name}"
+                    f"https://github.com/{repo}/releases/download/"
+                    f"{tag}/{asset_name}"
                 ),
             }
+    return platforms
+
+
+def build_manifest(version: str, notes: str, platforms: dict, pub_date=None) -> dict:
+    if pub_date is None:
+        pub_date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return {
+        "version": version,
+        "notes": notes,
+        "pub_date": pub_date,
+        "platforms": platforms,
+    }
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--version", required=True)
+    parser.add_argument("--notes", required=True)
+    parser.add_argument(
+        "--repo", required=True, help="e.g. ActivityWatch/activitywatch"
+    )
+    parser.add_argument("--tag", required=True, help="e.g. v0.13.3 or v0.13.3-research")
+    parser.add_argument(
+        "--edition",
+        choices=EDITIONS,
+        default=None,
+        help="Release line. Inferred from --tag (*-research) if omitted.",
+    )
+    parser.add_argument("--dist", required=True, help="directory to search for *.sig files")
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args(argv)
+
+    version = normalize_version(args.version)
+    edition = infer_edition(args.tag, args.edition)
+    platforms = collect_platforms(args.dist, version, args.repo, args.tag, edition)
 
     if not platforms:
         raise SystemExit(
-            "No updater artifacts found - refusing to write an empty latest.json"
+            f"No {edition} updater artifacts found - refusing to write an empty "
+            f"{os.path.basename(args.output)}"
         )
 
-    manifest = {
-        "version": args.version,
-        "notes": args.notes,
-        "pub_date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "platforms": platforms,
-    }
+    manifest = build_manifest(version, args.notes, platforms)
 
     with open(args.output, "w") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
 
-    print(f"Wrote {args.output} with platforms: {', '.join(sorted(platforms))}")
+    print(f"Wrote {args.output} ({edition}) with platforms: {', '.join(sorted(platforms))}")
 
 
 if __name__ == "__main__":
