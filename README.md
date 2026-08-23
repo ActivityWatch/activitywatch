@@ -178,7 +178,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
-| HPR           | :white_check_mark: | :white_check_mark: | :x: (Title parsing)| :x: (Title parsing)| :white_check_mark: |
+| HPR           | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :white_check_mark: |
 
 For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
