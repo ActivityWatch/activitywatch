@@ -149,8 +149,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | [ulogme]        | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
 | [RescueTime]    | :x:                | :white_check_mark: | Centralized                | :x:                |
 | [WakaTime]      | :x:                | :white_check_mark: | Centralized                | Clients            |
-| [HPR]           | :white_check_mark: | :white_check_mark: | :x:                        |
-:white_check_mark: |
+| [HPR]           | :white_check_mark: | :white_check_mark: | :x:                        | :white_check_mark: |
 
 [sync]: https://github.com/ActivityWatch/activitywatch/issues/35
 [Selfspy]: https://github.com/selfspy/selfspy
@@ -168,7 +167,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
 | ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
-| HPR           | :white_check_mark: | :x:                | :white_check_mark: | :x:                |
+| HPR           | :white_check_mark: | :x:                | :white_check_mark: | :x:                | :x:
 
 ##### Tracking
 
@@ -179,7 +178,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | ulogme        | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                   |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                   |
 | WakaTime      | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | Only for text editors |
-| HPR           | :white_check_mark: | :white_check_mark: | :x: (Title parsing)| :x: (Title parsing)|
+| HPR           | :white_check_mark: | :white_check_mark: | :x: (Title parsing)| :x: (Title parsing)| :white_check_mark: |
 
 For a complete list of the things ActivityWatch can track, [see the page on *watchers* in the documentation](https://docs.activitywatch.net/en/latest/watchers.html).
 
