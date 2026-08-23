@@ -167,7 +167,7 @@ We have a plan to address all of these and we're well on our way. See the table 
 | Selfspy       | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
 | ulogme        | :x:                | :white_check_mark: | :white_check_mark: | :x:                |:x:                  |
 | RescueTime    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |Limited functionality|
-| HPR           | :white_check_mark: | :x:                | :white_check_mark: | :x:                | :x: |           |
+| HPR           | :white_check_mark: | :x:                | :white_check_mark: | :x:                | :x:             |
 
 ##### Tracking
 
