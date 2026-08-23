@@ -723,6 +723,11 @@ jobs:
             poetry install
             make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
             pip freeze
+        env:
+          # Signs aw-tauri bundles and emits .sig files for the updater when
+          # createUpdaterArtifacts is enabled in aw-tauri/src-tauri/tauri.conf.json.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Run tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
@@ -811,11 +816,67 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAMID: ${{ secrets.APPLE_TEAMID }}
 
+      - name: Package Tauri updater artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p dist/updater
+          VERSION="${VERSION_WITH_V#v}"
+
+          case "$RUNNER_OS" in
+            macOS) OS_NAME="darwin" ;;
+            Linux) OS_NAME="linux" ;;
+            Windows) OS_NAME="windows" ;;
+          esac
+          case "$(uname -m)" in
+            arm64|aarch64) ARCH_NAME="aarch64" ;;
+            x86_64|amd64) ARCH_NAME="x86_64" ;;
+            *) ARCH_NAME="$(uname -m)" ;;
+          esac
+          PLATFORM_KEY="${OS_NAME}-${ARCH_NAME}"
+          EDITION=""
+          if [[ "${AW_RESEARCH_EDITION:-}" == "true" ]]; then EDITION="-research"; fi
+
+          # Only the bundle formats Tauri's updater consumes — avoids picking up
+          # .sig files for .deb/.rpm/.dmg if those ever get signed too.
+          found=0
+          while IFS= read -r -d '' sig; do
+            artifact="${sig%.sig}"
+            if [ -f "$artifact" ]; then
+              base="${artifact##*/}"
+              # Bundle names embed the crate version (e.g. aw-tauri_0.1.0_amd64.AppImage),
+              # so "everything after the first dot" would yield "1.0_amd64.AppImage".
+              case "$base" in
+                *.app.tar.gz)      ext="app.tar.gz" ;;
+                *.AppImage.tar.gz) ext="AppImage.tar.gz" ;;
+                *.AppImage)        ext="AppImage" ;;
+                *.nsis.zip)        ext="nsis.zip" ;;
+                *.msi.zip)         ext="msi.zip" ;;
+                *.msi)             ext="msi" ;;
+                *.exe)             ext="exe" ;;
+                *) echo "unknown updater bundle: $base" >&2; exit 1 ;;
+              esac
+              out="dist/updater/activitywatch-tauri${EDITION}-${VERSION}-${PLATFORM_KEY}.${ext}"
+              cp "$artifact" "$out"
+              cp "$sig" "$out.sig"
+              found=$((found + 1))
+            fi
+          done < <(find aw-tauri/src-tauri/target -type f \( \
+            -path "*/release/bundle/macos/*.sig" -o \
+            -path "*/release/bundle/appimage/*.sig" -o \
+            -path "*/release/bundle/nsis/*.sig" -o \
+            -path "*/release/bundle/msi/*.sig" \
+            \) -print0)
+
+          echo "Found $found Tauri updater artifact(s) for $PLATFORM_KEY"
+          ls -la dist/updater/ || true
+
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
           name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}
-          path: dist/activitywatch-*.*
+          path: |
+            dist/activitywatch-*.*
+            dist/updater/*
 
   release-notes:
     name: Generate release notes
@@ -920,6 +981,12 @@ jobs:
     needs: [build-qt, build-tauri, release-notes]
     runs-on: ubuntu-latest
     steps:
+      # Pin checkout in this contents-write job so a moved v7 tag cannot
+      # change the release automation. Build jobs keep actions/checkout@v7.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
@@ -934,13 +1001,48 @@ jobs:
         with:
           prefix: 'v'
 
+      # Tag/repo values are passed via env (GITHUB_REF_NAME / GITHUB_REPOSITORY
+      # are set by Actions) rather than interpolated into the shell script, so
+      # a crafted v* tag cannot inject commands into this contents-write job.
+      #
+      # Editions are partitioned by filename so they cannot share an updater
+      # endpoint: standard writes latest.json, research writes latest-research.json.
+      - name: Generate updater manifest
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          VERSION="${VERSION%-research}"
+          if [[ "$TAG" == *-research ]]; then
+            EDITION="research"
+            MANIFEST="latest-research.json"
+            NOTES="ActivityWatch ${TAG} (Research Edition)"
+          else
+            EDITION="standard"
+            MANIFEST="latest.json"
+            NOTES="ActivityWatch ${TAG}"
+          fi
+          python3 scripts/package/generate_latest_json.py \
+            --version "$VERSION" \
+            --edition "$EDITION" \
+            --notes "$NOTES" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --tag "$TAG" \
+            --dist dist \
+            --output "dist/${MANIFEST}"
+          cat "dist/${MANIFEST}"
+
       - name: Release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
         with:
           draft: true
           # Empty name falls back to the tag name (standard releases unchanged).
           name: ${{ endsWith(github.ref_name, '-research') && format('{0} (Research Edition)', github.ref_name) || '' }}
-          files: dist/*/activitywatch-*.*
+          files: |
+            dist/*/activitywatch-*.*
+            dist/*/updater/*
+            dist/latest.json
+            dist/latest-research.json
           body_path: dist/release_notes/release_notes.md
           # check-version-format-action leaves is_stable unset/false for
           # research-suffixed tags, so this stays prerelease for them too.
