@@ -420,6 +420,14 @@ jobs:
         if: env.AW_RESEARCH_EDITION == 'true'
         run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
 
+      # Watchers store buckets as `{client}_{hostname}`. That hostname is a
+      # participant identifier on named machines, and /api/0/export copies it
+      # into the map key, embedded id, and hostname field. Standard builds
+      # must not change; this patch is Research-only and fail-closed.
+      - name: Patch research edition export hostname sanitizer
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_export.py
+
       # The watcher rewrites `app` to a study category before storing, but
       # aw-webui categorises client-side with its own defaults and never sees
       # the watcher's map -- so without this the Categories panel reads
@@ -697,6 +705,14 @@ jobs:
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
         run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+
+      # Watchers store buckets as `{client}_{hostname}`. That hostname is a
+      # participant identifier on named machines, and /api/0/export copies it
+      # into the map key, embedded id, and hostname field. Standard builds
+      # must not change; this patch is Research-only and fail-closed.
+      - name: Patch research edition export hostname sanitizer
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_export.py
 
       # The watcher rewrites `app` to a study category before storing, but
       # aw-webui categorises client-side with its own defaults and never sees
