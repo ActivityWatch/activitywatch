@@ -108,7 +108,8 @@ for arg in "$@"; do
             if extract_appimage "$arg" "$AI_DIR"; then
                 scan_elfs "$AI_DIR" "$(basename "$arg")"
             else
-                echo "WARNING: could not extract $(basename "$arg") — skipping AppImage ABI scan" >&2
+                echo "ERROR: could not extract $(basename "$arg") — AppImage ABI scan is required; aborting" >&2
+                exit 2
             fi
             ;;
         *)
