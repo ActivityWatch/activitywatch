@@ -208,10 +208,9 @@ ifeq ($(TAURI_BUILD),true)
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp aw-server-rust/target/$(targetdir)/aw-sync dist/activitywatch/aw-server-rust/aw-sync
 else
-# Move aw-qt to the root of the dist folder
-	mv dist/activitywatch/aw-qt aw-qt-tmp
-	mv aw-qt-tmp/* dist/activitywatch
-	rmdir aw-qt-tmp
+# Move aw-qt to the root of the dist folder (cp -a handles hidden files that glob * misses)
+	cp -a dist/activitywatch/aw-qt/. dist/activitywatch/
+	rm -rf dist/activitywatch/aw-qt
 endif
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
