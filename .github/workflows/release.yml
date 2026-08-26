@@ -526,6 +526,239 @@ jobs:
           name: builds-${{ matrix.os }}-py${{ matrix.python_version }}
           path: dist/activitywatch-*.*
 
+  build-qt-manylinux-2-28:
+    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor)
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+    env:
+      AW_EXTRAS: true
+      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      # AppImage tools (linuxdeploy/appimagetool) are themselves AppImages;
+      # FUSE is unavailable inside Docker containers, so use extract-and-run.
+      APPIMAGE_EXTRACT_AND_RUN: 1
+      # aw-sync enables openssl/vendored on Linux and tries to build OpenSSL
+      # from source; use the container's system openssl-devel instead.
+      OPENSSL_NO_VENDOR: 1
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: [3.9]
+        node_version: [22]
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      # Configure git safe.directory immediately after checkout so that every
+      # subsequent step — including the version probe below — can read the full
+      # history.  Deferring this step past the first `git describe` call causes
+      # the version probe to fall back to v0.0.0.dev-unknown.
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Set RELEASE
+        run: |
+          echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> "$GITHUB_ENV"
+
+      - name: Set tag metadata
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "VERSION_TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+
+      - name: Determine and output version
+        run: |
+          VERSION_WITH_V=$(bash scripts/package/getversion.sh)
+          # Strip the research tag suffix for filenames: the edition gets its
+          # own token (activitywatch[-research]-<version>-...), so the version
+          # part stays a plain version string.
+          VERSION_WITH_V="${VERSION_WITH_V%-research}"
+          VERSION_NO_V="${VERSION_WITH_V#v}"
+          echo "VERSION_WITH_V=${VERSION_WITH_V}" >> "$GITHUB_ENV"
+          echo "VERSION_NO_V=${VERSION_NO_V}" >> "$GITHUB_ENV"
+          echo "========================================"
+          echo "Build Version Information"
+          echo "========================================"
+          echo "GitHub ref: ${{ github.ref }}"
+          echo "GitHub ref_name: ${{ github.ref_name }}"
+          echo "Version (with v):  ${VERSION_WITH_V}"
+          echo "Version (no v):     ${VERSION_NO_V}"
+          echo "========================================"
+
+      - name: Verify aw-server-rust submodule version matches release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # Fail fast if the aw-server-rust submodule is pinned to an older
+          # release line than the one we're tagging.  Same check as in
+          # build-qt and build-qt-tauri — prevents shipping a manylinux
+          # bundle with a mismatched aw-server-rust binary.
+          #
+          # The bundled binary's version lives in
+          # aw-server-rust/aw-server/Cargo.toml (the workspace-level
+          # aw-server-rust/Cargo.toml has no [package].version field).
+          BUNDLED_VERSION=$(grep -m1 '^version = ' aw-server-rust/aw-server/Cargo.toml | sed -E 's/^version = "(.*)".*/\1/')
+          if [ -z "$BUNDLED_VERSION" ]; then
+            echo "ERROR: could not read aw-server version from aw-server-rust/aw-server/Cargo.toml" >&2
+            exit 1
+          fi
+
+          AW_VERSION="${VERSION_NO_V}"  # e.g. "0.14.0b3"
+          if [ -z "$AW_VERSION" ]; then
+            echo "ERROR: VERSION_NO_V is empty — the 'Determine and output version' step must export it to GITHUB_ENV" >&2
+            exit 1
+          fi
+          AW_MAJOR_MINOR=$(echo "$AW_VERSION" | cut -d'.' -f1-2)  # "0.14"
+          AWS_MAJOR_MINOR=$(echo "$BUNDLED_VERSION" | cut -d'.' -f1-2)  # "0.14"
+
+          echo "AW release tag:       ${AW_VERSION} (major.minor: ${AW_MAJOR_MINOR})"
+          echo "Bundled aw-server:    ${BUNDLED_VERSION} (major.minor: ${AWS_MAJOR_MINOR})"
+
+          if [ "$AW_MAJOR_MINOR" != "$AWS_MAJOR_MINOR" ]; then
+            echo ""
+            echo "ERROR: aw-server-rust major.minor (${AWS_MAJOR_MINOR}) does not match"
+            echo "       AW release major.minor (${AW_MAJOR_MINOR})."
+            echo "       The aw-server-rust submodule is stale for this tag."
+            echo "       Update the submodule (cd aw-server-rust && git pull) and re-tag."
+            exit 1
+          fi
+          echo "OK: aw-server version ${BUNDLED_VERSION} is consistent with AW release ${AW_VERSION}"
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        id: toolchain
+        with:
+          toolchain: stable
+
+      - name: Cache node_modules
+        uses: actions/cache@v6
+        with:
+          path: aw-server-rust/aw-webui/node_modules
+          key: manylinux_2_28-node_modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            manylinux_2_28-node_modules-
+
+      - name: Cache cargo build
+        uses: actions/cache@v6
+        env:
+          cache-name: cargo-build-target
+        with:
+          path: aw-server-rust/target
+          key: manylinux_2_28-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            manylinux_2_28-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
+
+      - name: Install Linux dependencies
+        run: |
+          dnf install -y epel-release
+          dnf install -y \
+            qt5-qtbase-devel \
+            qt5-qtx11extras \
+            qt5-qtwayland \
+            fontconfig-devel \
+            freetype-devel \
+            libX11-devel \
+            libXcursor-devel \
+            libXext-devel \
+            libXfixes-devel \
+            libXft-devel \
+            libXi-devel \
+            libXrandr-devel \
+            libXrender-devel \
+            libxcb-devel \
+            openssl-devel \
+            kernel-headers \
+            gcc \
+            gcc-c++ \
+            python39-devel \
+            python39-libs \
+            squashfs-tools \
+            zip \
+            wget
+
+      - name: Set up Python PATH
+        run: |
+          # Prepend the manylinux CPython 3.9 so `python3` resolves to the
+          # container's build Python, which ships headers and a shared
+          # libpython needed by PyInstaller.
+          echo "/opt/python/cp39-cp39/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=/usr/lib64:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+
+      - name: Install Python tooling
+        run: python3 -m pip install poetry==2.2.1
+
+      - name: Patch research edition defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+
+      - name: Emit research edition category preset for the web UI
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          preset="$(python3 scripts/emit_research_category_preset.py)"
+          echo "AW_PRESET_CATEGORY_SETS=${preset}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          poetry install
+          make build
+          pip freeze
+
+      - name: Run tests
+        run: |
+          source venv/bin/activate
+          make test
+
+      - name: Run integration tests
+        run: |
+          source venv/bin/activate
+          make test-integration
+
+      - name: Package
+        run: |
+          source venv/bin/activate
+          poetry install
+          make package
+
+      - name: Package AppImage
+        run: ./scripts/package/package-appimage.sh
+
+      - name: Rename artifacts with manylinux_2_28 suffix
+        run: |
+          EDITION=""
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
+          # ZIP produced by `make package`
+          ZIP_SRC="dist/activitywatch${EDITION}-${VERSION_WITH_V}-linux-x86_64.zip"
+          ZIP_DST="dist/activitywatch${EDITION}-${VERSION_WITH_V}-linux-x86_64-manylinux_2_28.zip"
+          [ -f "$ZIP_SRC" ] && mv -v "$ZIP_SRC" "$ZIP_DST"
+          # AppImage produced by package-appimage.sh (intentionally unversioned)
+          AI_SRC="dist/activitywatch${EDITION}-linux-x86_64.AppImage"
+          AI_DST="dist/activitywatch${EDITION}-linux-x86_64-manylinux_2_28.AppImage"
+          [ -f "$AI_SRC" ] && mv -v "$AI_SRC" "$AI_DST"
+
+      - name: ABI gate — verify glibc 2.28 floor
+        run: |
+          bash scripts/package/abi-gate.sh \
+            dist/activitywatch*-manylinux_2_28.zip \
+            dist/activitywatch*-manylinux_2_28.AppImage
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: builds-manylinux_2_28-qt-py${{ matrix.python_version }}
+          path: dist/activitywatch-*.*
+
   build-tauri:
     name: Build Tauri artifacts
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
@@ -994,7 +1227,7 @@ jobs:
   release:
     name: Publish draft release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: [build-qt, build-tauri, release-notes]
+    needs: [build-qt, build-qt-manylinux-2-28, build-tauri, release-notes]
     runs-on: ubuntu-latest
     steps:
       # Pin checkout in this contents-write job so a moved v7 tag cannot

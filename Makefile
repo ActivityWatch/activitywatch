@@ -209,9 +209,12 @@ ifeq ($(TAURI_BUILD),true)
 	cp aw-server-rust/target/$(targetdir)/aw-sync dist/activitywatch/aw-server-rust/aw-sync
 else
 # Move aw-qt to the root of the dist folder
-	mv dist/activitywatch/aw-qt aw-qt-tmp
-	mv aw-qt-tmp/* dist/activitywatch
-	rmdir aw-qt-tmp
+# Rename first to avoid cp conflict: the aw-qt binary inside the dir has the
+# same name as the source directory, so cp -a src/. dest/ would fail trying
+# to overwrite the directory with the binary of the same name.
+	mv dist/activitywatch/aw-qt dist/aw-qt-tmp
+	cp -a dist/aw-qt-tmp/. dist/activitywatch/
+	rm -rf dist/aw-qt-tmp
 endif
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
