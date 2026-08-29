@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "aw-watcher-categorize"
+version = "0.1.0"
+description = "Automated AI-powered categorization watcher and rule learner for ActivityWatch"
+authors = ["ActivityWatch Contributors <erik@bjareho.lt>"]
+license = "MPL-2.0"
+readme = "README.md"
+
+[tool.poetry.scripts]
+aw-watcher-categorize = "aw_watcher_categorize.main:main"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aw-client = "^0.5.14"
+aw-core = "^0.5.14"
+tomlkit = ">=0.11.0"
+tabulate = ">=0.9.0"
+requests = ">=2.28.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+mypy = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
