@@ -36,7 +36,7 @@ def build_analysis(name, location, binaries=[], datas=[], hiddenimports=[]):
     )
 
 
-def build_collect(analysis, name, console=True):
+def build_collect(analysis, name, console=True, entitlements=None):
     """Used to build the COLLECT statements for each module"""
     pyz = PYZ(analysis.pure, analysis.zipped_data)
     exe = EXE(
@@ -49,7 +49,7 @@ def build_collect(analysis, name, console=True):
         upx=True,
         console=console,
         contents_directory=".",
-        entitlements_file=entitlements_file,
+        entitlements_file=entitlements or entitlements_file,
         codesign_identity=codesign_identity,
     )
     return COLLECT(
@@ -74,6 +74,7 @@ print("bundling activitywatch version " + current_release)
 
 # Get entitlements and codesign identity
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
+app_entitlements_file = Path(".") / "scripts" / "package" / "app-entitlements.plist"
 codesign_identity = os.environ.get("APPLE_PERSONALID", "").strip()
 if not codesign_identity:
     print("Environment variable APPLE_PERSONALID not set. Releases won't be signed.")
@@ -92,6 +93,8 @@ awi_location = Path("aw-watcher-input")
 aw_notify_location = Path("aw-notify")
 
 if platform.system() == "Darwin":
+    from PyInstaller.utils import osx as osxutils
+
     icon = aw_qt_location / "media/logo/logo.icns"
 else:
     icon = aw_qt_location / "media/logo/logo.ico"
@@ -208,6 +211,7 @@ awq_coll = build_collect(
     aw_qt_a,
     "aw-qt",
     console=False if platform.system() == "Windows" else True,
+    entitlements=app_entitlements_file,
 )
 
 # aw-watcher-input
@@ -244,3 +248,8 @@ if platform.system() == "Darwin":
             # "CFBundleShortVersionString": current_release.lstrip('v'),
         },
     )
+
+    # BUNDLE inherits signing settings from the last COLLECT and deep-signs the
+    # assembled bundle with them. Re-sign the application layer so its responsible
+    # executable retains app-only capabilities without propagating them to helpers.
+    osxutils.sign_binary(app.name, codesign_identity, app_entitlements_file)
