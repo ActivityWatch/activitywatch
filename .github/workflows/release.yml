@@ -828,16 +828,16 @@ jobs:
           echo "Version (no v):     ${VERSION_NO_V}"
           echo "========================================"
 
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python_version }}
+
       - name: Verify Tauri and Qt embed the same aw-server-rust revision
         # Tauri embeds the Git revision in its Cargo.lock, independently of
         # the top-level submodule used by Qt. Check the actual build inputs;
         # checking only the submodule allowed v0.14.0b4 Tauri to ship 0.13.1.
         run: python3 scripts/check_tauri_server.py "$VERSION_NO_V"
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python_version }}
 
       - name: Set up Node
         if: ${{ !matrix.skip_webui }}
