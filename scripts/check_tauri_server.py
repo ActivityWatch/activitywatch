@@ -126,40 +126,16 @@ def initialize_submodule(root: Path, name: str) -> bool:
             ).strip()
         ).resolve()
         if actual_git_dir != expected_git_dir:
-            # Git also supports an old-form submodule with its Git directory
-            # embedded at <path>/.git. Accept that only when its origin is the
-            # URL configured for this exact submodule; other repositories at
-            # the configured path must never be rewritten by synchronization.
-            try:
-                expected_url = subprocess.check_output(
-                    [
-                        "git",
-                        "-C",
-                        str(root),
-                        "config",
-                        "-f",
-                        ".gitmodules",
-                        "--get",
-                        f"submodule.{name}.url",
-                    ],
-                    text=True,
-                    stderr=subprocess.DEVNULL,
-                ).strip()
-                actual_url = subprocess.check_output(
-                    ["git", "-C", str(path), "remote", "get-url", "origin"],
-                    text=True,
-                    stderr=subprocess.DEVNULL,
-                ).strip()
-            except subprocess.CalledProcessError:
-                expected_url = actual_url = ""
-            if (
-                not (path / ".git").is_dir()
-                or not expected_url
-                or actual_url != expected_url
-            ):
-                raise ValueError(
-                    f"refusing unrelated Git checkout at configured submodule path {path}"
+            hint = ""
+            if (path / ".git").is_dir():
+                hint = (
+                    f"; if this is an old-form submodule, migrate it first with "
+                    f"'git submodule absorbgitdirs {name}'"
                 )
+            raise ValueError(
+                f"refusing unmanaged Git checkout at configured submodule path {path}"
+                f"{hint}"
+            )
         return False
     subprocess.run(
         ["git", "-C", str(root), "submodule", "update", "--init", name], check=True

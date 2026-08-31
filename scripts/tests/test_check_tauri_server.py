@@ -150,11 +150,13 @@ def test_initialize_submodule_rejects_unrelated_checkout(tmp_path: Path):
     unrelated = parent / "aw-server-rust"
     _, _ = make_git_repo(unrelated)
 
-    with pytest.raises(ValueError, match="refusing unrelated Git checkout"):
+    with pytest.raises(ValueError, match="refusing unmanaged Git checkout"):
         initialize_submodule(parent, "aw-server-rust")
 
 
-def test_initialize_submodule_accepts_old_form_checkout(tmp_path: Path):
+def test_initialize_submodule_rejects_old_form_checkout_with_migration_hint(
+    tmp_path: Path,
+):
     parent = tmp_path / "activitywatch"
     _, _ = make_git_repo(parent)
     server = parent / "aw-server-rust"
@@ -169,4 +171,5 @@ def test_initialize_submodule_accepts_old_form_checkout(tmp_path: Path):
         f"\turl = {url}\n"
     )
 
-    assert not initialize_submodule(parent, "aw-server-rust")
+    with pytest.raises(ValueError, match="git submodule absorbgitdirs aw-server-rust"):
+        initialize_submodule(parent, "aw-server-rust")
