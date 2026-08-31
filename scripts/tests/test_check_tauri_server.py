@@ -15,6 +15,8 @@ major_minor = checker.major_minor
 read_locked_server = checker.read_locked_server
 read_package_version = checker.read_package_version
 validation_errors = checker.validation_errors
+is_git_checkout = checker.is_git_checkout
+initialize_submodule = checker.initialize_submodule
 sync_submodule = checker.sync_submodule
 
 
@@ -115,11 +117,11 @@ def test_sync_submodule_checks_out_locked_revision(tmp_path: Path):
 
 def test_sync_submodule_refuses_dirty_checkout(tmp_path: Path):
     repo = tmp_path / "aw-server-rust"
-    first, _ = make_git_repo(repo)
+    _, current = make_git_repo(repo)
     (repo / "tracked.txt").write_text("dirty\n")
 
     with pytest.raises(ValueError, match="refusing to replace dirty"):
-        sync_submodule(repo, first)
+        sync_submodule(repo, current)
 
 
 def test_sync_submodule_rejects_uninitialized_nested_directory(tmp_path: Path):
@@ -130,3 +132,44 @@ def test_sync_submodule_rejects_uninitialized_nested_directory(tmp_path: Path):
 
     with pytest.raises(ValueError, match="not initialized as a Git submodule"):
         sync_submodule(server, REVISION)
+
+
+def test_is_git_checkout_requires_the_exact_repository_root(tmp_path: Path):
+    repo = tmp_path / "activitywatch"
+    _, _ = make_git_repo(repo)
+    nested = repo / "aw-server-rust"
+    nested.mkdir()
+
+    assert is_git_checkout(repo)
+    assert not is_git_checkout(nested)
+
+
+def test_initialize_submodule_rejects_unrelated_checkout(tmp_path: Path):
+    parent = tmp_path / "activitywatch"
+    _, _ = make_git_repo(parent)
+    unrelated = parent / "aw-server-rust"
+    _, _ = make_git_repo(unrelated)
+
+    with pytest.raises(ValueError, match="refusing unmanaged Git checkout"):
+        initialize_submodule(parent, "aw-server-rust")
+
+
+def test_initialize_submodule_rejects_old_form_checkout_with_migration_hint(
+    tmp_path: Path,
+):
+    parent = tmp_path / "activitywatch"
+    _, _ = make_git_repo(parent)
+    server = parent / "aw-server-rust"
+    _, _ = make_git_repo(server)
+    url = "https://github.com/ActivityWatch/aw-server-rust.git"
+    subprocess.run(
+        ["git", "-C", str(server), "remote", "add", "origin", url], check=True
+    )
+    (parent / ".gitmodules").write_text(
+        f'[submodule "aw-server-rust"]\n'
+        "\tpath = aw-server-rust\n"
+        f"\turl = {url}\n"
+    )
+
+    with pytest.raises(ValueError, match="git submodule absorbgitdirs aw-server-rust"):
+        initialize_submodule(parent, "aw-server-rust")

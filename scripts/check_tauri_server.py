@@ -91,24 +91,64 @@ def validation_errors(
     return errors
 
 
+def is_git_checkout(path: Path) -> bool:
+    """Return whether path is the root of an initialized Git checkout."""
+    try:
+        git_root = Path(
+            subprocess.check_output(
+                ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+        ).resolve()
+    except subprocess.CalledProcessError:
+        return False
+    return git_root == path.resolve()
+
+
+def initialize_submodule(root: Path, name: str) -> bool:
+    """Initialize a missing submodule without resetting an updated checkout."""
+    path = root / name
+    if is_git_checkout(path):
+        expected_git_dir = Path(
+            subprocess.check_output(
+                ["git", "-C", str(root), "rev-parse", "--git-path", f"modules/{name}"],
+                text=True,
+            ).strip()
+        )
+        if not expected_git_dir.is_absolute():
+            expected_git_dir = root / expected_git_dir
+        expected_git_dir = expected_git_dir.resolve()
+        actual_git_dir = Path(
+            subprocess.check_output(
+                ["git", "-C", str(path), "rev-parse", "--absolute-git-dir"],
+                text=True,
+            ).strip()
+        ).resolve()
+        if actual_git_dir != expected_git_dir:
+            hint = ""
+            if (path / ".git").is_dir():
+                hint = (
+                    f"; if this is an old-form submodule, migrate it first with "
+                    f"'git submodule absorbgitdirs {name}'"
+                )
+            raise ValueError(
+                f"refusing unmanaged Git checkout at configured submodule path {path}"
+                f"{hint}"
+            )
+        return False
+    subprocess.run(
+        ["git", "-C", str(root), "submodule", "update", "--init", name], check=True
+    )
+    return True
+
+
 def sync_submodule(server_root: Path, revision: str) -> bool:
     """Check out the Tauri-locked revision in the top-level server submodule."""
-    git_root = Path(
-        subprocess.check_output(
-            ["git", "-C", str(server_root), "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
-    ).resolve()
-    if git_root != server_root.resolve():
+    if not is_git_checkout(server_root):
         raise ValueError(
             f"aw-server-rust is not initialized as a Git submodule at {server_root}"
         )
-
-    current_revision = subprocess.check_output(
-        ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
-    ).strip()
-    if current_revision == revision:
-        return False
 
     dirty = subprocess.check_output(
         [
@@ -126,6 +166,12 @@ def sync_submodule(server_root: Path, revision: str) -> bool:
         raise ValueError(
             f"refusing to replace dirty aw-server-rust checkout at {server_root}"
         )
+
+    current_revision = subprocess.check_output(
+        ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
+    ).strip()
+    if current_revision == revision:
+        return False
 
     try:
         subprocess.run(
@@ -172,19 +218,8 @@ def main() -> int:
     server_root = root / "aw-server-rust"
     try:
         if args.sync:
-            subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(root),
-                    "submodule",
-                    "update",
-                    "--init",
-                    "aw-tauri",
-                    "aw-server-rust",
-                ],
-                check=True,
-            )
+            initialize_submodule(root, "aw-tauri")
+            initialize_submodule(root, "aw-server-rust")
         tauri_version, tauri_revision = read_locked_server(
             root / "aw-tauri/src-tauri/Cargo.lock"
         )
