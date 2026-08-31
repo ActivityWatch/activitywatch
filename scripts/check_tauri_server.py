@@ -91,15 +91,34 @@ def validation_errors(
     return errors
 
 
+def is_git_checkout(path: Path) -> bool:
+    """Return whether path is the root of an initialized Git checkout."""
+    try:
+        git_root = Path(
+            subprocess.check_output(
+                ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+        ).resolve()
+    except subprocess.CalledProcessError:
+        return False
+    return git_root == path.resolve()
+
+
+def initialize_submodule(root: Path, name: str) -> bool:
+    """Initialize a missing submodule without resetting an updated checkout."""
+    if is_git_checkout(root / name):
+        return False
+    subprocess.run(
+        ["git", "-C", str(root), "submodule", "update", "--init", name], check=True
+    )
+    return True
+
+
 def sync_submodule(server_root: Path, revision: str) -> bool:
     """Check out the Tauri-locked revision in the top-level server submodule."""
-    git_root = Path(
-        subprocess.check_output(
-            ["git", "-C", str(server_root), "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
-    ).resolve()
-    if git_root != server_root.resolve():
+    if not is_git_checkout(server_root):
         raise ValueError(
             f"aw-server-rust is not initialized as a Git submodule at {server_root}"
         )
@@ -172,19 +191,8 @@ def main() -> int:
     server_root = root / "aw-server-rust"
     try:
         if args.sync:
-            subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(root),
-                    "submodule",
-                    "update",
-                    "--init",
-                    "aw-tauri",
-                    "aw-server-rust",
-                ],
-                check=True,
-            )
+            initialize_submodule(root, "aw-tauri")
+            initialize_submodule(root, "aw-server-rust")
         tauri_version, tauri_revision = read_locked_server(
             root / "aw-tauri/src-tauri/Cargo.lock"
         )

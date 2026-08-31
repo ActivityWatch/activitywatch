@@ -15,6 +15,7 @@ major_minor = checker.major_minor
 read_locked_server = checker.read_locked_server
 read_package_version = checker.read_package_version
 validation_errors = checker.validation_errors
+is_git_checkout = checker.is_git_checkout
 sync_submodule = checker.sync_submodule
 
 
@@ -130,3 +131,13 @@ def test_sync_submodule_rejects_uninitialized_nested_directory(tmp_path: Path):
 
     with pytest.raises(ValueError, match="not initialized as a Git submodule"):
         sync_submodule(server, REVISION)
+
+
+def test_is_git_checkout_requires_the_exact_repository_root(tmp_path: Path):
+    repo = tmp_path / "activitywatch"
+    _, _ = make_git_repo(repo)
+    nested = repo / "aw-server-rust"
+    nested.mkdir()
+
+    assert is_git_checkout(repo)
+    assert not is_git_checkout(nested)
