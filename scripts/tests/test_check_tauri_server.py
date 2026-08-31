@@ -152,3 +152,21 @@ def test_initialize_submodule_rejects_unrelated_checkout(tmp_path: Path):
 
     with pytest.raises(ValueError, match="refusing unrelated Git checkout"):
         initialize_submodule(parent, "aw-server-rust")
+
+
+def test_initialize_submodule_accepts_old_form_checkout(tmp_path: Path):
+    parent = tmp_path / "activitywatch"
+    _, _ = make_git_repo(parent)
+    server = parent / "aw-server-rust"
+    _, _ = make_git_repo(server)
+    url = "https://github.com/ActivityWatch/aw-server-rust.git"
+    subprocess.run(
+        ["git", "-C", str(server), "remote", "add", "origin", url], check=True
+    )
+    (parent / ".gitmodules").write_text(
+        f'[submodule "aw-server-rust"]\n'
+        "\tpath = aw-server-rust\n"
+        f"\turl = {url}\n"
+    )
+
+    assert not initialize_submodule(parent, "aw-server-rust")
