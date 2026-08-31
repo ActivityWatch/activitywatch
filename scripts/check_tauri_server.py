@@ -171,9 +171,6 @@ def main() -> int:
     root = args.repo_root.resolve()
     server_root = root / "aw-server-rust"
     try:
-        tauri_version, tauri_revision = read_locked_server(
-            root / "aw-tauri/src-tauri/Cargo.lock"
-        )
         if args.sync:
             subprocess.run(
                 [
@@ -183,10 +180,15 @@ def main() -> int:
                     "submodule",
                     "update",
                     "--init",
+                    "aw-tauri",
                     "aw-server-rust",
                 ],
                 check=True,
             )
+        tauri_version, tauri_revision = read_locked_server(
+            root / "aw-tauri/src-tauri/Cargo.lock"
+        )
+        if args.sync:
             changed = sync_submodule(server_root, tauri_revision)
             if changed:
                 print(f"Synced aw-server-rust to Tauri lock {tauri_revision[:12]}")
