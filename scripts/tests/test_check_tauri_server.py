@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ major_minor = checker.major_minor
 read_locked_server = checker.read_locked_server
 read_package_version = checker.read_package_version
 validation_errors = checker.validation_errors
+sync_submodule = checker.sync_submodule
 
 
 REVISION = "a" * 40
@@ -67,3 +69,64 @@ def test_rejects_different_revision_even_on_same_release_line():
 def test_rejects_invalid_version():
     with pytest.raises(ValueError, match="invalid version"):
         major_minor("dev")
+
+
+def git(repo: Path, *args: str) -> str:
+    return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
+
+
+def make_git_repo(path: Path) -> tuple[str, str]:
+    path.mkdir()
+    subprocess.run(["git", "-C", str(path), "init"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(path), "config", "user.email", "test@example.com"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(path), "config", "user.name", "Test"], check=True
+    )
+    tracked = path / "tracked.txt"
+    tracked.write_text("first\n")
+    subprocess.run(["git", "-C", str(path), "add", "tracked.txt"], check=True)
+    subprocess.run(
+        ["git", "-C", str(path), "commit", "-m", "first"],
+        check=True,
+        capture_output=True,
+    )
+    first = git(path, "rev-parse", "HEAD")
+    tracked.write_text("second\n")
+    subprocess.run(
+        ["git", "-C", str(path), "commit", "-am", "second"],
+        check=True,
+        capture_output=True,
+    )
+    return first, git(path, "rev-parse", "HEAD")
+
+
+def test_sync_submodule_checks_out_locked_revision(tmp_path: Path):
+    repo = tmp_path / "aw-server-rust"
+    first, second = make_git_repo(repo)
+    assert git(repo, "rev-parse", "HEAD") == second
+
+    assert sync_submodule(repo, first)
+    assert git(repo, "rev-parse", "HEAD") == first
+    assert not sync_submodule(repo, first)
+
+
+def test_sync_submodule_refuses_dirty_checkout(tmp_path: Path):
+    repo = tmp_path / "aw-server-rust"
+    first, _ = make_git_repo(repo)
+    (repo / "tracked.txt").write_text("dirty\n")
+
+    with pytest.raises(ValueError, match="refusing to replace dirty"):
+        sync_submodule(repo, first)
+
+
+def test_sync_submodule_rejects_uninitialized_nested_directory(tmp_path: Path):
+    parent = tmp_path / "activitywatch"
+    _, _ = make_git_repo(parent)
+    server = parent / "aw-server-rust"
+    server.mkdir()
+
+    with pytest.raises(ValueError, match="not initialized as a Git submodule"):
+        sync_submodule(server, REVISION)

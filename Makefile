@@ -7,7 +7,7 @@
 #
 # We recommend creating and activating a Python virtualenv before building.
 # Instructions on how to do this can be found in the guide linked above.
-.PHONY: build install test clean clean_all
+.PHONY: build install test clean clean_all update-submodules sync-tauri-server
 
 SHELL := /usr/bin/env bash
 
@@ -103,6 +103,17 @@ update:
 	git pull
 	git submodule update --init --recursive
 	make build
+
+# Move direct submodules to their latest upstream commits. aw-tauri's lockfile
+# is authoritative for the server revision, so align the top-level server
+# submodule with it after updating everything else.
+update-submodules:
+	git submodule update --init --remote
+	git submodule foreach 'git submodule update --init --recursive'
+	$(MAKE) sync-tauri-server
+
+sync-tauri-server:
+	python3 scripts/check_tauri_server.py --sync
 
 
 lint:
