@@ -120,3 +120,13 @@ def test_sync_submodule_refuses_dirty_checkout(tmp_path: Path):
 
     with pytest.raises(ValueError, match="refusing to replace dirty"):
         sync_submodule(repo, first)
+
+
+def test_sync_submodule_rejects_uninitialized_nested_directory(tmp_path: Path):
+    parent = tmp_path / "activitywatch"
+    _, _ = make_git_repo(parent)
+    server = parent / "aw-server-rust"
+    server.mkdir()
+
+    with pytest.raises(ValueError, match="not initialized as a Git submodule"):
+        sync_submodule(server, REVISION)

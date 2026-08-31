@@ -93,6 +93,17 @@ def validation_errors(
 
 def sync_submodule(server_root: Path, revision: str) -> bool:
     """Check out the Tauri-locked revision in the top-level server submodule."""
+    git_root = Path(
+        subprocess.check_output(
+            ["git", "-C", str(server_root), "rev-parse", "--show-toplevel"],
+            text=True,
+        ).strip()
+    ).resolve()
+    if git_root != server_root.resolve():
+        raise ValueError(
+            f"aw-server-rust is not initialized as a Git submodule at {server_root}"
+        )
+
     current_revision = subprocess.check_output(
         ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
     ).strip()
@@ -164,6 +175,18 @@ def main() -> int:
             root / "aw-tauri/src-tauri/Cargo.lock"
         )
         if args.sync:
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(root),
+                    "submodule",
+                    "update",
+                    "--init",
+                    "aw-server-rust",
+                ],
+                check=True,
+            )
             changed = sync_submodule(server_root, tauri_revision)
             if changed:
                 print(f"Synced aw-server-rust to Tauri lock {tauri_revision[:12]}")
@@ -195,11 +218,21 @@ def main() -> int:
         print("\nERROR: inconsistent aw-server build inputs:", file=sys.stderr)
         for error in errors:
             print(f"  - {error}", file=sys.stderr)
-        print(
-            "\nRun `make sync-tauri-server` to make the top-level submodule "
-            "follow aw-tauri's Cargo.lock.",
-            file=sys.stderr,
-        )
+        if (
+            args.release_version is not None
+            and major_minor(tauri_version) != major_minor(args.release_version)
+        ):
+            print(
+                "\nUpdate aw-tauri's Cargo.lock to the intended server release line, "
+                "then run `make sync-tauri-server`.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "\nRun `make sync-tauri-server` to make the top-level submodule "
+                "follow aw-tauri's Cargo.lock.",
+                file=sys.stderr,
+            )
         return 1
 
     print("OK: Qt and Tauri will bundle the same aw-server-rust revision")
