@@ -108,7 +108,27 @@ def is_git_checkout(path: Path) -> bool:
 
 def initialize_submodule(root: Path, name: str) -> bool:
     """Initialize a missing submodule without resetting an updated checkout."""
-    if is_git_checkout(root / name):
+    path = root / name
+    if is_git_checkout(path):
+        expected_git_dir = Path(
+            subprocess.check_output(
+                ["git", "-C", str(root), "rev-parse", "--git-path", f"modules/{name}"],
+                text=True,
+            ).strip()
+        )
+        if not expected_git_dir.is_absolute():
+            expected_git_dir = root / expected_git_dir
+        expected_git_dir = expected_git_dir.resolve()
+        actual_git_dir = Path(
+            subprocess.check_output(
+                ["git", "-C", str(path), "rev-parse", "--absolute-git-dir"],
+                text=True,
+            ).strip()
+        ).resolve()
+        if actual_git_dir != expected_git_dir:
+            raise ValueError(
+                f"refusing unrelated Git checkout at configured submodule path {path}"
+            )
         return False
     subprocess.run(
         ["git", "-C", str(root), "submodule", "update", "--init", name], check=True
@@ -122,12 +142,6 @@ def sync_submodule(server_root: Path, revision: str) -> bool:
         raise ValueError(
             f"aw-server-rust is not initialized as a Git submodule at {server_root}"
         )
-
-    current_revision = subprocess.check_output(
-        ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
-    ).strip()
-    if current_revision == revision:
-        return False
 
     dirty = subprocess.check_output(
         [
@@ -145,6 +159,12 @@ def sync_submodule(server_root: Path, revision: str) -> bool:
         raise ValueError(
             f"refusing to replace dirty aw-server-rust checkout at {server_root}"
         )
+
+    current_revision = subprocess.check_output(
+        ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
+    ).strip()
+    if current_revision == revision:
+        return False
 
     try:
         subprocess.run(
