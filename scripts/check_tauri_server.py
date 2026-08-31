@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 
 FIELD_RE = re.compile(r'^\s*([a-zA-Z0-9_-]+)\s*=\s*"([^"]+)"\s*$', re.MULTILINE)
@@ -64,24 +64,25 @@ def read_locked_server(cargo_lock: Path) -> Tuple[str, str]:
 
 
 def validation_errors(
-    release_version: str,
+    release_version: Optional[str],
     submodule_version: str,
     submodule_revision: str,
     tauri_version: str,
     tauri_revision: str,
 ) -> List[str]:
-    release_line = major_minor(release_version)
     errors = []
-    if major_minor(submodule_version) != release_line:
-        errors.append(
-            f"aw-server-rust submodule version {submodule_version} does not match "
-            f"release line {release_line}"
-        )
-    if major_minor(tauri_version) != release_line:
-        errors.append(
-            f"Tauri locks aw-server {tauri_version}, which does not match release line "
-            f"{release_line}"
-        )
+    if release_version is not None:
+        release_line = major_minor(release_version)
+        if major_minor(submodule_version) != release_line:
+            errors.append(
+                f"aw-server-rust submodule version {submodule_version} does not match "
+                f"release line {release_line}"
+            )
+        if major_minor(tauri_version) != release_line:
+            errors.append(
+                f"Tauri locks aw-server {tauri_version}, which does not match release line "
+                f"{release_line}"
+            )
     if tauri_revision != submodule_revision:
         errors.append(
             f"Tauri locks aw-server-rust {tauri_revision[:12]}, but the release "
@@ -90,26 +91,88 @@ def validation_errors(
     return errors
 
 
+def sync_submodule(server_root: Path, revision: str) -> bool:
+    """Check out the Tauri-locked revision in the top-level server submodule."""
+    current_revision = subprocess.check_output(
+        ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
+    ).strip()
+    if current_revision == revision:
+        return False
+
+    dirty = subprocess.check_output(
+        [
+            "git",
+            "-C",
+            str(server_root),
+            "status",
+            "--porcelain",
+            "--untracked-files=no",
+            "--ignore-submodules=all",
+        ],
+        text=True,
+    ).strip()
+    if dirty:
+        raise ValueError(
+            f"refusing to replace dirty aw-server-rust checkout at {server_root}"
+        )
+
+    try:
+        subprocess.run(
+            ["git", "-C", str(server_root), "cat-file", "-e", f"{revision}^{{commit}}"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        subprocess.run(
+            ["git", "-C", str(server_root), "fetch", "origin", revision], check=True
+        )
+
+    subprocess.run(
+        ["git", "-C", str(server_root), "checkout", "--detach", revision], check=True
+    )
+    subprocess.run(
+        ["git", "-C", str(server_root), "submodule", "update", "--init", "--recursive"],
+        check=True,
+    )
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "release_version", help="ActivityWatch version without the leading v"
+        "release_version",
+        nargs="?",
+        help="ActivityWatch version without the leading v (required unless --sync)",
+    )
+    parser.add_argument(
+        "--sync",
+        action="store_true",
+        help="make the top-level aw-server-rust submodule follow Tauri's Cargo.lock",
     )
     parser.add_argument(
         "--repo-root", type=Path, default=Path(__file__).resolve().parents[1]
     )
     args = parser.parse_args()
+    if args.release_version is None and not args.sync:
+        parser.error("release_version is required unless --sync is used")
 
     root = args.repo_root.resolve()
     server_root = root / "aw-server-rust"
     try:
+        tauri_version, tauri_revision = read_locked_server(
+            root / "aw-tauri/src-tauri/Cargo.lock"
+        )
+        if args.sync:
+            changed = sync_submodule(server_root, tauri_revision)
+            if changed:
+                print(f"Synced aw-server-rust to Tauri lock {tauri_revision[:12]}")
+            else:
+                print(f"aw-server-rust already matches Tauri lock {tauri_revision[:12]}")
         submodule_version = read_package_version(server_root / "aw-server/Cargo.toml")
         submodule_revision = subprocess.check_output(
             ["git", "-C", str(server_root), "rev-parse", "HEAD"], text=True
         ).strip()
-        tauri_version, tauri_revision = read_locked_server(
-            root / "aw-tauri/src-tauri/Cargo.lock"
-        )
         errors = validation_errors(
             args.release_version,
             submodule_version,
@@ -124,7 +187,8 @@ def main() -> int:
         )
         return 1
 
-    print(f"ActivityWatch release: {args.release_version}")
+    if args.release_version is not None:
+        print(f"ActivityWatch release: {args.release_version}")
     print(f"aw-server-rust:       {submodule_version} @ {submodule_revision[:12]}")
     print(f"Tauri Cargo.lock:     {tauri_version} @ {tauri_revision[:12]}")
     if errors:
@@ -132,8 +196,8 @@ def main() -> int:
         for error in errors:
             print(f"  - {error}", file=sys.stderr)
         print(
-            "\nUpdate both the aw-server-rust submodule and aw-tauri's Cargo.lock "
-            "to the same revision before tagging.",
+            "\nRun `make sync-tauri-server` to make the top-level submodule "
+            "follow aw-tauri's Cargo.lock.",
             file=sys.stderr,
         )
         return 1
