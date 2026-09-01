@@ -356,7 +356,7 @@ jobs:
 
       - name: Set up Node
         if: ${{ !matrix.skip_webui }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node_version }}
 
@@ -630,7 +630,7 @@ jobs:
           echo "OK: aw-server version ${BUNDLED_VERSION} is consistent with AW release ${AW_VERSION}"
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node_version }}
 
@@ -841,7 +841,7 @@ jobs:
 
       - name: Set up Node
         if: ${{ !matrix.skip_webui }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node_version }}
 
