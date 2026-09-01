@@ -63,7 +63,11 @@ get_version_internal() {
         _version="$(git describe --tags --abbrev=0 --exact-match 2>/dev/null || true)"
         if [[ -z "$_version" ]]; then
             local _latest_tag
-            _latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")"
+            # Exclude research-edition tags so dev versions off master don't
+            # inherit a "-research" base (e.g. v0.14.0b4-research.dev-abc1234).
+            # Exact-match above intentionally keeps them: building *on* a
+            # research tag must report the research version.
+            _latest_tag="$(git describe --tags --abbrev=0 --exclude '*-research' 2>/dev/null || echo "v0.0.0")"
             local _commit_hash
             _commit_hash="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
             _version="${_latest_tag}.dev-${_commit_hash}"

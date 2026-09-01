@@ -418,7 +418,11 @@ jobs:
 
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
-        run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+        run: |
+          python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+          # Participants' machines must resume tracking after reboots without
+          # setup steps: enable start-at-login on first launch (aw-qt#131).
+          python3 scripts/patch_research_edition_awqt.py aw-qt/aw_qt/config.py
 
       # Watchers store buckets as `{client}_{hostname}`. That hostname is a
       # participant identifier on named machines, and /api/0/export copies it
@@ -699,7 +703,11 @@ jobs:
 
       - name: Patch research edition defaults
         if: env.AW_RESEARCH_EDITION == 'true'
-        run: python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+        run: |
+          python3 scripts/patch_research_edition_config.py aw-watcher-window/aw_watcher_window/config.py
+          # Participants' machines must resume tracking after reboots without
+          # setup steps: enable start-at-login on first launch (aw-qt#131).
+          python3 scripts/patch_research_edition_awqt.py aw-qt/aw_qt/config.py
 
       - name: Emit research edition category preset for the web UI
         if: env.AW_RESEARCH_EDITION == 'true'
