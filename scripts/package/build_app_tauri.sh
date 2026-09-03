@@ -144,6 +144,7 @@ if [ -n "$APPLE_PERSONALID" ]; then
     # then .framework bundles, then the top-level .app last.
     # --timestamp is required for notarization (Apple rejects submissions without it).
     ENTITLEMENTS="scripts/package/entitlements.plist"
+    APP_ENTITLEMENTS="scripts/package/app-entitlements.plist"
 
     sign_binary() {
         echo "  Signing: $1"
@@ -263,7 +264,10 @@ if [ -n "$APPLE_PERSONALID" ]; then
 
     # Step 3: Sign the top-level .app bundle last.
     echo "  Signing top-level .app bundle..."
-    sign_binary "dist/${APP_NAME}.app"
+    codesign --force --options runtime --timestamp \
+        --entitlements "$APP_ENTITLEMENTS" \
+        --sign "$APPLE_PERSONALID" \
+        "dist/${APP_NAME}.app"
 
     echo "App signing complete."
 else
