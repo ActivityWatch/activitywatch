@@ -62,7 +62,9 @@ def test_patch_inserts_module_and_both_call_sites(tmp_path: Path):
     bucket = (root / "aw-server-rust/aw-server/src/endpoints/bucket.rs").read_text(
         encoding="utf-8"
     )
-    mod = (root / "aw-server-rust/aw-server/src/endpoints/mod.rs").read_text(encoding="utf-8")
+    mod = (root / "aw-server-rust/aw-server/src/endpoints/mod.rs").read_text(
+        encoding="utf-8"
+    )
     copied = root / "aw-server-rust/aw-server/src/endpoints/export_sanitize.rs"
 
     assert copied.is_file()
@@ -86,7 +88,9 @@ def test_patch_is_idempotent(tmp_path: Path):
         encoding="utf-8"
     )
     assert first == second
-    mod = (root / "aw-server-rust/aw-server/src/endpoints/mod.rs").read_text(encoding="utf-8")
+    mod = (root / "aw-server-rust/aw-server/src/endpoints/mod.rs").read_text(
+        encoding="utf-8"
+    )
     assert mod.count("mod export_sanitize;") == 1
 
 
@@ -104,8 +108,14 @@ def test_live_tree_is_patchable_or_already_patched():
         pytest.skip("aw-server-rust not checked out")
     export_text = export.read_text(encoding="utf-8")
     bucket_text = bucket.read_text(encoding="utf-8")
-    assert patcher.MARKER in export_text or export_text.count(patcher.EXPORT_INSERT_NEEDLE) == 1
-    assert patcher.MARKER in bucket_text or bucket_text.count(patcher.BUCKET_INSERT_NEEDLE) == 1
+    assert (
+        patcher.MARKER in export_text
+        or export_text.count(patcher.EXPORT_INSERT_NEEDLE) == 1
+    )
+    assert (
+        patcher.MARKER in bucket_text
+        or bucket_text.count(patcher.BUCKET_INSERT_NEEDLE) == 1
+    )
 
 
 def test_sanitizer_allowlist_covers_config_categories():
@@ -118,3 +128,12 @@ def test_sanitizer_allowlist_covers_config_categories():
     expected.update({"Excluded", "excluded"})
     missing = [category for category in expected if f'"{category}"' not in rust]
     assert missing == []
+
+
+def test_every_research_build_patches_the_export_sanitizer():
+    workflow = (
+        Path(__file__).resolve().parents[2] / ".github" / "workflows" / "release.yml"
+    ).read_text(encoding="utf-8")
+
+    assert workflow.count("python3 scripts/patch_research_edition_config.py") == 3
+    assert workflow.count("python3 scripts/patch_research_edition_export.py") == 3

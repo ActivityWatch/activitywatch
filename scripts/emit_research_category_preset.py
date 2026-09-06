@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """Emit the Research Edition category preset consumed by aw-webui at build time.
 
-The watcher rewrites `app` to a study category before the event is stored
-(see patch_research_edition_config.py). aw-webui, however, categorises
-client-side with its own default regexes and never sees the watcher's map, so
-without this preset the Categories panel reads "Uncategorized" while Top
-Applications shows the correct categories -- the data is right and the UI
-disagrees with it. That is the exact symptom the Lund study reported on
-v0.14.0b3-research.
+The approved study contract keeps application names while the watcher replaces
+browser titles with study categories and removes every URL. aw-webui categorises
+client-side, so this preset matches both stored browser category labels and the
+known raw application-name aliases. Top Applications can therefore show Word,
+Spotify, and Teams while Top Categories still uses the study taxonomy.
 
 aw-webui (ActivityWatch/aw-webui#936) reads a preset category set from the
 `AW_PRESET_CATEGORY_SETS` env var at build time. This script derives that
-preset from the same single source of truth as the watcher map, so the two can
+preset from the same taxonomy source as the watcher build patch, so the two can
 never drift:
 
     python3 scripts/emit_research_category_preset.py > preset.json
 
-Rules match on the category name anchored to the whole value, because by the
-time aw-webui sees an event, `app` *is* the category name.
+Rules are exact, case-insensitive matches. aw-webui applies every category rule
+to `app` and `title`, and the oldest web UI pinned by the release carriers drops
+unknown per-rule metadata, so the preset cannot rely on field or priority keys.
+Explicitly excluded app aliases map to `Excluded`; unknown applications remain
+`Uncategorized` instead of overlapping every specific rule with a catch-all.
 """
 
 import importlib.util
@@ -64,6 +65,12 @@ def escape_portable(value: str) -> str:
     )
 
 
+def exact_alternation(values: set[str]) -> str:
+    """Build a stable whole-value alternation portable across Python and JS."""
+    escaped = [escape_portable(value) for value in sorted(values)]
+    return f"^(?:{'|'.join(escaped)})$"
+
+
 def build_preset() -> dict:
     source = _load_category_source()
 
@@ -75,14 +82,21 @@ def build_preset() -> dict:
     return {
         "id": PRESET_ID,
         "name": PRESET_NAME,
-        # Sorted so the same map always produces a byte-identical preset.
+        # Sorted so the same taxonomy always produces a byte-identical preset.
         "categories": [
             {
                 "name": [category],
                 "rule": {
                     "type": "regex",
-                    "regex": f"^{escape_portable(category)}$",
-                    "ignore_case": False,
+                    "regex": exact_alternation(
+                        {category}
+                        | {
+                            app
+                            for app, app_category in source.APP_CATEGORY_MAP.items()
+                            if app_category == category
+                        }
+                    ),
+                    "ignore_case": True,
                 },
             }
             for category in sorted(categories)

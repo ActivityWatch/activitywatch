@@ -432,11 +432,9 @@ jobs:
         if: env.AW_RESEARCH_EDITION == 'true'
         run: python3 scripts/patch_research_edition_export.py
 
-      # The watcher rewrites `app` to a study category before storing, but
-      # aw-webui categorises client-side with its own defaults and never sees
-      # the watcher's map -- so without this the Categories panel reads
-      # "Uncategorized" while Top Applications shows the right categories.
-      # Derived from the same map as the step above, so the two cannot drift.
+      # The watcher keeps approved app names and replaces browser titles with a
+      # study category. This preset maps both representations into the study
+      # taxonomy so Top Applications and Top Categories agree.
       - name: Emit research edition category preset for the web UI
         if: env.AW_RESEARCH_EDITION == 'true'
         shell: bash
@@ -709,6 +707,10 @@ jobs:
           # setup steps: enable start-at-login on first launch (aw-qt#131).
           python3 scripts/patch_research_edition_awqt.py aw-qt/aw_qt/config.py
 
+      - name: Patch research edition export hostname sanitizer
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_export.py
+
       - name: Emit research edition category preset for the web UI
         if: env.AW_RESEARCH_EDITION == 'true'
         run: |
@@ -922,11 +924,9 @@ jobs:
         if: env.AW_RESEARCH_EDITION == 'true'
         run: python3 scripts/patch_research_edition_export.py
 
-      # The watcher rewrites `app` to a study category before storing, but
-      # aw-webui categorises client-side with its own defaults and never sees
-      # the watcher's map -- so without this the Categories panel reads
-      # "Uncategorized" while Top Applications shows the right categories.
-      # Derived from the same map as the step above, so the two cannot drift.
+      # The watcher keeps approved app names and replaces browser titles with a
+      # study category. This preset maps both representations into the study
+      # taxonomy so Top Applications and Top Categories agree.
       - name: Emit research edition category preset for the web UI
         if: env.AW_RESEARCH_EDITION == 'true'
         shell: bash

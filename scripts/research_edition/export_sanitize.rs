@@ -4,8 +4,8 @@
 //! when `AW_RESEARCH_EDITION=true`. Standard builds never see this module.
 //!
 //! Two jobs:
-//! 1. Fail closed if currentwindow events still carry raw titles/URLs/app names
-//!    (an existing ActivityWatch database is not a study-safe profile).
+//! 1. Fail closed if currentwindow events still carry raw titles or any event
+//!    carries a URL. Application names are approved study variables.
 //! 2. Rewrite each exported bucket's map key, embedded `id`, and `hostname`
 //!    so the real machine name never leaves the device. Colliding sanitized
 //!    IDs fail the export rather than silently merging two machines.
@@ -41,37 +41,6 @@ const STUDY_CATEGORIES: &[&str] = &[
     "excluded",
 ];
 
-/// Browser app names the Research filter leaves in `app` while classifying the
-/// title. Copied from `aw-watcher-window/aw_watcher_window/research_filter.py`.
-const BROWSER_APPS: &[&str] = &[
-    "chrome",
-    "google chrome",
-    "google chrome canary",
-    "google-chrome",
-    "google-chrome-beta",
-    "google-chrome-unstable",
-    "chromium",
-    "chromium-browser",
-    "brave browser",
-    "brave",
-    "brave-browser",
-    "firefox",
-    "firefox developer edition",
-    "firefox-esr",
-    "safari",
-    "edge",
-    "microsoft edge",
-    "microsoft-edge",
-    "microsoft-edge-beta",
-    "microsoft-edge-dev",
-    "opera",
-    "chrome.exe",
-    "brave.exe",
-    "firefox.exe",
-    "msedge.exe",
-    "opera.exe",
-];
-
 pub fn sanitize_buckets_export(export: BucketsExport) -> Result<BucketsExport, String> {
     let mut checked = HashMap::new();
     for (key, mut bucket) in export.buckets {
@@ -101,7 +70,10 @@ fn reject_unfiltered(bucket: &mut Bucket) -> Result<(), String> {
     Ok(())
 }
 
-fn unfiltered_reason(bucket_type: &str, data: &serde_json::Map<String, Value>) -> Option<&'static str> {
+fn unfiltered_reason(
+    bucket_type: &str,
+    data: &serde_json::Map<String, Value>,
+) -> Option<&'static str> {
     if data.contains_key("url") {
         return Some("url field");
     }
@@ -113,11 +85,6 @@ fn unfiltered_reason(bucket_type: &str, data: &serde_json::Map<String, Value>) -
             return Some("non-category window title");
         }
     }
-    if let Some(app) = data.get("app").and_then(Value::as_str) {
-        if !is_allowed_window_app(app) {
-            return Some("non-category window app");
-        }
-    }
     None
 }
 
@@ -126,10 +93,6 @@ fn is_study_category(value: &str) -> bool {
     STUDY_CATEGORIES
         .iter()
         .any(|category| category.eq_ignore_ascii_case(trimmed))
-}
-
-fn is_allowed_window_app(app: &str) -> bool {
-    is_study_category(app) || BROWSER_APPS.iter().any(|name| name.eq_ignore_ascii_case(app.trim()))
 }
 
 fn rewrite_identities(buckets: HashMap<String, Bucket>) -> Result<BucketsExport, String> {
@@ -199,7 +162,13 @@ mod tests {
         }
     }
 
-    fn bucket(id: &str, hostname: &str, bucket_type: &str, client: &str, events: Vec<Event>) -> Bucket {
+    fn bucket(
+        id: &str,
+        hostname: &str,
+        bucket_type: &str,
+        client: &str,
+        events: Vec<Event>,
+    ) -> Bucket {
         Bucket {
             bid: None,
             id: id.to_string(),
@@ -216,10 +185,7 @@ mod tests {
 
     fn export_of(buckets: Vec<Bucket>) -> BucketsExport {
         BucketsExport {
-            buckets: buckets
-                .into_iter()
-                .map(|b| (b.id.clone(), b))
-                .collect(),
+            buckets: buckets.into_iter().map(|b| (b.id.clone(), b)).collect(),
         }
     }
 
@@ -265,7 +231,10 @@ mod tests {
         );
 
         let dump = serde_json::to_string(&sanitized).unwrap();
-        assert!(!dump.contains(host), "real hostname must not appear in export JSON");
+        assert!(
+            !dump.contains(host),
+            "real hostname must not appear in export JSON"
+        );
         assert_eq!(dump.matches(SANITIZED_HOSTNAME).count(), 6); // key + id + hostname, twice
     }
 
@@ -324,7 +293,9 @@ mod tests {
             "host",
             "web.tab.current",
             "aw-watcher-web",
-            vec![event(json!({"url": "https://mail.example/inbox", "title": "Inbox"}))],
+            vec![event(
+                json!({"url": "https://mail.example/inbox", "title": "Inbox"}),
+            )],
         )]);
 
         let err = match sanitize_buckets_export(original) {
@@ -336,13 +307,39 @@ mod tests {
     }
 
     #[test]
+    fn retained_non_browser_app_name_is_allowed() {
+        let original = export_of(vec![bucket(
+            "aw-watcher-window_host",
+            "host",
+            "currentwindow",
+            "aw-watcher-window",
+            vec![event(json!({"app": "Microsoft Word"}))],
+        )]);
+
+        let sanitized = sanitize_buckets_export(original).unwrap();
+        let bucket = sanitized
+            .buckets
+            .get(&format!("aw-watcher-window_{SANITIZED_HOSTNAME}"))
+            .unwrap();
+        assert_eq!(
+            bucket.events.as_ref().unwrap().clone().take_inner()[0].data,
+            json!({"app": "Microsoft Word"})
+                .as_object()
+                .unwrap()
+                .clone()
+        );
+    }
+
+    #[test]
     fn browser_event_with_classified_title_is_allowed() {
         let original = export_of(vec![bucket(
             "aw-watcher-window_host",
             "host",
             "currentwindow",
             "aw-watcher-window",
-            vec![event(json!({"app": "Firefox", "title": "Work & Productivity"}))],
+            vec![event(
+                json!({"app": "Firefox", "title": "Work & Productivity"}),
+            )],
         )]);
 
         let sanitized = sanitize_buckets_export(original).unwrap();
@@ -362,7 +359,10 @@ mod tests {
     #[test]
     fn sanitize_id_replaces_suffix_and_embedded_hostname() {
         assert_eq!(
-            sanitize_id("aw-watcher-window_Participant-Alice-MacBook", "Participant-Alice-MacBook"),
+            sanitize_id(
+                "aw-watcher-window_Participant-Alice-MacBook",
+                "Participant-Alice-MacBook"
+            ),
             format!("aw-watcher-window_{SANITIZED_HOSTNAME}")
         );
         assert_eq!(
