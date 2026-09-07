@@ -31,6 +31,17 @@ collected:
    distinct LaunchServices identity that does not overwrite
    ``/Applications/ActivityWatch.app``.
 
+4. **Install identity**: Windows gets its own Inno ``AppId``, install dir,
+   shortcuts and uninstall entry; Linux gets its own deb package name,
+   ``/opt/activitywatch-research`` tree and desktop-entry filename. Bundle ids
+   split LaunchServices, not the on-disk product -- without this a research
+   installer *replaces* a participant's standard install.
+
+5. **First-run autostart**: aw-qt writes its own login item / Startup shortcut /
+   autostart ``.desktop``, under names independent of the installer's. Those are
+   rebranded too, or the two editions overwrite each other's autostart even with
+   every other identity split.
+
 Usage (from the repository root, after ``make test``, before ``make package``):
 
     python3 scripts/patch_research_edition_profile.py qt      # build-qt jobs
@@ -80,6 +91,24 @@ WINDOWS_APPID_TAURI = "70E2D4AB-8DA2-4BE0-8391-AB5B48653773"
 # generates one per build); the upgrade code is what defines the product family,
 # so it is the one that matters here.
 WINDOWS_WIX_UPGRADE_CODE_TAURI = "ABF0AB0C-5BA0-4C2C-BF3E-797B2E1913DA"
+
+# Linux install identity. The Qt deb is a single product on master:
+# `Package: activitywatch`, `/opt/activitywatch`, and one `aw-qt.desktop`
+# filename in both /etc/xdg/autostart and /usr/share/applications. Installing a
+# research deb next to a standard one therefore *replaces* it (dpkg treats a
+# same-named package as an upgrade) and its autostart entry overwrites the
+# standard one. Own package name, own /opt tree and own desktop-entry filename
+# is what makes the two editions co-installable.
+LINUX_PACKAGE = "activitywatch-research"
+LINUX_OPT_DIR = f"/opt/{LINUX_PACKAGE}"
+LINUX_DESKTOP_FILENAME = f"{LINUX_PACKAGE}.desktop"
+# Desktop-entry `Icon=` id. Only the AppImage actually installs an icon under
+# this name (`linuxdeploy --icon-filename`); the deb ships none today. Patch
+# both together so they cannot drift apart.
+LINUX_ICON_ID = LINUX_PACKAGE
+# macOS LaunchAgent label written by aw-qt's own first-run autostart (distinct
+# from the .app bundle id, which the installer/LaunchServices own).
+LAUNCH_AGENT_LABEL = "net.activitywatch.aw-qt-research"
 
 
 @dataclass(frozen=True)
@@ -429,12 +458,134 @@ WINDOWS_PATCHES_TAURI: List[Patch] = [
 ]
 
 
+# --- Linux package identity ---------------------------------------------------
+# Qt only: the Tauri Linux bundles come from Tauri's own bundler, whose package
+# and desktop-entry names derive from `productName`. That is coupled to the
+# cargo binary name (`mainBinaryName`), so splitting it needs a Tauri build to
+# verify and is tracked separately.
+
+LINUX_PATCHES_QT: List[Patch] = [
+    Patch(
+        "scripts/package/deb/control",
+        "Package: activitywatch\n",
+        f"Package: {LINUX_PACKAGE}\n",
+        "deb package name (co-installable with the standard package)",
+    ),
+    Patch(
+        "scripts/package/deb/control",
+        "Description: Open source time tracker\n",
+        "Description: Open source time tracker (Research Edition)\n",
+        "deb package description",
+    ),
+    Patch(
+        "scripts/package/package-deb.sh",
+        'PKGDIR="activitywatch_$VERSION_NUM"\n',
+        f'PKGDIR="{LINUX_PACKAGE}_$VERSION_NUM"\n',
+        "deb staging dir (dpkg-deb names the .deb after it)",
+    ),
+    Patch(
+        "scripts/package/package-deb.sh",
+        "sudo mv activitywatch_${VERSION_NUM}.deb",
+        f"sudo mv {LINUX_PACKAGE}_${{VERSION_NUM}}.deb",
+        "deb output filename produced by dpkg-deb --build",
+    ),
+    Patch(
+        "scripts/package/package-deb.sh",
+        "cp -r dist/activitywatch/ $PKGDIR/opt/\n",
+        f"cp -r dist/activitywatch/ $PKGDIR{LINUX_OPT_DIR}\n",
+        "install tree location (/opt/activitywatch-research)",
+    ),
+    Patch(
+        "scripts/package/package-deb.sh",
+        "sudo sed -i 's!Exec=aw-qt!Exec=/opt/activitywatch/aw-qt!' "
+        "$PKGDIR/opt/activitywatch/aw-qt.desktop\n"
+        "sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/etc/xdg/autostart/\n"
+        "sudo cp $PKGDIR/opt/activitywatch/aw-qt.desktop $PKGDIR/usr/share/applications/\n",
+        f"sudo sed -i 's!Exec=aw-qt!Exec={LINUX_OPT_DIR}/aw-qt!' "
+        f"$PKGDIR{LINUX_OPT_DIR}/aw-qt.desktop\n"
+        f"sudo cp $PKGDIR{LINUX_OPT_DIR}/aw-qt.desktop "
+        f"$PKGDIR/etc/xdg/autostart/{LINUX_DESKTOP_FILENAME}\n"
+        f"sudo cp $PKGDIR{LINUX_OPT_DIR}/aw-qt.desktop "
+        f"$PKGDIR/usr/share/applications/{LINUX_DESKTOP_FILENAME}\n",
+        "Exec path plus distinct autostart/menu desktop-entry filename",
+    ),
+    Patch(
+        "aw-qt/resources/aw-qt.desktop",
+        "Name=ActivityWatch\n",
+        f"Name={BUNDLE_NAME}\n",
+        "desktop entry display name",
+    ),
+    Patch(
+        "aw-qt/resources/aw-qt.desktop",
+        "Icon=activitywatch\n",
+        f"Icon={LINUX_ICON_ID}\n",
+        "desktop entry icon id (matches the AppImage --icon-filename)",
+    ),
+    Patch(
+        "scripts/package/package-appimage.sh",
+        "--desktop-file ./activitywatch/aw-qt.desktop "
+        "--icon-file ./activitywatch/media/logo/logo.png "
+        "--icon-filename activitywatch\n",
+        f"--desktop-file ./activitywatch/{LINUX_DESKTOP_FILENAME} "
+        "--icon-file ./activitywatch/media/logo/logo.png "
+        f"--icon-filename {LINUX_ICON_ID}\n",
+        "AppImage desktop-entry filename and icon id",
+    ),
+    Patch(
+        "scripts/package/package-appimage.sh",
+        "# create AppRun\n",
+        "# Research edition: linuxdeploy installs the desktop entry under its own\n"
+        "# basename, so give it a distinct one - appimaged would otherwise\n"
+        "# overwrite a standard install's entry on desktop integration.\n"
+        f"cp ./activitywatch/aw-qt.desktop ./activitywatch/{LINUX_DESKTOP_FILENAME}\n"
+        "\n# create AppRun\n",
+        "AppImage: stage the research desktop entry under its own filename",
+    ),
+]
+
+# --- first-run autostart identity ---------------------------------------------
+# aw-qt writes its own autostart entry (config `autostart_on_first_run`). Those
+# names are independent of the installer's: without this the two editions
+# overwrite each other's login item / Startup shortcut / autostart .desktop even
+# though every other identity is already split.
+
+AUTOSTART_PATCHES_QT: List[Patch] = [
+    Patch(
+        "aw-qt/aw_qt/autostart.py",
+        'APP_NAME = "ActivityWatch"\n',
+        f'APP_NAME = "{BUNDLE_NAME}"\n',
+        "Windows Run value + Startup shortcut name",
+    ),
+    Patch(
+        "aw-qt/aw_qt/autostart.py",
+        "    return _linux_autostart_dir() / DESKTOP_FILENAME\n",
+        f'    return _linux_autostart_dir() / "{LINUX_DESKTOP_FILENAME}"\n',
+        "Linux autostart entry filename (DESKTOP_FILENAME still names the "
+        "shipped resource we copy from)",
+    ),
+    Patch(
+        "aw-qt/aw_qt/autostart.py",
+        'LAUNCH_AGENT_LABEL = "net.activitywatch.aw-qt"\n',
+        f'LAUNCH_AGENT_LABEL = "{LAUNCH_AGENT_LABEL}"\n',
+        "macOS LaunchAgent label and plist filename",
+    ),
+    Patch(
+        "aw-qt/aw_qt/autostart.py",
+        "Name=ActivityWatch\n",
+        f"Name={BUNDLE_NAME}\n",
+        "fallback desktop-entry template display name",
+    ),
+]
+
+
 TARGETS = {
     "qt": (
         PROFILE_PATCHES_QT
         + PORT_PATCHES_QT
         + BUNDLE_PATCHES_QT
         + WINDOWS_PATCHES_QT
+        + LINUX_PATCHES_QT
+        + AUTOSTART_PATCHES_QT
     ),
     "tauri": (
         PROFILE_PATCHES_TAURI

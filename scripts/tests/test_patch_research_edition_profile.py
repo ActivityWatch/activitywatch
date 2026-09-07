@@ -347,3 +347,109 @@ def test_tauri_wix_upgrade_code_is_pinned_and_config_stays_valid_json(tmp_path: 
     wix = config["bundle"]["windows"]["wix"]
     assert wix["upgradeCode"] == patcher.WINDOWS_WIX_UPGRADE_CODE_TAURI
     uuid.UUID(wix["upgradeCode"])  # tauri parses this as a uuid::Uuid
+
+
+# --- Linux package identity ---------------------------------------------------
+# Like the Windows tests above, these patch the *real* packaging scripts: the
+# thing under test is mostly what the patch does NOT touch. A synthetic fixture
+# built from the `old` strings alone would still pass if upstream added a fourth
+# reference to /opt/activitywatch or copied the desktop entry somewhere else.
+
+
+def test_linux_deb_is_a_separate_package(tmp_path: Path):
+    """A research deb must be co-installable, not an upgrade of the standard one."""
+    control = _patch_real_file(
+        tmp_path, "scripts/package/deb/control", patcher.LINUX_PATCHES_QT
+    )
+    assert f"Package: {patcher.LINUX_PACKAGE}\n" in control
+    # dpkg keys off the package name: same name == upgrade == standard removed.
+    assert "Package: activitywatch\n" not in control
+
+
+def test_linux_deb_installs_beside_a_standard_install(tmp_path: Path):
+    """No /opt/activitywatch or shared desktop-entry filename may survive."""
+    script = _patch_real_file(
+        tmp_path, "scripts/package/package-deb.sh", patcher.LINUX_PATCHES_QT
+    )
+
+    # The staged install tree, the Exec= line and the .deb filename must all
+    # move together; a leftover bare "/opt/activitywatch" would overwrite the
+    # standard install's files even with a distinct package name.
+    assert "/opt/activitywatch/" not in script
+    assert f"{patcher.LINUX_OPT_DIR}/aw-qt" in script
+    assert "activitywatch_${VERSION_NUM}.deb" not in script
+
+    # Both copies out of the install tree must land under the research
+    # filename: /etc/xdg/autostart and /usr/share/applications are shared
+    # namespaces, so a same-named entry silently replaces the standard one.
+    for dest in ("etc/xdg/autostart", "usr/share/applications"):
+        assert f"$PKGDIR/{dest}/{patcher.LINUX_DESKTOP_FILENAME}\n" in script
+        assert f"$PKGDIR/{dest}/\n" not in script
+
+
+def test_linux_desktop_entry_is_rebranded(tmp_path: Path):
+    """Menu/dock name and icon id must not read as a standard install."""
+    entry = _patch_real_file(
+        tmp_path, "aw-qt/resources/aw-qt.desktop", patcher.LINUX_PATCHES_QT
+    )
+    assert f"Name={patcher.BUNDLE_NAME}\n" in entry
+    assert "Name=ActivityWatch\n" not in entry
+    assert f"Icon={patcher.LINUX_ICON_ID}\n" in entry
+
+
+def test_appimage_desktop_and_icon_ids_agree(tmp_path: Path):
+    """linuxdeploy's --icon-filename must match the entry's Icon= key.
+
+    Desktop integration resolves the icon by that id; a mismatch ships an
+    AppImage with no icon, and a shared id would overwrite the standard
+    install's icon in the user's hicolor theme.
+    """
+    script = _patch_real_file(
+        tmp_path, "scripts/package/package-appimage.sh", patcher.LINUX_PATCHES_QT
+    )
+    entry = _patch_real_file(
+        tmp_path, "aw-qt/resources/aw-qt.desktop", patcher.LINUX_PATCHES_QT
+    )
+
+    assert f"--icon-filename {patcher.LINUX_ICON_ID}\n" in script
+    assert f"Icon={patcher.LINUX_ICON_ID}\n" in entry
+    # The entry handed to linuxdeploy is the research-named copy, and the copy
+    # is staged before it is used.
+    assert f"--desktop-file ./activitywatch/{patcher.LINUX_DESKTOP_FILENAME} " in script
+    stage = script.index(f"cp ./activitywatch/aw-qt.desktop ./activitywatch/{patcher.LINUX_DESKTOP_FILENAME}")
+    assert stage < script.index("linuxdeploy-x86_64.AppImage --appdir")
+
+
+def test_first_run_autostart_identity_is_distinct_on_every_platform(tmp_path: Path):
+    """aw-qt writes its own autostart entry; those names are the installer's.
+
+    Bundle id, package name and profile are all already split at this point --
+    but if the login item / Startup shortcut / autostart .desktop keep their
+    standard names, the two editions still overwrite each other's autostart.
+    """
+    rel = "aw-qt/aw_qt/autostart.py"
+    src = _repo_root() / rel
+    if not src.is_file():
+        pytest.skip(f"{rel} not present")
+    before = src.read_text(encoding="utf-8")
+    after = _patch_real_file(tmp_path, rel, patcher.AUTOSTART_PATCHES_QT)
+
+    # Linux: the written filename changes; the *shipped resource* name does not
+    # (the patched build still reads resources/aw-qt.desktop out of the bundle).
+    assert f'_linux_autostart_dir() / "{patcher.LINUX_DESKTOP_FILENAME}"' in after
+    assert 'DESKTOP_FILENAME = "aw-qt.desktop"' in after
+    # macOS: LAUNCH_AGENT_FILENAME is derived, so the plist follows the label.
+    assert f'LAUNCH_AGENT_LABEL = "{patcher.LAUNCH_AGENT_LABEL}"' in after
+    assert 'LAUNCH_AGENT_LABEL = "net.activitywatch.aw-qt"\n' not in after
+    # Windows: both the Run value name and the Startup .lnk derive from APP_NAME.
+    assert f'APP_NAME = "{patcher.BUNDLE_NAME}"' in after
+    assert 'APP_NAME = "ActivityWatch"\n' not in after
+
+    # Guard the derivations the assertions above rely on: if upstream stops
+    # deriving these, the research build silently keeps a colliding name.
+    for derived in (
+        'LAUNCH_AGENT_FILENAME = f"{LAUNCH_AGENT_LABEL}.plist"',
+        "WINDOWS_RUN_VALUE_NAME = APP_NAME",
+        'WINDOWS_STARTUP_SHORTCUT_NAME = f"{APP_NAME}.lnk"',
+    ):
+        assert derived in before, f"upstream no longer derives: {derived}"
