@@ -461,6 +461,23 @@ jobs:
           source venv/bin/activate || source venv/Scripts/activate
           make test-integration
 
+      # Research Edition profile identity is baked AFTER the module test
+      # suites: they assert the ordinary defaults (profile=default, port 5600)
+      # and would fail on the patched tree. Python modules are editable
+      # installs, so PyInstaller collects the patched source at package time;
+      # the Rust binaries are rebuilt below. Fail-closed: a stale submodule pin
+      # aborts the build rather than shipping a bundle that runs the default
+      # profile next to a participant's standard install.
+      - name: Patch research edition profile identity
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_profile.py qt
+
+      - name: Rebuild aw-server-rust with research defaults
+        if: env.AW_RESEARCH_EDITION == 'true' && matrix.skip_rust != true
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          make --directory=aw-server-rust aw-server SKIP_WEBUI=true
+
       - name: Package
         run: |
           source venv/bin/activate || source venv/Scripts/activate
@@ -735,6 +752,23 @@ jobs:
           source venv/bin/activate
           make test-integration
 
+      # Research Edition profile identity is baked AFTER the module test
+      # suites: they assert the ordinary defaults (profile=default, port 5600)
+      # and would fail on the patched tree. Python modules are editable
+      # installs, so PyInstaller collects the patched source at package time;
+      # the Rust binaries are rebuilt below. Fail-closed: a stale submodule pin
+      # aborts the build rather than shipping a bundle that runs the default
+      # profile next to a participant's standard install.
+      - name: Patch research edition profile identity
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_profile.py qt
+
+      - name: Rebuild aw-server-rust with research defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          source venv/bin/activate
+          make --directory=aw-server-rust aw-server SKIP_WEBUI=true
+
       - name: Package
         run: |
           source venv/bin/activate
@@ -962,6 +996,32 @@ jobs:
           command: |
             source venv/bin/activate || source venv/Scripts/activate
             make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+
+      # Research Edition profile identity is baked AFTER the module test
+      # suites: they assert the ordinary defaults (profile=default, port 5600)
+      # and would fail on the patched tree. Python modules are editable
+      # installs, so PyInstaller collects the patched source at package time;
+      # the Rust binaries are rebuilt below. Fail-closed: a stale submodule pin
+      # aborts the build rather than shipping a bundle that runs the default
+      # profile next to a participant's standard install.
+      - name: Patch research edition profile identity
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_profile.py tauri
+
+      - name: Rebuild aw-tauri with research defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          shell: bash
+          command: |
+            set -e
+            source venv/bin/activate || source venv/Scripts/activate
+            make --directory=aw-tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Import macOS signing certificate
         if: runner.os == 'macOS' && (startsWith(github.ref, 'refs/tags/v') || env.AW_RESEARCH_EDITION == 'true')
