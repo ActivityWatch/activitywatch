@@ -65,6 +65,22 @@ BUNDLE_NAME = "ActivityWatch Research"
 # Dock and Spotlight still show CFBundleName ("ActivityWatch Research").
 BUNDLE_DIR_STEM = "ActivityWatch-Research"
 
+# Windows install identity. Inno Setup keys off AppId, not the display name: a
+# research setup sharing the standard AppId registers as the *same* product, so
+# it upgrades over an existing install and its uninstaller removes both. Own
+# GUIDs give the research build its own install dir, Start-Menu/desktop/startup
+# shortcuts and "Apps & features" entry, which is what dual-run requires.
+WINDOWS_APPID_QT = "32024B9B-352E-4E97-AA56-9EEF143E5B70"
+WINDOWS_APPID_TAURI = "70E2D4AB-8DA2-4BE0-8391-AB5B48653773"
+# MSI upgrade code. Tauri derives this from `identifier` when unset, so the
+# research build already differs today via the patched identifier — but that
+# makes installer identity a silent side effect of an unrelated string. Pinning
+# it means a future identifier change cannot collapse research MSIs onto the
+# standard upgrade family. WixConfig exposes no product-code field (Tauri
+# generates one per build); the upgrade code is what defines the product family,
+# so it is the one that matters here.
+WINDOWS_WIX_UPGRADE_CODE_TAURI = "ABF0AB0C-5BA0-4C2C-BF3E-797B2E1913DA"
+
 
 @dataclass(frozen=True)
 class Patch:
@@ -342,9 +358,90 @@ BUNDLE_PATCHES_TAURI: List[Patch] = [
     ),
 ]
 
+# --- Windows install identity -------------------------------------------------
+# Both .iss files derive AppName, DefaultDirName (Qt), the Start-Menu / desktop /
+# {userstartup} shortcut names and UninstallDisplayName from `#define MyAppName`,
+# so patching that one token cascades to every user-visible identity. AppId and
+# OutputBaseFilename do not cascade and are patched explicitly.
+#
+# Note both .iss files ship `OutputBaseFilename=activitywatch-setup` on master,
+# so the Qt and Tauri setups already overwrite each other in dist/. The research
+# names below are distinct from each other as well as from standard, which also
+# stops research artifacts from colliding on the release page.
+
+WINDOWS_PATCHES_QT: List[Patch] = [
+    Patch(
+        "scripts/package/activitywatch-setup.iss",
+        '#define MyAppName "ActivityWatch"\n',
+        f'#define MyAppName "{BUNDLE_NAME}"\n',
+        "Inno Qt product name (cascades to dir, shortcuts, uninstall entry)",
+    ),
+    Patch(
+        "scripts/package/activitywatch-setup.iss",
+        "AppId={{F226B8F4-3244-46E6-901D-0CE8035423E4}\n",
+        f"AppId={{{{{WINDOWS_APPID_QT}}}\n",
+        "Inno Qt AppId (separate product, not an upgrade of standard)",
+    ),
+    Patch(
+        "scripts/package/activitywatch-setup.iss",
+        "OutputBaseFilename=activitywatch-setup\n",
+        "OutputBaseFilename=activitywatch-research-setup\n",
+        "Inno Qt setup .exe filename",
+    ),
+]
+
+WINDOWS_PATCHES_TAURI: List[Patch] = [
+    Patch(
+        "aw-tauri/src-tauri/tauri.conf.json",
+        '  "bundle": {\n    "active": true,\n',
+        '  "bundle": {\n    "active": true,\n'
+        '    "windows": {\n'
+        '      "wix": {\n'
+        f'        "upgradeCode": "{WINDOWS_WIX_UPGRADE_CODE_TAURI}"\n'
+        '      }\n'
+        '    },\n',
+        "Tauri WiX upgrade code (research MSIs are their own product family)",
+    ),
+    Patch(
+        "scripts/package/aw-tauri.iss",
+        '#define MyAppName "ActivityWatch (Tauri)"\n',
+        f'#define MyAppName "{BUNDLE_NAME} (Tauri)"\n',
+        "Inno Tauri product name (cascades to shortcuts, uninstall entry)",
+    ),
+    Patch(
+        "scripts/package/aw-tauri.iss",
+        "AppId={{983D0855-08C8-46BD-AEFB-3924581C6703}\n",
+        f"AppId={{{{{WINDOWS_APPID_TAURI}}}\n",
+        "Inno Tauri AppId (separate product, not an upgrade of standard Tauri)",
+    ),
+    Patch(
+        "scripts/package/aw-tauri.iss",
+        "DefaultDirName={autopf}\\ActivityWatch-Tauri\n",
+        f"DefaultDirName={{autopf}}\\{BUNDLE_DIR_STEM}-Tauri\n",
+        "Inno Tauri install directory",
+    ),
+    Patch(
+        "scripts/package/aw-tauri.iss",
+        "OutputBaseFilename=activitywatch-setup\n",
+        "OutputBaseFilename=activitywatch-research-tauri-setup\n",
+        "Inno Tauri setup .exe filename",
+    ),
+]
+
+
 TARGETS = {
-    "qt": PROFILE_PATCHES_QT + PORT_PATCHES_QT + BUNDLE_PATCHES_QT,
-    "tauri": PROFILE_PATCHES_TAURI + PORT_PATCHES_TAURI + BUNDLE_PATCHES_TAURI,
+    "qt": (
+        PROFILE_PATCHES_QT
+        + PORT_PATCHES_QT
+        + BUNDLE_PATCHES_QT
+        + WINDOWS_PATCHES_QT
+    ),
+    "tauri": (
+        PROFILE_PATCHES_TAURI
+        + PORT_PATCHES_TAURI
+        + BUNDLE_PATCHES_TAURI
+        + WINDOWS_PATCHES_TAURI
+    ),
 }
 
 

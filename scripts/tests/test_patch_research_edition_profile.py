@@ -234,3 +234,116 @@ def test_macos_bundle_dir_is_distinct_from_standard(tmp_path: Path, target: str)
     notarize = (root / "scripts/notarize.sh").read_text(encoding="utf-8")
     assert f"app=dist/{expected_app}" in notarize
     assert "app=dist/ActivityWatch.app" not in notarize
+
+
+# --- Windows install identity -------------------------------------------------
+# These use the *real* .iss / tauri.conf.json rather than the synthetic fixture,
+# because the thing under test is largely what the patch does NOT touch: the
+# shortcut, uninstall and install-dir lines that derive from `#define MyAppName`.
+# A synthetic file built from the `old` strings alone cannot catch upstream
+# hardcoding a name that would then collide with a standard install.
+
+WINDOWS_REAL_FILES = {
+    "qt": "scripts/package/activitywatch-setup.iss",
+    "tauri": "scripts/package/aw-tauri.iss",
+}
+STANDARD_APPID_QT = "F226B8F4-3244-46E6-901D-0CE8035423E4"
+STANDARD_APPID_TAURI = "983D0855-08C8-46BD-AEFB-3924581C6703"
+
+
+def _patch_real_file(tmp_path: Path, rel_path: str, patches) -> str:
+    """Copy one real repo file into ``tmp_path``, patch it, return the result."""
+    src = _repo_root() / rel_path
+    if not src.is_file():
+        pytest.skip(f"{rel_path} not present")
+    dst = tmp_path / rel_path
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+
+    relevant = [p for p in patches if p.path == rel_path]
+    patcher.apply_patches(tmp_path, relevant, check=False)
+    return dst.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("target", ["qt", "tauri"])
+def test_windows_installer_is_a_separate_product(tmp_path: Path, target: str):
+    """Research setup must register its own product, not upgrade over standard."""
+    rel = WINDOWS_REAL_FILES[target]
+    patches = (
+        patcher.WINDOWS_PATCHES_QT
+        if target == "qt"
+        else patcher.WINDOWS_PATCHES_TAURI
+    )
+    text = _patch_real_file(tmp_path, rel, patches)
+
+    research_appid = (
+        patcher.WINDOWS_APPID_QT if target == "qt" else patcher.WINDOWS_APPID_TAURI
+    )
+    standard_appid = STANDARD_APPID_QT if target == "qt" else STANDARD_APPID_TAURI
+
+    # AppId is what Inno keys "same product" on — it must have changed.
+    assert f"AppId={{{{{research_appid}}}" in text
+    assert standard_appid not in text
+
+    # Display name drives shortcuts, uninstall entry and (Qt) the install dir.
+    assert patcher.BUNDLE_NAME in text
+    assert '#define MyAppName "ActivityWatch"\n' not in text
+    assert '#define MyAppName "ActivityWatch (Tauri)"\n' not in text
+
+    # Setup .exe no longer collides with the standard artifact.
+    assert "OutputBaseFilename=activitywatch-setup\n" not in text
+    assert "OutputBaseFilename=activitywatch-research" in text
+
+    # Shortcut / uninstall identity must still *derive* from MyAppName. If
+    # upstream ever hardcodes the name here, the research build would install a
+    # shortcut and uninstall entry indistinguishable from a standard install.
+    for line in ("{autoprograms}", "{autodesktop}", "{userstartup}"):
+        assert f'Name: "{line}\\{{#MyAppName}}"' in text
+    assert "UninstallDisplayName={#MyAppName}\n" in text
+
+
+def test_windows_research_installers_do_not_collide_with_each_other(tmp_path: Path):
+    """Qt-research and Tauri-research are also distinct products from each other."""
+    qt = _patch_real_file(
+        tmp_path / "qt", WINDOWS_REAL_FILES["qt"], patcher.WINDOWS_PATCHES_QT
+    )
+    tauri = _patch_real_file(
+        tmp_path / "tauri", WINDOWS_REAL_FILES["tauri"], patcher.WINDOWS_PATCHES_TAURI
+    )
+
+    appids = {
+        patcher.WINDOWS_APPID_QT,
+        patcher.WINDOWS_APPID_TAURI,
+        STANDARD_APPID_QT,
+        STANDARD_APPID_TAURI,
+    }
+    assert len(appids) == 4, "research AppIds must be unique GUIDs"
+
+    def _output_name(text: str) -> str:
+        for line in text.splitlines():
+            if line.startswith("OutputBaseFilename="):
+                return line.split("=", 1)[1]
+        raise AssertionError("no OutputBaseFilename")
+
+    # Both .iss files ship `activitywatch-setup` on master, so the research
+    # names must be distinct from each other as well as from standard.
+    assert _output_name(qt) != _output_name(tauri)
+
+    # Install directories must differ (Qt derives its dir from MyAppName).
+    assert "DefaultDirName={autopf}\\{#MyAppName}\n" in qt
+    assert f"DefaultDirName={{autopf}}\\{patcher.BUNDLE_DIR_STEM}-Tauri\n" in tauri
+    assert "DefaultDirName={autopf}\\ActivityWatch-Tauri\n" not in tauri
+
+
+def test_tauri_wix_upgrade_code_is_pinned_and_config_stays_valid_json(tmp_path: Path):
+    """The MSI upgrade code defines the product family; pin it, don't derive it."""
+    import json
+    import uuid
+
+    rel = "aw-tauri/src-tauri/tauri.conf.json"
+    text = _patch_real_file(tmp_path, rel, patcher.WINDOWS_PATCHES_TAURI)
+
+    config = json.loads(text)  # deny_unknown_fields upstream: must stay valid
+    wix = config["bundle"]["windows"]["wix"]
+    assert wix["upgradeCode"] == patcher.WINDOWS_WIX_UPGRADE_CODE_TAURI
+    uuid.UUID(wix["upgradeCode"])  # tauri parses this as a uuid::Uuid
