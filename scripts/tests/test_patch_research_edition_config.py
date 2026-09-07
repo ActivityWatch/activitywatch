@@ -100,7 +100,27 @@ def test_post_137_layout_injects_only_browser_map_into_research_defaults():
     assert "aw-watcher-window" not in defaults
     assert defaults["research_enabled"] is True
     assert defaults["research_category_map"]["svenskaspel.se"] == "Sensitive / Excluded"
-    assert "research_app_category_map" not in defaults
+    # An empty table is emitted so upgrades from an earlier Research Edition
+    # (which may have had this map populated) explicitly clear it.
+    assert defaults["research_app_category_map"] == {}
+
+
+def test_post_137_emits_explicit_empty_app_map_to_clear_legacy_entries():
+    """The patched research_defaults must include an explicit empty app-category table.
+
+    An upgrade from an earlier Research Edition may have a populated
+    research_app_category_map in the user's saved config. Because research_defaults
+    is merged into [aw-watcher-window] key-by-key, omitting the table would leave
+    legacy entries intact, so application names would continue to be replaced with
+    categories, defeating the primary behavior change. The explicit empty section
+    header ensures the watcher's merge logic resets the key.
+    """
+    result = patcher.patch_config(POST_137)
+
+    defaults_str = _string_constant(result, "research_defaults")
+    # The literal section header must appear so older installs see an explicit reset.
+    assert "[research_app_category_map]" in defaults_str
+    assert tomllib.loads(defaults_str)["research_app_category_map"] == {}
 
 
 def test_patched_config_matches_the_pinned_watcher_storage_contract():
@@ -165,7 +185,9 @@ def test_app_map_runtime_support_is_not_required_for_name_preserving_build():
     result = patcher.patch_config(without_lookup)
 
     defaults = tomllib.loads(_string_constant(result, "research_defaults"))
-    assert "research_app_category_map" not in defaults
+    # An empty app-map table is always emitted to clear legacy populated maps;
+    # the watcher ignores it if it does not read research_app_category_map.
+    assert defaults["research_app_category_map"] == {}
 
 
 def test_fails_closed_when_flag_is_missing():

@@ -784,7 +784,12 @@ def patch_config(text: str) -> str:
         # That template is parsed standalone and merged into the
         # [aw-watcher-window] section key-by-key, so its table headers must NOT
         # carry the section prefix.
-        block = f"research_enabled = true\n\n[research_category_map]\n{entries}"
+        # Include an empty [research_app_category_map] so that an upgrade from
+        # an earlier Research Edition (which may have had this map populated)
+        # explicitly clears it via the key-by-key merge. Without this, a prior
+        # non-empty app map survives the upgrade and continues replacing app
+        # names with categories, defeating the primary behavior change.
+        block = f"research_enabled = true\n\n[research_category_map]\n{entries}\n\n[research_app_category_map]"
         patched = ENABLED_FLAG_RE.sub(lambda _: block, text, count=1)
     else:
         # Pre-#137: the section-prefixed browser header is already present in
