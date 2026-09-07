@@ -204,3 +204,33 @@ def test_patched_python_profile_module_behaviour(tmp_path: Path, monkeypatch):
 
     module.export_profile(module.resolve_profile(None, False))
     assert os.environ["AW_PROFILE"] == "research"
+
+
+@pytest.mark.parametrize("target", ["qt", "tauri"])
+def test_macos_bundle_dir_is_distinct_from_standard(tmp_path: Path, target: str):
+    """Research builds must not emit ActivityWatch.app next to a standard install."""
+    root = make_fixture_root(tmp_path, target)
+    patcher.apply_patches(root, patcher.TARGETS[target], check=False)
+
+    stem = patcher.BUNDLE_DIR_STEM
+    expected_app = f"{stem}.app"
+    colliding = "ActivityWatch.app"
+
+    if target == "qt":
+        spec = (root / "aw.spec").read_text(encoding="utf-8")
+        assert f'name="{expected_app}"' in spec
+        assert f'name="{colliding}"' not in spec
+    else:
+        tauri = (root / "scripts/package/build_app_tauri.sh").read_text(
+            encoding="utf-8"
+        )
+        assert f'APP_NAME="{stem}"' in tauri
+        assert 'APP_NAME="ActivityWatch"\n' not in tauri
+
+    makefile = (root / "Makefile").read_text(encoding="utf-8")
+    assert f"APP_BUNDLE ?= {stem}\n" in makefile
+    assert "APP_BUNDLE ?= ActivityWatch\n" not in makefile
+
+    notarize = (root / "scripts/notarize.sh").read_text(encoding="utf-8")
+    assert f"app=dist/{expected_app}" in notarize
+    assert "app=dist/ActivityWatch.app" not in notarize

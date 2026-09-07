@@ -461,6 +461,15 @@ jobs:
           source venv/bin/activate || source venv/Scripts/activate
           make test-integration
 
+      # The patcher's exact-match table is release-critical. Run it on every
+      # PR/release job (not only research tags) so a drifted submodule pin
+      # fails before packaging. Must stay on the unpatched tree: --check
+      # and the fail-closed tests assert the ordinary defaults.
+      - name: Test research edition profile patcher
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
       # Research Edition profile identity is baked AFTER the module test
       # suites: they assert the ordinary defaults (profile=default, port 5600)
       # and would fail on the patched tree. Python modules are editable
@@ -508,21 +517,26 @@ jobs:
             export APPLE_PERSONALID
           fi
 
+          BUNDLE="ActivityWatch"
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            BUNDLE="ActivityWatch-Research"
+          fi
+
           source venv/bin/activate
-          make dist/ActivityWatch.dmg
+          make "dist/${BUNDLE}.dmg" APP_BUNDLE="${BUNDLE}"
 
           if [ "$SIGN_MACOS" = true ]; then
-            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" "dist/${BUNDLE}.dmg"
 
             brew install akeru-inc/tap/xcnotary
-            xcnotary precheck dist/ActivityWatch.app
-            xcnotary precheck dist/ActivityWatch.dmg
+            xcnotary precheck "dist/${BUNDLE}.app"
+            xcnotary precheck "dist/${BUNDLE}.dmg"
 
             make dist/notarize
           fi
           EDITION=""
           if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
-          mv dist/ActivityWatch.dmg dist/activitywatch${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          mv "dist/${BUNDLE}.dmg" dist/activitywatch${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -751,6 +765,15 @@ jobs:
         run: |
           source venv/bin/activate
           make test-integration
+
+      # The patcher's exact-match table is release-critical. Run it on every
+      # PR/release job (not only research tags) so a drifted submodule pin
+      # fails before packaging. Must stay on the unpatched tree: --check
+      # and the fail-closed tests assert the ordinary defaults.
+      - name: Test research edition profile patcher
+        run: |
+          source venv/bin/activate
+          python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
 
       # Research Edition profile identity is baked AFTER the module test
       # suites: they assert the ordinary defaults (profile=default, port 5600)
@@ -997,6 +1020,15 @@ jobs:
             source venv/bin/activate || source venv/Scripts/activate
             make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      # The patcher's exact-match table is release-critical. Run it on every
+      # PR/release job (not only research tags) so a drifted submodule pin
+      # fails before packaging. Must stay on the unpatched tree: --check
+      # and the fail-closed tests assert the ordinary defaults.
+      - name: Test research edition profile patcher
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
       # Research Edition profile identity is baked AFTER the module test
       # suites: they assert the ordinary defaults (profile=default, port 5600)
       # and would fail on the patched tree. Python modules are editable
@@ -1080,21 +1112,26 @@ jobs:
             SIGN_MACOS=true
           fi
 
+          BUNDLE="ActivityWatch"
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            BUNDLE="ActivityWatch-Research"
+          fi
+
           source venv/bin/activate
-          make dist/ActivityWatch.dmg
+          make "dist/${BUNDLE}.dmg" APP_BUNDLE="${BUNDLE}"
 
           if [ "$SIGN_MACOS" = true ]; then
-            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" "dist/${BUNDLE}.dmg"
 
             brew install akeru-inc/tap/xcnotary
-            xcnotary precheck dist/ActivityWatch.app
-            xcnotary precheck dist/ActivityWatch.dmg
+            xcnotary precheck "dist/${BUNDLE}.app"
+            xcnotary precheck "dist/${BUNDLE}.dmg"
 
             make dist/notarize
           fi
           EDITION=""
           if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          mv "dist/${BUNDLE}.dmg" dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}

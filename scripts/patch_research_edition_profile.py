@@ -26,9 +26,10 @@ collected:
 
 3. **macOS bundle identity**: ``CFBundleIdentifier`` becomes
    ``net.activitywatch.ActivityWatch-research`` (Tauri: ``net.activitywatch.tauri-research``)
-   with ``CFBundleName`` "ActivityWatch Research", so dual-run next to a
-   standard install is a distinct LaunchServices identity with its own login
-   item and TCC grant, not a shared slot.
+   with ``CFBundleName`` "ActivityWatch Research" *and* on-disk bundle
+   ``ActivityWatch-Research.app``, so dual-run next to a standard install is a
+   distinct LaunchServices identity that does not overwrite
+   ``/Applications/ActivityWatch.app``.
 
 Usage (from the repository root, after ``make test``, before ``make package``):
 
@@ -60,6 +61,9 @@ RESEARCH_PORT = 5667
 BUNDLE_ID = "net.activitywatch.ActivityWatch-research"
 TAURI_IDENTIFIER = "net.activitywatch.tauri-research"
 BUNDLE_NAME = "ActivityWatch Research"
+# Hyphenated on-disk stem so Makefile / notarize / CI paths stay unquoted.
+# Dock and Spotlight still show CFBundleName ("ActivityWatch Research").
+BUNDLE_DIR_STEM = "ActivityWatch-Research"
 
 
 @dataclass(frozen=True)
@@ -264,10 +268,30 @@ BUNDLE_PATCHES_QT: List[Patch] = [
         "PyInstaller BUNDLE display name",
     ),
     Patch(
+        "aw.spec",
+        '        name="ActivityWatch.app",\n',
+        f'        name="{BUNDLE_DIR_STEM}.app",\n',
+        "PyInstaller BUNDLE on-disk filename",
+    ),
+    Patch(
+        "Makefile",
+        "APP_BUNDLE ?= ActivityWatch\n",
+        f"APP_BUNDLE ?= {BUNDLE_DIR_STEM}\n",
+        "Makefile .app/.dmg stem",
+    ),
+    Patch(
         "scripts/notarize.sh",
         "bundleid=net.activitywatch.ActivityWatch # Match aw.spec\n",
         f"bundleid={BUNDLE_ID} # Match aw.spec\n",
         "notarization bundle id",
+    ),
+    Patch(
+        "scripts/notarize.sh",
+        "app=dist/ActivityWatch.app\n"
+        "dmg=dist/ActivityWatch.dmg\n",
+        f"app=dist/{BUNDLE_DIR_STEM}.app\n"
+        f"dmg=dist/{BUNDLE_DIR_STEM}.dmg\n",
+        "notarization .app/.dmg paths",
     ),
 ]
 
@@ -285,6 +309,18 @@ BUNDLE_PATCHES_TAURI: List[Patch] = [
         "Tauri .app CFBundleName",
     ),
     Patch(
+        "scripts/package/build_app_tauri.sh",
+        'APP_NAME="ActivityWatch"\n',
+        f'APP_NAME="{BUNDLE_DIR_STEM}"\n',
+        "Tauri .app on-disk filename",
+    ),
+    Patch(
+        "Makefile",
+        "APP_BUNDLE ?= ActivityWatch\n",
+        f"APP_BUNDLE ?= {BUNDLE_DIR_STEM}\n",
+        "Makefile .app/.dmg stem",
+    ),
+    Patch(
         "aw-tauri/src-tauri/tauri.conf.json",
         '  "identifier": "net.activitywatch.tauri",\n',
         f'  "identifier": "{TAURI_IDENTIFIER}",\n',
@@ -295,6 +331,14 @@ BUNDLE_PATCHES_TAURI: List[Patch] = [
         "bundleid=net.activitywatch.ActivityWatch # Match aw.spec\n",
         f"bundleid={BUNDLE_ID} # Match aw.spec\n",
         "notarization bundle id",
+    ),
+    Patch(
+        "scripts/notarize.sh",
+        "app=dist/ActivityWatch.app\n"
+        "dmg=dist/ActivityWatch.dmg\n",
+        f"app=dist/{BUNDLE_DIR_STEM}.app\n"
+        f"dmg=dist/{BUNDLE_DIR_STEM}.dmg\n",
+        "notarization .app/.dmg paths",
     ),
 ]
 
