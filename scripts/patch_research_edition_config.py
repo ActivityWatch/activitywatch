@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Patch aw-watcher-window/config.py with Matthias's research edition category maps.
+"""Patch aw-watcher-window/config.py with Research Edition browser categories.
 
 Run as part of the CI build for research edition:
     python3 scripts/patch_research_edition_config.py <path/to/config.py>
-
-Two maps are injected:
 
 CATEGORY_MAP — browser URL/title substring matching:
     classify_title() in PR #130 checks each pattern against the URL first (when
@@ -13,19 +11,19 @@ CATEGORY_MAP — browser URL/title substring matching:
     (music.youtube.com before youtube.com). Video domains before News title keywords
     (svtplay.se domain before the "svt" title keyword).
 
-APP_CATEGORY_MAP — non-browser app-name → study category mapping:
-    classify_app() in PR #136 performs a case-insensitive exact lookup of the
-    app name. Non-browser apps are replaced by their study category; unmapped
-    apps become 'Excluded'. Ordering within this map is irrelevant (exact lookup).
-    Injection fails closed if the [aw-watcher-window.research_app_category_map]
-    section is absent, which means the submodule pin predates PR #136.
+APP_CATEGORY_MAP is retained as the shared taxonomy for the web UI preset, but
+is deliberately not injected into the watcher. The approved study contract keeps
+application names (including browser identity) while discarding raw titles and
+URLs. An empty watcher app map selects exactly that behavior.
 """
+
 import pathlib
 import re
 import sys
 
 CONFIG_FILE = pathlib.Path(
-    sys.argv[1] if len(sys.argv) > 1
+    sys.argv[1]
+    if len(sys.argv) > 1
     else "aw-watcher-window/aw_watcher_window/config.py"
 )
 
@@ -651,10 +649,10 @@ CATEGORY_MAP: list[tuple[str, str]] = [
     ("kagi", "Search & Navigation"),
 ]
 
-# App-name → study category mapping for non-browser applications.
+# App-name → study category aliases used by the web UI preset.
 # Faithfully derived from Matthias Lehner's APP_TO_CATEGORY dict (classifier 2026-07-06).
-# Keys are lowercase app names (exact match, case-insensitive at runtime).
-# "Excluded" means the app is deliberately suppressed — not a lookup miss.
+# These aliases are not injected into the watcher: Research Edition storage keeps
+# the approved raw app name and removes the non-browser title and every URL.
 APP_CATEGORY_MAP: dict[str, str] = {
     # AI chatbots & assistants
     "chatgpt": "AI Chatbots & Assistants",
@@ -768,16 +766,10 @@ ENABLED_FLAG_RE = re.compile(r"^research_enabled = false$", re.MULTILINE)
 # config file.
 RESEARCH_DEFAULTS_ANCHOR = 'research_defaults = """'
 
-# Proof that the watcher can actually consume an app map (aw-watcher-window #136).
-# This is a runtime-capability check, not a layout check, so it survives further
-# reshuffling of the config templates.
-APP_MAP_RUNTIME_MARKER = 'config.get("research_app_category_map"'
 
-
-def patch_config(text: str) -> tuple[str, bool]:
-    """Patch config.py text.  Returns (patched_text, app_map_injected)."""
+def patch_config(text: str) -> str:
+    """Enable browser categorization while leaving the watcher app map empty."""
     category_header = "[aw-watcher-window.research_category_map]"
-    app_category_header = "[aw-watcher-window.research_app_category_map]"
 
     enabled_matches = len(ENABLED_FLAG_RE.findall(text))
     if enabled_matches != 1:
@@ -785,44 +777,29 @@ def patch_config(text: str) -> tuple[str, bool]:
             f"expected exactly one line-anchored 'research_enabled = false', found {enabled_matches}"
         )
 
-    # Fail closed: without the runtime lookup the submodule predates PR #136, so
-    # classify_app() does not exist and non-browser apps would keep their raw
-    # names. Injecting anyway produces a green build that silently reproduces the
-    # exact privacy bug this map fixes -- fail loudly instead.
-    if APP_MAP_RUNTIME_MARKER not in text:
-        raise ValueError(
-            "aw-watcher-window does not read research_app_category_map "
-            "(requires PR #136 in the submodule pin)"
-        )
-
     entries = build_toml_table(CATEGORY_MAP)
-    app_entries = build_toml_table(list(APP_CATEGORY_MAP.items()))
 
     if RESEARCH_DEFAULTS_ANCHOR in text:
-        # Post-#137: the maps belong inside the `research_defaults` template.
+        # Post-#137: the browser map belongs inside `research_defaults`.
         # That template is parsed standalone and merged into the
         # [aw-watcher-window] section key-by-key, so its table headers must NOT
         # carry the section prefix.
-        block = (
-            "research_enabled = true\n\n"
-            f"[research_category_map]\n{entries}\n\n"
-            f"[research_app_category_map]\n{app_entries}"
-        )
+        # Include an empty [research_app_category_map] so that an upgrade from
+        # an earlier Research Edition (which may have had this map populated)
+        # explicitly clears it via the key-by-key merge. Without this, a prior
+        # non-empty app map survives the upgrade and continues replacing app
+        # names with categories, defeating the primary behavior change.
+        block = f"research_enabled = true\n\n[research_category_map]\n{entries}\n\n[research_app_category_map]"
         patched = ENABLED_FLAG_RE.sub(lambda _: block, text, count=1)
     else:
-        # Pre-#137: the section-prefixed headers are already present in
-        # `default_config`; inject the entries under them.
+        # Pre-#137: the section-prefixed browser header is already present in
+        # `default_config`; leave the app-map section empty.
         if text.count(category_header) != 1:
             raise ValueError(f"expected exactly one '{category_header}' section")
-        if text.count(app_category_header) != 1:
-            raise ValueError(f"expected exactly one '{app_category_header}' section")
         patched = ENABLED_FLAG_RE.sub("research_enabled = true", text, count=1)
         patched = patched.replace(category_header, f"{category_header}\n{entries}", 1)
-        patched = patched.replace(
-            app_category_header, f"{app_category_header}\n{app_entries}", 1
-        )
 
-    return patched, True
+    return patched
 
 
 def main() -> None:
@@ -831,16 +808,17 @@ def main() -> None:
         sys.exit(1)
     text = CONFIG_FILE.read_text(encoding="utf-8")
     try:
-        patched, app_map_injected = patch_config(text)
+        patched = patch_config(text)
     except ValueError as error:
         print(f"Error: {error} in {CONFIG_FILE}", file=sys.stderr)
         sys.exit(1)
     CONFIG_FILE.write_text(patched, encoding="utf-8")
     unique = len({p for p, _ in CATEGORY_MAP})
     cats = len({c for _, c in CATEGORY_MAP})
-    print(f"Injected {unique} unique patterns across {cats} categories into {CONFIG_FILE}")
-    assert app_map_injected  # patch_config() now fails closed rather than skipping
-    print(f"Injected {len(APP_CATEGORY_MAP)} app-name entries into {CONFIG_FILE}")
+    print(
+        f"Injected {unique} unique patterns across {cats} categories into {CONFIG_FILE}"
+    )
+    print("Preserving application names; watcher app-category map left empty")
 
 
 if __name__ == "__main__":
