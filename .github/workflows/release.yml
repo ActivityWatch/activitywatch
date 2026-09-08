@@ -252,6 +252,44 @@ jobs:
             echo "The tag-triggered build jobs in this workflow will now build artifacts and create/update the draft prerelease."
           } >> "$GITHUB_STEP_SUMMARY"
 
+  research-edition-checks:
+    name: Research Edition — patch table smoke test
+    # Run on every PR and push so drifted submodule pins fail at review time,
+    # not when Erik pushes the annotated release tag.  The patcher is stdlib-only
+    # so no poetry/build step is needed; only submodules (real source files) and
+    # pytest (for the unit-test fixture suite).
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+
+      - name: Install pytest
+        run: pip install pytest
+
+      # Verify every patch target string exists exactly once in the real
+      # submodule sources for both build flavours.  Fails immediately if a
+      # target is missing or ambiguous — the same guard that would abort a tag
+      # build, now running at PR time.
+      - name: Verify Qt patch targets (--check)
+        run: python3 scripts/patch_research_edition_profile.py qt --check
+
+      - name: Verify Tauri patch targets (--check)
+        run: python3 scripts/patch_research_edition_profile.py tauri --check
+
+      # Fixture-based unit tests: patchers apply correctly on synthetic trees,
+      # fail closed on missing/ambiguous tokens, and leave ordinary defaults
+      # untouched on the unpatched tree.
+      - name: Run profile patcher unit tests
+        run: python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
   build-qt:
     name: Build Qt artifacts
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
@@ -260,7 +298,7 @@ jobs:
     env:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      AW_RESEARCH_EDITION: ${{ matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
     defaults:
       run:
         shell: bash
@@ -275,6 +313,24 @@ jobs:
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
+        # Research Edition build leg: apply the research patch set and
+        # compile/test/package the *patched* tree on every PR and branch push,
+        # so a drifted patch target or a patched-source compile failure dies at
+        # PR time instead of at tag time. Linux only: cheapest full build and no
+        # signing secrets. On tag pushes and research dispatches `research`
+        # resolves to false, so this row merges into the existing ubuntu-22.04 row
+        # instead of adding a duplicate leg -- research tags already build the
+        # research edition in every row, and standard tags must not upload
+        # research artifacts to the standard release.
+        research: [false]
+        include:
+          - os: ubuntu-22.04
+            python_version: 3.9
+            node_version: 22
+            skip_rust: false
+            skip_webui: false
+            experimental: false
+            research: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
 
     steps:
       - uses: actions/checkout@v7
@@ -461,6 +517,32 @@ jobs:
           source venv/bin/activate || source venv/Scripts/activate
           make test-integration
 
+      # The patcher's exact-match table is release-critical. Run it on every
+      # PR/release job (not only research tags) so a drifted submodule pin
+      # fails before packaging. Must stay on the unpatched tree: --check
+      # and the fail-closed tests assert the ordinary defaults.
+      - name: Test research edition profile patcher
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
+      # Research Edition profile identity is baked AFTER the module test
+      # suites: they assert the ordinary defaults (profile=default, port 5600)
+      # and would fail on the patched tree. Python modules are editable
+      # installs, so PyInstaller collects the patched source at package time;
+      # the Rust binaries are rebuilt below. Fail-closed: a stale submodule pin
+      # aborts the build rather than shipping a bundle that runs the default
+      # profile next to a participant's standard install.
+      - name: Patch research edition profile identity
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_profile.py qt
+
+      - name: Rebuild aw-server-rust with research defaults
+        if: env.AW_RESEARCH_EDITION == 'true' && matrix.skip_rust != true
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          make --directory=aw-server-rust aw-server SKIP_WEBUI=true
+
       - name: Package
         run: |
           source venv/bin/activate || source venv/Scripts/activate
@@ -491,21 +573,26 @@ jobs:
             export APPLE_PERSONALID
           fi
 
+          BUNDLE="ActivityWatch"
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            BUNDLE="ActivityWatch-Research"
+          fi
+
           source venv/bin/activate
-          make dist/ActivityWatch.dmg
+          make "dist/${BUNDLE}.dmg" APP_BUNDLE="${BUNDLE}"
 
           if [ "$SIGN_MACOS" = true ]; then
-            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" "dist/${BUNDLE}.dmg"
 
             brew install akeru-inc/tap/xcnotary
-            xcnotary precheck dist/ActivityWatch.app
-            xcnotary precheck dist/ActivityWatch.dmg
+            xcnotary precheck "dist/${BUNDLE}.app"
+            xcnotary precheck "dist/${BUNDLE}.dmg"
 
             make dist/notarize
           fi
           EDITION=""
           if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
-          mv dist/ActivityWatch.dmg dist/activitywatch${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          mv "dist/${BUNDLE}.dmg" dist/activitywatch${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -525,7 +612,7 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
-          name: builds-${{ matrix.os }}-py${{ matrix.python_version }}
+          name: builds-${{ matrix.os }}-py${{ matrix.python_version }}${{ matrix.research && '-research' || '' }}
           path: dist/activitywatch-*.*
 
   build-qt-manylinux-2-28:
@@ -735,6 +822,32 @@ jobs:
           source venv/bin/activate
           make test-integration
 
+      # The patcher's exact-match table is release-critical. Run it on every
+      # PR/release job (not only research tags) so a drifted submodule pin
+      # fails before packaging. Must stay on the unpatched tree: --check
+      # and the fail-closed tests assert the ordinary defaults.
+      - name: Test research edition profile patcher
+        run: |
+          source venv/bin/activate
+          python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
+      # Research Edition profile identity is baked AFTER the module test
+      # suites: they assert the ordinary defaults (profile=default, port 5600)
+      # and would fail on the patched tree. Python modules are editable
+      # installs, so PyInstaller collects the patched source at package time;
+      # the Rust binaries are rebuilt below. Fail-closed: a stale submodule pin
+      # aborts the build rather than shipping a bundle that runs the default
+      # profile next to a participant's standard install.
+      - name: Patch research edition profile identity
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_profile.py qt
+
+      - name: Rebuild aw-server-rust with research defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: |
+          source venv/bin/activate
+          make --directory=aw-server-rust aw-server SKIP_WEBUI=true
+
       - name: Package
         run: |
           source venv/bin/activate
@@ -778,7 +891,7 @@ jobs:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      AW_RESEARCH_EDITION: ${{ matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
       # All subprojects share one virtualenv. Poetry's parallel installer can
       # race while replacing the same dependency from different lock files.
       POETRY_INSTALLER_PARALLEL: "false"
@@ -802,6 +915,24 @@ jobs:
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
+        # Research Edition build leg: apply the research patch set and
+        # compile/test/package the *patched* tree on every PR and branch push,
+        # so a drifted patch target or a patched-source compile failure dies at
+        # PR time instead of at tag time. Linux only: cheapest full build and no
+        # signing secrets. On tag pushes and research dispatches `research`
+        # resolves to false, so this row merges into the existing ubuntu-24.04 row
+        # instead of adding a duplicate leg -- research tags already build the
+        # research edition in every row, and standard tags must not upload
+        # research artifacts to the standard release.
+        research: [false]
+        include:
+          - os: ubuntu-24.04
+            python_version: 3.9
+            node_version: 22
+            skip_rust: false
+            skip_webui: false
+            experimental: false
+            research: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
 
     steps:
       - uses: actions/checkout@v7
@@ -963,6 +1094,41 @@ jobs:
             source venv/bin/activate || source venv/Scripts/activate
             make test SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      # The patcher's exact-match table is release-critical. Run it on every
+      # PR/release job (not only research tags) so a drifted submodule pin
+      # fails before packaging. Must stay on the unpatched tree: --check
+      # and the fail-closed tests assert the ordinary defaults.
+      - name: Test research edition profile patcher
+        run: |
+          source venv/bin/activate || source venv/Scripts/activate
+          python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
+      # Research Edition profile identity is baked AFTER the module test
+      # suites: they assert the ordinary defaults (profile=default, port 5600)
+      # and would fail on the patched tree. Python modules are editable
+      # installs, so PyInstaller collects the patched source at package time;
+      # the Rust binaries are rebuilt below. Fail-closed: a stale submodule pin
+      # aborts the build rather than shipping a bundle that runs the default
+      # profile next to a participant's standard install.
+      - name: Patch research edition profile identity
+        if: env.AW_RESEARCH_EDITION == 'true'
+        run: python3 scripts/patch_research_edition_profile.py tauri
+
+      - name: Rebuild aw-tauri with research defaults
+        if: env.AW_RESEARCH_EDITION == 'true'
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          shell: bash
+          command: |
+            set -e
+            source venv/bin/activate || source venv/Scripts/activate
+            make --directory=aw-tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
       - name: Import macOS signing certificate
         if: runner.os == 'macOS' && (startsWith(github.ref, 'refs/tags/v') || env.AW_RESEARCH_EDITION == 'true')
         run: |
@@ -1020,21 +1186,26 @@ jobs:
             SIGN_MACOS=true
           fi
 
+          BUNDLE="ActivityWatch"
+          if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then
+            BUNDLE="ActivityWatch-Research"
+          fi
+
           source venv/bin/activate
-          make dist/ActivityWatch.dmg
+          make "dist/${BUNDLE}.dmg" APP_BUNDLE="${BUNDLE}"
 
           if [ "$SIGN_MACOS" = true ]; then
-            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" dist/ActivityWatch.dmg
+            codesign --force --verbose --timestamp -s "${APPLE_PERSONALID}" "dist/${BUNDLE}.dmg"
 
             brew install akeru-inc/tap/xcnotary
-            xcnotary precheck dist/ActivityWatch.app
-            xcnotary precheck dist/ActivityWatch.dmg
+            xcnotary precheck "dist/${BUNDLE}.app"
+            xcnotary precheck "dist/${BUNDLE}.dmg"
 
             make dist/notarize
           fi
           EDITION=""
           if [[ "$AW_RESEARCH_EDITION" == "true" ]]; then EDITION="-research"; fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
+          mv "dist/${BUNDLE}.dmg" dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-macos-$(uname -m).dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -1097,7 +1268,7 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
-          name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}
+          name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}${{ matrix.research && '-research' || '' }}
           path: |
             dist/activitywatch-*.*
             dist/updater/*
