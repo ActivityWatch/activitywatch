@@ -548,6 +548,13 @@ LINUX_PATCHES_QT: List[Patch] = [
 # names are independent of the installer's: without this the two editions
 # overwrite each other's login item / Startup shortcut / autostart .desktop even
 # though every other identity is already split.
+#
+# aw-qt#133 made those names profile-aware (`aw-qt-research.desktop`,
+# `net.activitywatch.aw-qt-research`, `ActivityWatch (research)`). The research
+# edition *is* profile=research, so the suffix alone collides with a standard
+# build launched as `--profile research`. Override the written identities to
+# edition-specific names; leave DESKTOP_FILENAME / LAUNCH_AGENT_LABEL as the
+# shipped-resource / base strings.
 
 AUTOSTART_PATCHES_QT: List[Patch] = [
     Patch(
@@ -558,16 +565,18 @@ AUTOSTART_PATCHES_QT: List[Patch] = [
     ),
     Patch(
         "aw-qt/aw_qt/autostart.py",
-        "    return _linux_autostart_dir() / DESKTOP_FILENAME\n",
+        '    return _linux_autostart_dir() / f"{stem}{_profile_suffix()}{extension}"\n',
         f'    return _linux_autostart_dir() / "{LINUX_DESKTOP_FILENAME}"\n',
         "Linux autostart entry filename (DESKTOP_FILENAME still names the "
-        "shipped resource we copy from)",
+        "shipped resource we copy from; do not use aw-qt-research.desktop — "
+        "that is the standard build's named-profile entry)",
     ),
     Patch(
         "aw-qt/aw_qt/autostart.py",
-        'LAUNCH_AGENT_LABEL = "net.activitywatch.aw-qt"\n',
-        f'LAUNCH_AGENT_LABEL = "{LAUNCH_AGENT_LABEL}"\n',
-        "macOS LaunchAgent label and plist filename",
+        '    return f"{LAUNCH_AGENT_LABEL}{_profile_suffix()}"\n',
+        f'    return "{BUNDLE_ID}"\n',
+        "macOS LaunchAgent label (bundle id, not net.activitywatch.aw-qt-research, "
+        "which is the standard build's named-profile label)",
     ),
     Patch(
         "aw-qt/aw_qt/autostart.py",
@@ -579,13 +588,10 @@ AUTOSTART_PATCHES_QT: List[Patch] = [
 
 
 # --- first-run autostart identity (Tauri) --------------------------------------
-# tauri_plugin_autostart derives its OS entry name from productName by default.
-# Standard and research Tauri builds share productName="aw-tauri", so their
-# autostart entries (Windows registry Run key, Linux ~/.config/autostart/ file)
-# overwrite each other. Give the research build a distinct name by switching to
-# the Builder API and setting app_name when BUILD_PROFILE is not the default.
-# macOS uses different OS mechanisms (AppleScript vs LaunchAgent) so it doesn't
-# collide, but the macos_launcher selection is included for completeness.
+# aw-tauri#253 already gives named profiles a distinct plugin app name
+# (`aw-tauri-research`). The research edition *is* profile=research, so that
+# name collides with a standard build launched as `--profile research`. Override
+# with an edition-specific `aw-tauri-{BUILD_PROFILE}-edition` identity.
 #
 # This patch applies after PROFILE_PATCHES_TAURI, so BUILD_PROFILE and
 # DEFAULT_PROFILE are both defined in the compiled profile module by the time
@@ -594,47 +600,26 @@ AUTOSTART_PATCHES_QT: List[Patch] = [
 AUTOSTART_PATCHES_TAURI: List[Patch] = [
     Patch(
         "aw-tauri/src-tauri/src/lib.rs",
-        "        .plugin(tauri_plugin_autostart::init(\n"
-        "            // AppleScript login items silently drop extra arguments; LaunchAgent\n"
-        "            // writes a plist with ProgramArguments so --profile survives relogin.\n"
-        "            if profile::is_default(&cli_args.profile) {\n"
-        "                MacosLauncher::AppleScript\n"
-        "            } else {\n"
-        "                MacosLauncher::LaunchAgent\n"
-        "            },\n"
-        "            if profile::is_default(&cli_args.profile) {\n"
-        "                Some(vec![])\n"
-        "            } else {\n"
-        "                Some(vec![\"--profile\", cli_args.profile.as_str()])\n"
-        "            },\n"
-        "        ))\n",
-        "        .plugin({\n"
-        "            // AppleScript login items silently drop extra arguments; LaunchAgent\n"
-        "            // writes a plist with ProgramArguments so --profile survives relogin.\n"
-        "            // Non-default BUILD_PROFILE means a research-edition binary: give it a\n"
-        "            // distinct autostart entry name so editions don't overwrite each other.\n"
-        "            let is_default_profile = profile::is_default(&cli_args.profile);\n"
-        "            let args: Vec<&str> = if is_default_profile {\n"
-        "                vec![]\n"
-        "            } else {\n"
-        "                vec![\"--profile\", cli_args.profile.as_str()]\n"
-        "            };\n"
-        "            #[allow(unused_mut)]\n"
-        "            let mut b = tauri_plugin_autostart::Builder::new().args(args);\n"
+        "            if let Some(app_name) = profile::autostart_app_name(&cli_args.profile) {\n"
+        "                builder = builder\n"
+        "                    .app_name(app_name)\n"
+        "                    .args([\"--profile\", cli_args.profile.as_str()]);\n"
+        "            }\n",
+        "            if let Some(app_name) = profile::autostart_app_name(&cli_args.profile) {\n"
+        "                builder = builder\n"
+        "                    .app_name(app_name)\n"
+        "                    .args([\"--profile\", cli_args.profile.as_str()]);\n"
+        "            }\n"
+        "            // Non-default BUILD_PROFILE is a research-edition binary: do not\n"
+        "            // reuse the named-profile identity (`aw-tauri-research`), which a\n"
+        "            // standard `--profile research` login item already owns.\n"
         "            if profile::BUILD_PROFILE != profile::DEFAULT_PROFILE {\n"
-        "                b = b.app_name(format!(\"aw-tauri-{}\", profile::BUILD_PROFILE));\n"
-        "            }\n"
-        "            #[cfg(target_os = \"macos\")]\n"
-        "            {\n"
-        "                b = b.macos_launcher(if is_default_profile {\n"
-        "                    MacosLauncher::AppleScript\n"
-        "                } else {\n"
-        "                    MacosLauncher::LaunchAgent\n"
-        "                });\n"
-        "            }\n"
-        "            b.build()\n"
-        "        })\n",
-        "tauri autostart: Builder with distinct app_name for research edition",
+        "                builder = builder.app_name(format!(\n"
+        "                    \"aw-tauri-{}-edition\",\n"
+        "                    profile::BUILD_PROFILE\n"
+        "                ));\n"
+        "            }\n",
+        "tauri autostart: edition-specific app_name so research != named profile",
     ),
 ]
 
