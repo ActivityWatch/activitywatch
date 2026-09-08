@@ -298,7 +298,7 @@ jobs:
     env:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      AW_RESEARCH_EDITION: ${{ matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
     defaults:
       run:
         shell: bash
@@ -313,6 +313,24 @@ jobs:
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
+        # Research Edition build leg: apply the research patch set and
+        # compile/test/package the *patched* tree on every PR and branch push,
+        # so a drifted patch target or a patched-source compile failure dies at
+        # PR time instead of at tag time. Linux only: cheapest full build and no
+        # signing secrets. On tag pushes and research dispatches `research`
+        # resolves to false, so this row merges into the existing ubuntu-22.04 row
+        # instead of adding a duplicate leg -- research tags already build the
+        # research edition in every row, and standard tags must not upload
+        # research artifacts to the standard release.
+        research: [false]
+        include:
+          - os: ubuntu-22.04
+            python_version: 3.9
+            node_version: 22
+            skip_rust: false
+            skip_webui: false
+            experimental: false
+            research: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
 
     steps:
       - uses: actions/checkout@v7
@@ -594,7 +612,7 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
-          name: builds-${{ matrix.os }}-py${{ matrix.python_version }}
+          name: builds-${{ matrix.os }}-py${{ matrix.python_version }}${{ matrix.research && '-research' || '' }}
           path: dist/activitywatch-*.*
 
   build-qt-manylinux-2-28:
@@ -873,7 +891,7 @@ jobs:
       AW_EXTRAS: true
       TAURI_BUILD: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      AW_RESEARCH_EDITION: ${{ matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
       # All subprojects share one virtualenv. Poetry's parallel installer can
       # race while replacing the same dependency from different lock files.
       POETRY_INSTALLER_PARALLEL: "false"
@@ -897,6 +915,24 @@ jobs:
         skip_rust: [false]
         skip_webui: [false]
         experimental: [false]
+        # Research Edition build leg: apply the research patch set and
+        # compile/test/package the *patched* tree on every PR and branch push,
+        # so a drifted patch target or a patched-source compile failure dies at
+        # PR time instead of at tag time. Linux only: cheapest full build and no
+        # signing secrets. On tag pushes and research dispatches `research`
+        # resolves to false, so this row merges into the existing ubuntu-24.04 row
+        # instead of adding a duplicate leg -- research tags already build the
+        # research edition in every row, and standard tags must not upload
+        # research artifacts to the standard release.
+        research: [false]
+        include:
+          - os: ubuntu-24.04
+            python_version: 3.9
+            node_version: 22
+            skip_rust: false
+            skip_webui: false
+            experimental: false
+            research: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
 
     steps:
       - uses: actions/checkout@v7
@@ -1232,7 +1268,7 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
-          name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}
+          name: builds-tauri-${{ matrix.os }}-py${{ matrix.python_version }}${{ matrix.research && '-research' || '' }}
           path: |
             dist/activitywatch-*.*
             dist/updater/*
