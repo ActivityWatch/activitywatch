@@ -253,7 +253,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   research-edition-checks:
-    name: Research Edition — patch table smoke test
+    name: Research Edition — patch and packaging smoke tests
     # Run on every PR and push so drifted submodule pins fail at review time,
     # not when Erik pushes the annotated release tag.  The patcher is stdlib-only
     # so no poetry/build step is needed; only submodules (real source files) and
@@ -286,8 +286,10 @@ jobs:
 
       # Fixture-based unit tests: patchers apply correctly on synthetic trees,
       # fail closed on missing/ambiguous tokens, and leave ordinary defaults
-      # untouched on the unpatched tree.
-      - name: Run profile patcher unit tests
+      # untouched on the unpatched tree. Also exercise the Windows installer
+      # collection step with fixture .exe files named by the real patched .iss
+      # sources; this catches naming drift without Inno Setup or signing.
+      - name: Run profile patcher and installer collection tests
         run: python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
 
   build-qt:

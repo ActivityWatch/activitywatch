@@ -1,7 +1,11 @@
+import fnmatch
 import importlib.util
 import os
+import re
+import subprocess
 import sys
 from pathlib import Path
+from string import Template
 
 import pytest
 
@@ -333,6 +337,133 @@ def test_windows_research_installers_do_not_collide_with_each_other(tmp_path: Pa
     assert "DefaultDirName={autopf}\\{#MyAppName}\n" in qt
     assert f"DefaultDirName={{autopf}}\\{patcher.BUNDLE_DIR_STEM}-Tauri\n" in tauri
     assert "DefaultDirName={autopf}\\ActivityWatch-Tauri\n" not in tauri
+
+
+@pytest.fixture(
+    params=[(target, research) for target in ("qt", "tauri") for research in (False, True)]
+)
+def windows_installer_names(tmp_path: Path, request):
+    target, research = request.param
+    rel = WINDOWS_REAL_FILES[target]
+    # Packaging inputs are tracked root files, so a missing producer must fail.
+    assert (_repo_root() / rel).is_file()
+    patches = (
+        patcher.WINDOWS_PATCHES_QT if target == "qt" else patcher.WINDOWS_PATCHES_TAURI
+    )
+    text = _patch_real_file(tmp_path, rel, patches if research else [])
+    outputs = re.findall(r"^OutputBaseFilename=(\S+)$", text, re.MULTILINE)
+    assert len(outputs) == 1, "expected one executable OutputBaseFilename assignment"
+
+    package = (_repo_root() / "scripts/package/package-all.sh").read_text()
+    calls = re.findall(
+        r'^\s*"\$SCRIPT_DIR/collect-setup\.sh" "\$filename"\s*$', package, re.MULTILINE
+    )
+    assert len(calls) == 1, "build_setup must invoke the tested installer collector"
+    templates = re.findall(
+        r'^\s*filename="([^"\n]+-setup\.exe)"$', package, re.MULTILINE
+    )
+    assert len(templates) == 1, "expected one versioned installer filename assignment"
+    suffix = "-tauri" if target == "tauri" else ""
+    if research:
+        suffix += "-research"
+    final = Template(templates[0]).substitute(
+        build_suffix=suffix, version="v0.14.0b5", platform="windows", arch="x86_64"
+    )
+    return target, outputs[0] + ".exe", final
+
+
+def test_windows_installer_producer_matches_packaging_and_release(windows_installer_names):
+    target, produced, final = windows_installer_names
+    collector = (_repo_root() / "scripts/package/collect-setup.sh").read_text()
+    inputs = re.findall(r"^\s*setup_src=\(([^)\n]+)\)$", collector, re.MULTILINE)
+    assert len(inputs) == 1, "expected one executable setup_src assignment"
+    assert fnmatch.fnmatchcase(f"dist/{produced}", inputs[0].strip())
+
+    workflow = (_repo_root() / ".github/workflows/release.yml").read_text()
+    jobs = dict(re.findall(
+        r"^  ([\w-]+):\n(.*?)(?=^  [\w-]+:|\Z)", workflow, re.MULTILINE | re.DOTALL
+    ))
+    upload = re.search(
+        r"^      - name: Upload packages\n(.*?)(?=^      - |\Z)",
+        jobs[f"build-{target}"], re.MULTILINE | re.DOTALL,
+    )
+    assert upload, f"missing {target} package upload step"
+    assert "uses: actions/upload-artifact@" in upload[1]
+    path = re.search(r"^          path: (.+)$", upload[1], re.MULTILINE)
+    assert path, f"missing {target} package upload path"
+    globs = (
+        re.findall(r"^            (\S+)$", upload[1], re.MULTILINE)
+        if path[1] == "|" else [path[1]]
+    )
+    assert globs and any(fnmatch.fnmatchcase(f"dist/{final}", glob) for glob in globs)
+    release = re.search(
+        r"^      - name: Release\n(.*?)(?=^      - |\Z)",
+        jobs["release"], re.MULTILINE | re.DOTALL,
+    )
+    assert release and "uses: softprops/action-gh-release@" in release[1]
+    files = re.search(
+        r"^          files: \|\n((?:^            \S.*\n)+)", release[1], re.MULTILINE
+    )
+    assert files, "missing release action's asset files block"
+    release_globs = [line.strip() for line in files[1].splitlines()]
+    assert release_globs and any(
+        fnmatch.fnmatchcase(f"dist/builds-windows/{final}", glob) for glob in release_globs
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform != "linux", reason="Bash fixture runs in the Ubuntu packaging smoke job"
+)
+def test_windows_setup_collection(tmp_path: Path, windows_installer_names):
+    _, produced, final = windows_installer_names
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / produced).write_bytes(b"fixture installer")
+    (dist / "activitywatch-portable.zip").write_bytes(b"portable archive")
+
+    result = subprocess.run(
+        ["bash", str(_repo_root() / "scripts/package/collect-setup.sh"), final],
+        cwd=tmp_path, capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert {path.name for path in dist.iterdir()} == {final, "activitywatch-portable.zip"}
+    assert (dist / final).read_bytes() == b"fixture installer"
+    assert (dist / "activitywatch-portable.zip").read_bytes() == b"portable archive"
+
+
+@pytest.mark.skipif(
+    sys.platform != "linux", reason="Bash fixture runs in the Ubuntu packaging smoke job"
+)
+@pytest.mark.parametrize("case", ["missing", "multiple", "directory"])
+def test_windows_setup_collection_refuses_invalid_inputs(tmp_path: Path, case: str):
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "activitywatch-portable.zip").write_bytes(b"portable archive")
+    if case == "multiple":
+        for name in ("activitywatch-setup.exe", "activitywatch-research-setup.exe"):
+            (dist / name).write_bytes(name.encode())
+    elif case == "directory":
+        (dist / "activitywatch-research-setup.exe").mkdir()
+
+    def snapshot():
+        return {
+            path.name: path.read_bytes() if path.is_file() else None
+            for path in dist.iterdir()
+        }
+
+    before = snapshot()
+    result = subprocess.run(
+        [
+            "bash", str(_repo_root() / "scripts/package/collect-setup.sh"),
+            "activitywatch-research-v0.14.0b5-windows-x86_64-setup.exe",
+        ],
+        cwd=tmp_path, capture_output=True, text=True,
+    )
+
+    assert result.returncode != 0
+    assert "expected exactly one" in result.stdout + result.stderr
+    assert snapshot() == before
 
 
 def test_tauri_wix_upgrade_code_is_pinned_and_config_stays_valid_json(tmp_path: Path):
