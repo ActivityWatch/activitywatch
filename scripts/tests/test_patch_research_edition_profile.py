@@ -453,3 +453,57 @@ def test_first_run_autostart_identity_is_distinct_on_every_platform(tmp_path: Pa
         'WINDOWS_STARTUP_SHORTCUT_NAME = f"{APP_NAME}.lnk"',
     ):
         assert derived in before, f"upstream no longer derives: {derived}"
+
+
+def test_tauri_autostart_uses_distinct_app_name_for_research_build(tmp_path: Path):
+    """tauri_plugin_autostart derives its entry name from productName by default.
+
+    Both standard and research Tauri builds share productName "aw-tauri", so
+    enabling autostart in one edition would overwrite the other's entry on
+    Windows (registry key) and Linux (~/.config/autostart/*.desktop).
+
+    The fix is entirely patcher-side: PROFILE_PATCHES_TAURI inserts BUILD_PROFILE
+    into profile.rs; AUTOSTART_PATCHES_TAURI replaces the tauri_plugin_autostart::init()
+    call in lib.rs with a Builder that sets an explicit app_name derived from
+    BUILD_PROFILE when it differs from DEFAULT_PROFILE.
+
+    This test asserts both patch sets produce the expected output on the real sources.
+    """
+    # --- half 1: PROFILE_PATCHES_TAURI inserts BUILD_PROFILE = "research" ---
+    profile_rs_rel = "aw-tauri/src-tauri/src/profile.rs"
+    profile_rs_src = _repo_root() / profile_rs_rel
+    if not profile_rs_src.is_file():
+        pytest.skip(f"{profile_rs_rel} not present")
+    before_profile = profile_rs_src.read_text(encoding="utf-8")
+    # Standard source has DEFAULT_PROFILE but NOT BUILD_PROFILE
+    assert 'pub const DEFAULT_PROFILE: &str = "default";' in before_profile
+    assert "BUILD_PROFILE" not in before_profile, (
+        "BUILD_PROFILE must NOT exist in the unpatched source; the patcher inserts it"
+    )
+    after_profile = _patch_real_file(
+        tmp_path,
+        profile_rs_rel,
+        patcher.PROFILE_PATCHES_TAURI,
+    )
+    assert f'pub const BUILD_PROFILE: &str = "{patcher.RESEARCH_PROFILE}";' in after_profile
+
+    # --- half 2: AUTOSTART_PATCHES_TAURI replaces init() with Builder + app_name ---
+    lib_rs_rel = "aw-tauri/src-tauri/src/lib.rs"
+    lib_rs_src = _repo_root() / lib_rs_rel
+    if not lib_rs_src.is_file():
+        pytest.skip(f"{lib_rs_rel} not present")
+    before_lib = lib_rs_src.read_text(encoding="utf-8")
+    # Standard source uses init(), not Builder
+    assert "tauri_plugin_autostart::init(" in before_lib
+    assert "tauri_plugin_autostart::Builder::new()" not in before_lib
+    after_lib = _patch_real_file(
+        tmp_path,
+        lib_rs_rel,
+        patcher.AUTOSTART_PATCHES_TAURI,
+    )
+    # Research build uses Builder with conditional app_name
+    assert "tauri_plugin_autostart::Builder::new().args(args)" in after_lib
+    assert "profile::BUILD_PROFILE != profile::DEFAULT_PROFILE" in after_lib
+    assert 'b.app_name(format!("aw-tauri-{}", profile::BUILD_PROFILE))' in after_lib
+    # Standard autostart call is gone
+    assert "tauri_plugin_autostart::init(" not in after_lib
