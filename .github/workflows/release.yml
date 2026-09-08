@@ -252,6 +252,44 @@ jobs:
             echo "The tag-triggered build jobs in this workflow will now build artifacts and create/update the draft prerelease."
           } >> "$GITHUB_STEP_SUMMARY"
 
+  research-edition-checks:
+    name: Research Edition — patch table smoke test
+    # Run on every PR and push so drifted submodule pins fail at review time,
+    # not when Erik pushes the annotated release tag.  The patcher is stdlib-only
+    # so no poetry/build step is needed; only submodules (real source files) and
+    # pytest (for the unit-test fixture suite).
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+
+      - name: Install pytest
+        run: pip install pytest
+
+      # Verify every patch target string exists exactly once in the real
+      # submodule sources for both build flavours.  Fails immediately if a
+      # target is missing or ambiguous — the same guard that would abort a tag
+      # build, now running at PR time.
+      - name: Verify Qt patch targets (--check)
+        run: python3 scripts/patch_research_edition_profile.py qt --check
+
+      - name: Verify Tauri patch targets (--check)
+        run: python3 scripts/patch_research_edition_profile.py tauri --check
+
+      # Fixture-based unit tests: patchers apply correctly on synthetic trees,
+      # fail closed on missing/ambiguous tokens, and leave ordinary defaults
+      # untouched on the unpatched tree.
+      - name: Run profile patcher unit tests
+        run: python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
   build-qt:
     name: Build Qt artifacts
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
