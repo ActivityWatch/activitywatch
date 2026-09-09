@@ -86,6 +86,7 @@ def test_valid_research_release():
         lambda m, r: m["platforms"].update({"unsupported-platform": {}}),
         lambda m, r: m["platforms"]["darwin-aarch64"].update(signature=""),
         lambda m, r: m["platforms"]["darwin-aarch64"].update(signature="wrong"),
+        lambda m, r: m.update(platforms=list(m["platforms"])),
     ],
 )
 def test_invalid_release_or_manifest(mutation):

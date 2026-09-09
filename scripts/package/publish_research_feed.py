@@ -73,7 +73,9 @@ def validate_manifest(manifest, release, tag, fetch=None):
         raise ValueError(
             "Release must be published, immutable, non-draft, and match the tag"
         )
-    if set(manifest["platforms"]) != set(TARGETS):
+    if not isinstance(manifest["platforms"], dict) or set(manifest["platforms"]) != set(
+        TARGETS
+    ):
         raise ValueError(
             "Manifest must contain exactly the complete required target matrix"
         )
