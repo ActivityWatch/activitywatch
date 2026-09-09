@@ -142,3 +142,21 @@ def test_serialises_without_newlines_for_github_env():
 
     assert "\n" not in payload
     assert json.loads(payload)[0]["id"] == "research-study"
+
+
+def test_every_category_has_a_distinct_hex_color():
+    """Activity view has no name-hash fallback; missing data.color renders grey."""
+    categories = emitter.build_preset()["categories"]
+    colors = [category["data"]["color"] for category in categories]
+
+    assert len(colors) == len(categories)
+    assert len(set(colors)) == len(colors)
+    for color in colors:
+        assert re.fullmatch(r"#[0-9A-F]{6}", color)
+
+
+def test_color_table_matches_the_study_taxonomy():
+    """A new map entry without a color must fail the build, not ship unstyled."""
+    names = {category["name"][0] for category in emitter.build_preset()["categories"]}
+
+    assert set(emitter.CATEGORY_COLORS) == names
