@@ -33,6 +33,32 @@ def normalize_version(version: str) -> str:
     return version
 
 
+def tauri_version(version: str) -> str:
+    """Convert AW release/dev labels to the SemVer embedded by Tauri.
+
+    Asset filenames and GitHub tags keep their original AW version spelling.
+    """
+    version = normalize_version(version)
+    number = r"(?:0|[1-9][0-9]*)"
+    match = re.fullmatch(
+        rf"(?P<base>{number}\.{number}\.{number})"
+        rf"(?:(?P<pre>a|b|rc)(?P<serial>{number}))?"
+        r"(?:\.dev-(?P<dev>[0-9a-f]+|unknown))?",
+        version,
+    )
+    if not match:
+        raise ValueError(f"Unsupported ActivityWatch version: {version!r}")
+    suffix = []
+    if match["pre"]:
+        suffix.extend(
+            ({"a": "alpha", "b": "beta", "rc": "rc"}[match["pre"]], match["serial"])
+        )
+    if match["dev"]:
+        # Prefix hashes so an all-digit hash with a leading zero stays valid.
+        suffix.extend(("dev", "g" + match["dev"]))
+    return match["base"] + ("-" + ".".join(suffix) if suffix else "")
+
+
 def infer_edition(tag: str, edition=None) -> str:
     if edition:
         if edition not in EDITIONS:
@@ -142,7 +168,7 @@ def main(argv=None):
             f"{os.path.basename(args.output)}"
         )
 
-    manifest = build_manifest(version, args.notes, platforms)
+    manifest = build_manifest(tauri_version(version), args.notes, platforms)
 
     with open(args.output, "w") as f:
         json.dump(manifest, f, indent=2)
