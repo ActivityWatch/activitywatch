@@ -17,8 +17,10 @@ never drift:
 Rules are exact, case-insensitive matches. aw-webui applies every category rule
 to `app` and `title`, and the oldest web UI pinned by the release carriers drops
 unknown per-rule metadata, so the preset cannot rely on field or priority keys.
-Explicitly excluded app aliases map to `Excluded`; unknown applications remain
-`Uncategorized` instead of overlapping every specific rule with a catch-all.
+Each category carries a `data.color` so the Activity view is not unstyled
+(ActivityWatch/activitywatch#1439). Explicitly excluded app aliases map to
+`Excluded`; unknown applications remain `Uncategorized` instead of overlapping
+every specific rule with a catch-all.
 """
 
 import importlib.util
@@ -40,6 +42,32 @@ _REGEX_METACHARACTERS = set(r"\^$.|?*+()[]{}")
 
 PRESET_ID = "research-study"
 PRESET_NAME = "Research Edition study categories"
+
+# Qualitative palette for the study taxonomy. aw-webui only colors a category
+# when `data.color` is set — there is no name-hash fallback for categories —
+# so omitting this is what made the research-study set render grey.
+# Keys must stay in lockstep with CATEGORY_MAP ∪ APP_CATEGORY_MAP; build_preset
+# raises if a category is missing.
+CATEGORY_COLORS: dict[str, str] = {
+    "AI Chatbots & Assistants": "#7B1FA2",
+    "Banking & Finance": "#1B5E20",
+    "Education & Learning": "#1565C0",
+    "Email": "#00838F",
+    "Excluded": "#BDBDBD",
+    "Games": "#EF6C00",
+    "Messaging": "#00897B",
+    "Music & Audio": "#7CB342",
+    "News & Current Affairs": "#C62828",
+    "Public Services": "#455A64",
+    "Search & Navigation": "#5C6BC0",
+    "Sensitive / Excluded": "#757575",
+    "Shopping - Goods": "#6D4C41",
+    "Shopping - Groceries & Food": "#F9A825",
+    "Social Networking": "#AD1457",
+    "Travel & Mobility": "#0277BD",
+    "Video Streaming": "#E53935",
+    "Work & Productivity": "#2E7D32",
+}
 
 _PATCHER = pathlib.Path(__file__).with_name("patch_research_edition_config.py")
 
@@ -71,6 +99,19 @@ def exact_alternation(values: set[str]) -> str:
     return f"^(?:{'|'.join(escaped)})$"
 
 
+def color_for(category: str) -> str:
+    """Look up the Activity-view color for a study category.
+
+    Missing keys fail the build rather than ship an unstyled taxonomy.
+    """
+    try:
+        return CATEGORY_COLORS[category]
+    except KeyError as exc:
+        raise RuntimeError(
+            f"study category {category!r} has no color in CATEGORY_COLORS"
+        ) from exc
+
+
 def build_preset() -> dict:
     source = _load_category_source()
 
@@ -78,6 +119,13 @@ def build_preset() -> dict:
     categories |= set(source.APP_CATEGORY_MAP.values())
     if not categories:
         raise RuntimeError("no categories found -- refusing to emit an empty preset")
+
+    extra_colors = set(CATEGORY_COLORS) - categories
+    if extra_colors:
+        raise RuntimeError(
+            "CATEGORY_COLORS has entries not in the study taxonomy: "
+            + ", ".join(sorted(extra_colors))
+        )
 
     return {
         "id": PRESET_ID,
@@ -98,6 +146,7 @@ def build_preset() -> dict:
                     ),
                     "ignore_case": True,
                 },
+                "data": {"color": color_for(category)},
             }
             for category in sorted(categories)
         ],
