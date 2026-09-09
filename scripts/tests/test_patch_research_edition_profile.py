@@ -567,21 +567,26 @@ def test_first_run_autostart_identity_is_distinct_on_every_platform(tmp_path: Pa
 
     # Linux: the written filename changes; the *shipped resource* name does not
     # (the patched build still reads resources/aw-qt.desktop out of the bundle).
+    # Must not be aw-qt-research.desktop — that is the standard named-profile entry.
     assert f'_linux_autostart_dir() / "{patcher.LINUX_DESKTOP_FILENAME}"' in after
+    assert "aw-qt-research.desktop" not in after
     assert 'DESKTOP_FILENAME = "aw-qt.desktop"' in after
-    # macOS: LAUNCH_AGENT_FILENAME is derived, so the plist follows the label.
-    assert f'LAUNCH_AGENT_LABEL = "{patcher.LAUNCH_AGENT_LABEL}"' in after
-    assert 'LAUNCH_AGENT_LABEL = "net.activitywatch.aw-qt"\n' not in after
+    # macOS: plist path follows _macos_launch_agent_label(), which would otherwise
+    # become net.activitywatch.aw-qt-research and collide with --profile research.
+    assert f'return "{patcher.BUNDLE_ID}"' in after
+    assert 'return f"{LAUNCH_AGENT_LABEL}{_profile_suffix()}"' not in after
+    assert f'return "{patcher.LAUNCH_AGENT_LABEL}"' not in after
     # Windows: both the Run value name and the Startup .lnk derive from APP_NAME.
+    # Named-profile suffixing then yields "ActivityWatch Research (research)".
     assert f'APP_NAME = "{patcher.BUNDLE_NAME}"' in after
     assert 'APP_NAME = "ActivityWatch"\n' not in after
 
-    # Guard the derivations the assertions above rely on: if upstream stops
-    # deriving these, the research build silently keeps a colliding name.
+    # Guard the runtime identity sources: if upstream stops suffixing these, the
+    # research overrides above would be patching dead code.
     for derived in (
-        'LAUNCH_AGENT_FILENAME = f"{LAUNCH_AGENT_LABEL}.plist"',
-        "WINDOWS_RUN_VALUE_NAME = APP_NAME",
-        'WINDOWS_STARTUP_SHORTCUT_NAME = f"{APP_NAME}.lnk"',
+        'return _linux_autostart_dir() / f"{stem}{_profile_suffix()}{extension}"',
+        'return f"{LAUNCH_AGENT_LABEL}{_profile_suffix()}"',
+        'return APP_NAME if not suffix else f"{APP_NAME} ({_profile()})"',
     ):
         assert derived in before, f"upstream no longer derives: {derived}"
 
@@ -618,23 +623,24 @@ def test_tauri_autostart_uses_distinct_app_name_for_research_build(tmp_path: Pat
     )
     assert f'pub const BUILD_PROFILE: &str = "{patcher.RESEARCH_PROFILE}";' in after_profile
 
-    # --- half 2: AUTOSTART_PATCHES_TAURI replaces init() with Builder + app_name ---
+    # --- half 2: AUTOSTART_PATCHES_TAURI overrides named-profile app_name ---
     lib_rs_rel = "aw-tauri/src-tauri/src/lib.rs"
     lib_rs_src = _repo_root() / lib_rs_rel
     if not lib_rs_src.is_file():
         pytest.skip(f"{lib_rs_rel} not present")
     before_lib = lib_rs_src.read_text(encoding="utf-8")
-    # Standard source uses init(), not Builder
-    assert "tauri_plugin_autostart::init(" in before_lib
-    assert "tauri_plugin_autostart::Builder::new()" not in before_lib
+    # Standard source already uses Builder + named-profile identities.
+    assert "tauri_plugin_autostart::Builder::new()" in before_lib
+    assert "profile::autostart_app_name" in before_lib
+    assert "BUILD_PROFILE" not in before_lib
     after_lib = _patch_real_file(
         tmp_path,
         lib_rs_rel,
         patcher.AUTOSTART_PATCHES_TAURI,
     )
-    # Research build uses Builder with conditional app_name
-    assert "tauri_plugin_autostart::Builder::new().args(args)" in after_lib
+    # Research build keeps named-profile wiring, then overrides the OS identity
+    # so it does not collide with a standard `--profile research` login item.
+    assert "profile::autostart_app_name" in after_lib
     assert "profile::BUILD_PROFILE != profile::DEFAULT_PROFILE" in after_lib
-    assert 'b.app_name(format!("aw-tauri-{}", profile::BUILD_PROFILE))' in after_lib
-    # Standard autostart call is gone
-    assert "tauri_plugin_autostart::init(" not in after_lib
+    assert '"aw-tauri-{}-edition"' in after_lib
+    assert 'format!("aw-tauri-{}", profile::BUILD_PROFILE)' not in after_lib
