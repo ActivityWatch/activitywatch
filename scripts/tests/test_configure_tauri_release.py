@@ -17,6 +17,9 @@ RESEARCH_ENDPOINT = (
     "research-updates/latest-research.json"
 )
 
+sys.path.insert(0, str(ROOT / "scripts/package"))
+from configure_tauri_release import configure, msi_rejects  # noqa: E402
+
 
 def key(material=b"r" * 32, comment="fixture", key_id=b"i" * 8):
     packet = base64.b64encode(b"Ed" + key_id + material).decode()
@@ -55,6 +58,51 @@ def run_configure(config, *args, public="", private="", version="v0.14.0b5-resea
         text=True,
         capture_output=True,
     )
+
+
+@pytest.mark.parametrize(
+    "version,rejects",
+    [
+        ("0.14.0", False),
+        ("0.14.0-5", False),
+        ("0.14.0-beta.5", True),
+        ("0.14.0-dev.gabc1234", True),
+        ("0.14.0-rc.1", True),
+    ],
+)
+def test_msi_rejects(version, rejects):
+    assert msi_rejects(version) is rejects
+
+
+def test_windows_drops_msi_for_non_numeric_prerelease(config):
+    # v0.14.0b5 -> "0.14.0-beta.5", which the msi (WiX) bundler rejects.
+    configure(
+        config, "v0.14.0b5", research=False, require_signing_key=False, platform="win32"
+    )
+    after = json.loads(config.read_text())
+    assert after["version"] == "0.14.0-beta.5"
+    assert after["bundle"]["targets"] == ["nsis"]
+
+
+def test_non_windows_keeps_all_targets_for_non_numeric_prerelease(config):
+    configure(
+        config,
+        "v0.14.0b5",
+        research=False,
+        require_signing_key=False,
+        platform="darwin",
+    )
+    after = json.loads(config.read_text())
+    assert after["bundle"]["targets"] == "all"
+
+
+def test_windows_keeps_all_targets_for_msi_safe_version(config):
+    configure(
+        config, "v0.14.0", research=False, require_signing_key=False, platform="win32"
+    )
+    after = json.loads(config.read_text())
+    assert after["version"] == "0.14.0"
+    assert after["bundle"]["targets"] == "all"
 
 
 def test_standard_version_changes_without_changing_update_trust(config):

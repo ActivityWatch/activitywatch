@@ -6,6 +6,7 @@ import base64
 import binascii
 import json
 import os
+import sys
 from pathlib import Path
 
 from generate_latest_json import tauri_version
@@ -15,6 +16,20 @@ RESEARCH_ENDPOINT = (
     "research-updates/latest-research.json"
 )
 STANDARD_ENDPOINT = "https://github.com/ActivityWatch/activitywatch/releases/latest/download/latest.json"
+
+
+def msi_rejects(version: str) -> bool:
+    """True if Tauri's msi (WiX) bundler will reject this SemVer version.
+
+    The msi target requires the optional pre-release identifier to be
+    numeric-only (e.g. "0.14.0-5"), unlike nsis or the other bundle formats.
+    AW's own pre-release scheme ("0.14.0-beta.5", "0.14.0-dev.gabc1234")
+    fails that check every time.
+    """
+    if "-" not in version:
+        return False
+    prerelease = version.split("-", 1)[1]
+    return not all(part.isdigit() for part in prerelease.split("."))
 
 
 def public_key(encoded: str) -> bytes:
@@ -32,10 +47,22 @@ def public_key(encoded: str) -> bytes:
 
 
 def configure(
-    path: Path, version: str, research: bool, require_signing_key: bool
+    path: Path,
+    version: str,
+    research: bool,
+    require_signing_key: bool,
+    *,
+    platform: str = sys.platform,
 ) -> None:
     config = json.loads(path.read_text(encoding="utf-8"))
-    config["version"] = tauri_version(version)
+    tv = tauri_version(version)
+    config["version"] = tv
+    if platform == "win32" and msi_rejects(tv):
+        bundle = config.setdefault("bundle", {})
+        if bundle.get("targets") == "all":
+            # Windows only ever produces msi+nsis from "all"; drop msi and
+            # keep nsis, which accepts the full AW pre-release scheme.
+            bundle["targets"] = ["nsis"]
     if research:
         updater = config["plugins"]["updater"]
         if updater["endpoints"] != [STANDARD_ENDPOINT]:
