@@ -1,0 +1,25 @@
+name: Research feed publisher tests
+on:
+  pull_request:
+    paths:
+      - 'scripts/package/publish_research_feed.py'
+      - 'scripts/tests/test_publish_research_feed.py'
+      - '.github/workflows/research-feed-publisher-tests.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/package/publish_research_feed.py'
+      - 'scripts/tests/test_publish_research_feed.py'
+      - '.github/workflows/research-feed-publisher-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+      - run: pip install pytest 'semver>=3,<4'
+      - run: python3 -m pytest scripts/tests/test_publish_research_feed.py -q
