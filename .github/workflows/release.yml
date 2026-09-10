@@ -292,6 +292,9 @@ jobs:
       - name: Run profile patcher and installer collection tests
         run: python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
 
+      - name: Test updater channel isolation and release versions
+        run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
+
   build-qt:
     name: Build Qt artifacts
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
@@ -1067,6 +1070,27 @@ jobs:
           preset="$(python3 scripts/emit_research_category_preset.py)"
           echo "AW_PRESET_CATEGORY_SETS=${preset}" >> "$GITHUB_ENV"
 
+      # aw-tauri/Makefile enables bundle.createUpdaterArtifacts through a CLI
+      # --config override when TAURI_SIGNING_PRIVATE_KEY is set. The JSON file
+      # alone therefore does not describe whether signed bundles are produced.
+      - name: Configure Tauri release version and update channel
+        run: |
+          args=()
+          if [ "$AW_RESEARCH_EDITION" = true ]; then
+            args+=(--research)
+            if [[ "$GITHUB_REF" == refs/tags/v* || "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+              args+=(--require-signing-key)
+            fi
+          fi
+          python3 scripts/package/configure_tauri_release.py \
+            --config aw-tauri/src-tauri/tauri.conf.json \
+            --version "$VERSION_NO_V" "${args[@]}"
+        env:
+          TAURI_UPDATER_PUBLIC_KEY_RESEARCH: ${{ vars.TAURI_UPDATER_PUBLIC_KEY_RESEARCH }}
+          # Select the secret NAME, never `research_secret || standard_secret`:
+          # an absent research secret must not fall back to standard signing.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY'] }}
+
       - name: Build
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
@@ -1081,10 +1105,9 @@ jobs:
             make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
             pip freeze
         env:
-          # Signs aw-tauri bundles and emits .sig files for the updater when
-          # createUpdaterArtifacts is enabled in aw-tauri/src-tauri/tauri.conf.json.
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # aw-tauri/Makefile enables createUpdaterArtifacts when this key is set.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY'] }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD'] }}
 
       - name: Run tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
@@ -1128,8 +1151,8 @@ jobs:
             source venv/bin/activate || source venv/Scripts/activate
             make --directory=aw-tauri build
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY'] }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD'] }}
 
       - name: Import macOS signing certificate
         if: runner.os == 'macOS' && (startsWith(github.ref, 'refs/tags/v') || env.AW_RESEARCH_EDITION == 'true')
@@ -1402,8 +1425,8 @@ jobs:
       # are set by Actions) rather than interpolated into the shell script, so
       # a crafted v* tag cannot inject commands into this contents-write job.
       #
-      # Editions are partitioned by filename so they cannot share an updater
-      # endpoint: standard writes latest.json, research writes latest-research.json.
+      # Keep versioned release assets separate. Research clients use the
+      # independent research-updates branch; these assets do not publish that feed.
       - name: Generate updater manifest
         run: |
           set -euo pipefail

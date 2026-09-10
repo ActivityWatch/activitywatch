@@ -33,6 +33,27 @@ def test_normalize_version_strips_v_and_research_suffix():
     assert gen.normalize_version("0.14.0b4-research") == "0.14.0b4"
 
 
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("v0.14.0", "0.14.0"),
+        ("v0.14.0b5-research", "0.14.0-beta.5"),
+        ("0.14.0a1", "0.14.0-alpha.1"),
+        ("0.14.0rc2", "0.14.0-rc.2"),
+        ("v0.14.0.dev-0123456", "0.14.0-dev.g0123456"),
+        ("v0.14.0b5.dev-abcdef0", "0.14.0-beta.5.dev.gabcdef0"),
+    ],
+)
+def test_tauri_version(version, expected):
+    assert gen.tauri_version(version) == expected
+
+
+@pytest.mark.parametrize("version", ["0.14", "0.14.0b01", "00.14.0", "0.14.0oops", ""])
+def test_tauri_version_refuses_unrecognized_labels(version):
+    with pytest.raises(ValueError):
+        gen.tauri_version(version)
+
+
 def test_infer_edition_from_tag_or_explicit_flag():
     assert gen.infer_edition("v0.14.0") == "standard"
     assert gen.infer_edition("v0.14.0b4") == "standard"
