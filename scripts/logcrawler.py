@@ -32,7 +32,7 @@ def collect():
     return matched_lines
 
 
-_date_reg_exp = re.compile('\d{4}-\d{2}-\d{2}')
+_date_reg_exp = re.compile('\\d{4}-\\d{2}-\\d{2}')
 
 
 today = datetime.now()
