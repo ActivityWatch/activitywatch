@@ -108,6 +108,31 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 You can find more (and newer) screenshots on [the website](https://activitywatch.net/screenshots/).
 
+## How to cite ActivityWatch
+
+If you use ActivityWatch in your research, please cite it. This helps us track
+academic impact and keeps the project sustainable. The canonical reference is
+the Zenodo DOI:
+
+**DOI: [10.5281/zenodo.4957165](https://doi.org/10.5281/zenodo.4957165)**
+
+Ready-to-paste BibTeX for your methods section:
+
+```bibtex
+@software{activitywatch,
+  author       = {Bjäreholt, Erik and Bjäreholt, Johan},
+  title        = {ActivityWatch},
+  year         = {2024},
+  publisher    = {Zenodo},
+  version      = {0.13.2},
+  doi          = {10.5281/zenodo.4957165},
+  url          = {https://github.com/ActivityWatch/activitywatch}
+}
+```
+
+If you publish a paper that uses ActivityWatch, we would love to hear about it —
+please let us know on [the forum](https://forum.activitywatch.net/).
+
 
 ## Installation & Usage
 
