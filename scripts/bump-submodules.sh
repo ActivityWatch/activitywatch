@@ -265,7 +265,9 @@ git fetch -q origin master
 if git merge-base --is-ancestor HEAD origin/master; then
     if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/master)" ]; then
         if [ "$DRY" = 1 ]; then
-            echo "  [dry-run] bundle master would fast-forward $(git rev-parse --short HEAD) -> $(git rev-parse --short origin/master)"
+            # A dry run moves nothing, but previewing the old tree would lie
+            # (.gitmodules and gitlinks may differ upstream). Ask for the FF.
+            echo "bundle master is behind origin/master ($(git rev-parse --short HEAD) -> $(git rev-parse --short origin/master)); a dry run does not move it — run \`git merge --ff-only origin/master\` first" >&2; exit 1
         else
             git merge -q --ff-only origin/master
             echo "  bundle master fast-forwarded to $(git rev-parse --short HEAD)"
@@ -424,7 +426,9 @@ elif [ "$DRY" = 1 ]; then
     echo "  [dry-run] would relock aw-server-rust git deps to ${SERVER_SHA:0:7}:"
     # crates whose [[package]] source is the aw-server-rust git repo
     awk '/^\[\[package\]\]/{n=""} /^name = /{n=$3} /^source = .*aw-server-rust\.git/{print "    " n}' "$LOCK" | sort -u
+    echo "  [dry-run] would: commit in aw-tauri: \"build(deps): updated cargo locks\""
     LOCK_ALIGNED=1
+    DRY_BUMPED="$DRY_BUMPED aw-tauri"    # the lock commit moves the aw-tauri pointer too
 else
     # One --precise moves every package that shares the git source.
     (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA")
@@ -453,7 +457,10 @@ fi
 # ---------------------------------------------------------------- 4. bundle
 
 step "4/4 bundle: align, validate, commit"
-VERSION=$(git -C aw-server-rust show "$SERVER_SHA:aw-server/Cargo.toml" 2>/dev/null | sed -n 's/^version = "\(.*\)"/\1/p' | head -1)
+VERSION=""
+if [ "$SERVER_SHA" != none ]; then
+    VERSION=$(git -C aw-server-rust show "$SERVER_SHA:aw-server/Cargo.toml" | sed -n 's/^version = "\(.*\)"/\1/p' | head -1)
+fi
 if [ "$LOCK_ALIGNED" = 1 ] && [ "$PAIR_FIXED" = 1 ]; then
     # The checker reads (and --sync moves) the checkouts, which are not the
     # pointers being committed here; the lock was verified at those above.
@@ -528,4 +535,4 @@ fi
 
 step "done"
 echo "submodule branches after:"
-./scripts/submodule-branch.sh | sed 's/^/  /'
+./scripts/submodule-branch.sh 2>/dev/null | sed 's/^/  /'   # skipped modules may have no checkout
