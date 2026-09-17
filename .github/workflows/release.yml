@@ -284,9 +284,11 @@ jobs:
       moved: ${{ steps.resolve.outputs.moved }}
       shas: ${{ steps.resolve.outputs.shas }}
     steps:
+      # No submodules here: on ordinary pushes and PRs this job exits at the
+      # guard below, and a recursive submodule clone would be paid for nothing
+      # on every build. Submodules are initialised only in latest mode.
       - uses: actions/checkout@v7
         with:
-          submodules: 'recursive'
           fetch-depth: 1
 
       - name: Resolve submodule tips
@@ -300,15 +302,20 @@ jobs:
             echo "Pinned submodule build; nothing to resolve."
             exit 0
           fi
+          git submodule update --init --recursive --depth 1 2>&1 | tail -3
           # Single quotes are deliberate: `git submodule foreach` expands
           # $displaypath itself, once per submodule.
           # shellcheck disable=SC2016
           tips='echo "$(git rev-parse HEAD) $displaypath"'
           before=$(git submodule foreach --recursive --quiet "$tips")
-          # Move each submodule (and nested submodules) to the tip of its
-          # upstream default branch. awatcher is third-party but is included:
-          # a nightly is exactly where its drift should surface.
-          git submodule update --init --recursive --remote --depth 1 2>&1 | tail -20
+          # Move each first-party submodule (and its nested submodules) to the
+          # tip of its upstream default branch. awatcher is third-party and is
+          # left at its pinned revision: a nightly must not execute unreviewed
+          # third-party code in jobs that carry signing secrets.
+          # shellcheck disable=SC2016
+          firstparty=$(git submodule --quiet foreach 'echo $sm_path' | grep -vx awatcher)
+          # shellcheck disable=SC2086
+          git submodule update --init --recursive --remote --depth 1 -- $firstparty 2>&1 | tail -20
           after=$(git submodule foreach --recursive --quiet "$tips")
           if [ "$before" = "$after" ]; then
             moved=false
@@ -357,11 +364,23 @@ jobs:
           SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
-            [ -n "$path" ] || continue
-            git -C "$path" fetch -q --depth 1 origin "$sha"
-            git -C "$path" checkout -q "$sha"
-          done
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q --depth 1 origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          git submodule update --init --recursive --depth 1
+          pass nested
           git submodule status --recursive
 
       - name: Set up Python
@@ -452,11 +471,23 @@ jobs:
           SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
-            [ -n "$path" ] || continue
-            git -C "$path" fetch -q origin "$sha"
-            git -C "$path" checkout -q "$sha"
-          done
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          git submodule update --init --recursive
+          pass nested
           git submodule status --recursive
 
       - name: Set RELEASE
@@ -777,11 +808,23 @@ jobs:
           SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
-            [ -n "$path" ] || continue
-            git -C "$path" fetch -q origin "$sha"
-            git -C "$path" checkout -q "$sha"
-          done
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          git submodule update --init --recursive
+          pass nested
           git submodule status --recursive
 
       # Configure git safe.directory immediately after checkout so that every
@@ -1090,11 +1133,23 @@ jobs:
           SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
-            [ -n "$path" ] || continue
-            git -C "$path" fetch -q origin "$sha"
-            git -C "$path" checkout -q "$sha"
-          done
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          git submodule update --init --recursive
+          pass nested
           git submodule status --recursive
 
       - name: Set environment variables
@@ -1137,7 +1192,7 @@ jobs:
       # which this job only installs later — the toolchain action is idempotent.
       - name: Set up Rust for the nightly relock
         if: needs.nightly-submodules.outputs.latest == 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
 
       - name: Relock aw-tauri Cargo.lock to the latest aw-server-rust (nightly)
         if: needs.nightly-submodules.outputs.latest == 'true'
