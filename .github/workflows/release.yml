@@ -379,7 +379,10 @@ jobs:
             done
           }
           pass direct
-          git submodule update --init --recursive --depth 1
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
           pass nested
           git submodule status --recursive
 
@@ -486,7 +489,10 @@ jobs:
             done
           }
           pass direct
-          git submodule update --init --recursive
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
           pass nested
           git submodule status --recursive
 
@@ -802,9 +808,22 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
+      # Configure git safe.directory immediately after checkout so that every
+      # subsequent step — including the version probe below — can read the full
+      # history.  Deferring this step past the first `git describe` call causes
+      # the version probe to fall back to v0.0.0.dev-unknown.
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Use latest submodule tips (nightly / submodules=latest)
         if: needs.nightly-submodules.outputs.latest == 'true'
         env:
+          # The container runs as root over a runner-owned checkout; the
+          # global safe.directory above covers the workspace only, not the
+          # submodule worktrees this step runs git inside of. Step-scoped.
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: safe.directory
+          GIT_CONFIG_VALUE_0: '*'
           SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
         run: |
           set -euo pipefail
@@ -823,16 +842,12 @@ jobs:
             done
           }
           pass direct
-          git submodule update --init --recursive
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
           pass nested
           git submodule status --recursive
-
-      # Configure git safe.directory immediately after checkout so that every
-      # subsequent step — including the version probe below — can read the full
-      # history.  Deferring this step past the first `git describe` call causes
-      # the version probe to fall back to v0.0.0.dev-unknown.
-      - name: Configure git safe directory
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Set RELEASE
         run: |
@@ -1148,7 +1163,10 @@ jobs:
             done
           }
           pass direct
-          git submodule update --init --recursive
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
           pass nested
           git submodule status --recursive
 
