@@ -123,6 +123,23 @@ $m" ;;
 # Tracked-file modifications inside a submodule (untracked files are fine).
 dirty() { [ -n "$(git -C "$1" status --porcelain --untracked-files=no)" ]; }
 
+# Direct modules whose fast-forward ff_master refused (dirty, or a local
+# master ahead of origin). Filled in step 2; step 3/4 must treat them as
+# "the bundle keeps its current gitlink".
+HELD=""
+held() { case " $HELD " in *" $1 "*) return 0 ;; esac; return 1; }
+
+# The gitlink step 4 will commit for direct module <m>: its checkout, unless
+# <m> is skipped or held, in which case the bundle keeps the one it has.
+pointer_to_commit() {
+    if in_skip "$1" || held "$1"; then git rev-parse "HEAD:$1"; else target_sha "$1"; fi
+}
+
+# Repos that would have received a pointer commit earlier in a --dry-run.
+# origin/master has not moved for them, but the preview must carry the
+# hypothetical commit upwards (media -> aw-webui -> aw-server -> bundle).
+DRY_BUMPED=""
+
 # Where <dir> will be after this run: its HEAD normally, but under --dry-run
 # nothing moves, so reason about origin/master instead (unless it is dirty
 # and would be left alone).
@@ -136,6 +153,8 @@ target_sha() {
 # inside the submodule — only a moved pointer counts.
 pointer_changed() {
     if [ "$DRY" = 1 ]; then
+        local key=$2; [ "$1" = . ] || key="$1/$2"
+        case " $DRY_BUMPED " in *" $key "*) return 0 ;; esac
         [ "$(git -C "$1" rev-parse "HEAD:$2")" != "$(target_sha "$1/$2")" ]
     else
         ! git -C "$1" diff --quiet --ignore-submodules=dirty -- "$2"
@@ -191,7 +210,13 @@ commit_pointer() {
         return 0
     fi
     if [ "$DRY" = 1 ]; then
-        echo "  [dry-run] $repo: $path $(git -C "$repo" rev-parse --short "HEAD:$path") -> $(git -C "$repo/$path" rev-parse --short origin/master)"
+        local key=$path to; [ "$repo" = . ] || key="$repo/$path"
+        case " $DRY_BUMPED " in
+            *" $key "*) to="(new commit from its own pointer bump)" ;;
+            *) to=$(git -C "$repo/$path" rev-parse --short origin/master) ;;
+        esac
+        echo "  [dry-run] $repo: $path $(git -C "$repo" rev-parse --short "HEAD:$path") -> $to"
+        DRY_BUMPED="$DRY_BUMPED ${repo#./}"
     else
         git -C "$repo" diff --submodule=log --ignore-submodules=dirty -- "$path" | sed 's/^/    /'
     fi
@@ -350,9 +375,8 @@ done
 # ---------------------------------------------------------------- 2. direct submodules
 
 step "2/4 direct submodules -> origin/master"
-# Modules ff_master refused (dirty, or a local master ahead of origin) sit
-# at whatever commit they were on; step 4 must not mistake that for a bump.
-HELD=""
+# Modules ff_master refused sit at whatever commit they were on; step 3/4
+# must not mistake that for a bump (see HELD above).
 for m in $DIRECT; do
     in_skip "$m" && { echo "  $m: skipped"; continue; }
     ff_master "$m" || HELD="$HELD $m"
@@ -361,22 +385,34 @@ done
 # ---------------------------------------------------------------- 3. Tauri Cargo pin
 
 step "3/4 aw-tauri Cargo.lock -> aw-server-rust @ HEAD"
-SERVER_SHA=$([ -e aw-server-rust/.git ] && target_sha aw-server-rust || echo none)
+# Alignment is judged against the two gitlinks the bundle commit will
+# contain, not against the checkouts: a skipped or held module keeps the
+# bundle's current gitlink while its checkout may sit somewhere else.
+SERVER_SHA=$([ -e aw-server-rust/.git ] && pointer_to_commit aw-server-rust || echo none)
+TAURI_REV=$([ -e aw-tauri/.git ] && pointer_to_commit aw-tauri || echo none)
 LOCK=aw-tauri/src-tauri/Cargo.lock
 # Step 4 must know whether the lock really matches the server pointer we are
 # about to commit. The lock is what check_tauri_server.py --sync treats as
 # authoritative, so running --sync against an unaligned lock would silently
 # check aw-server-rust back out at the OLD revision and undo step 2.
 LOCK_ALIGNED=0
+# Every aw-server-rust git dep in aw-tauri's lock *at TAURI_REV* pins SERVER_SHA.
 lock_at_server() {
-    grep -q "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK" \
-      && [ "$(grep -c "aw-server-rust.git?branch=master#" "$LOCK")" = "$(grep -c "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK")" ]
+    local lock total at
+    lock=$(git -C aw-tauri show "$TAURI_REV:src-tauri/Cargo.lock" 2>/dev/null) || return 1
+    total=$(printf '%s\n' "$lock" | grep -c "aw-server-rust.git?branch=master#" || true)
+    at=$(printf '%s\n' "$lock" | grep -c "aw-server-rust.git?branch=master#$SERVER_SHA" || true)
+    [ "$total" != 0 ] && [ "$total" = "$at" ]
 }
+# With either module skipped or held, neither checkout may be relocked or
+# --sync'd; the pair is judged as it is and committed only if it already fits.
+PAIR_FIXED=0
+if in_skip aw-tauri || in_skip aw-server-rust || held aw-tauri || held aw-server-rust; then PAIR_FIXED=1; fi
 if [ ! -e aw-server-rust/.git ] || [ ! -e aw-tauri/.git ]; then
     echo "  skipped (aw-server-rust or aw-tauri has no checkout)"
-elif in_skip aw-tauri || in_skip aw-server-rust; then
-    echo "  skipped (aw-tauri or aw-server-rust in --skip)"
-    lock_at_server && LOCK_ALIGNED=1
+elif [ "$PAIR_FIXED" = 1 ]; then
+    echo "  aw-tauri or aw-server-rust is skipped/held; judging the lock at the pointers to be committed (aw-tauri ${TAURI_REV:0:7}, aw-server-rust ${SERVER_SHA:0:7})"
+    if lock_at_server; then LOCK_ALIGNED=1; echo "  aligned"; fi
 elif lock_at_server; then
     echo "  $LOCK already at ${SERVER_SHA:0:7} for every aw-* crate"
     LOCK_ALIGNED=1
@@ -417,8 +453,12 @@ fi
 # ---------------------------------------------------------------- 4. bundle
 
 step "4/4 bundle: align, validate, commit"
-VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' aw-server-rust/aw-server/Cargo.toml 2>/dev/null | head -1)
-if [ "$LOCK_ALIGNED" = 1 ]; then
+VERSION=$(git -C aw-server-rust show "$SERVER_SHA:aw-server/Cargo.toml" 2>/dev/null | sed -n 's/^version = "\(.*\)"/\1/p' | head -1)
+if [ "$LOCK_ALIGNED" = 1 ] && [ "$PAIR_FIXED" = 1 ]; then
+    # The checker reads (and --sync moves) the checkouts, which are not the
+    # pointers being committed here; the lock was verified at those above.
+    echo "  check_tauri_server.py skipped: verified at the gitlinks instead (aw-server-rust $VERSION @ ${SERVER_SHA:0:7})"
+elif [ "$LOCK_ALIGNED" = 1 ]; then
     if [ "$DRY" = 1 ]; then
         echo "  [dry-run] would run: check_tauri_server.py --sync && check_tauri_server.py $VERSION"
     else
