@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch aw-server-rust export endpoints for the Research Edition build.
+"""Patch aw-server-rust's export path for the Research Edition build.
 
 Run as part of the CI build for research edition:
 
@@ -8,6 +8,17 @@ Run as part of the CI build for research edition:
 Standard builds never run this script, so `/api/0/export` stays byte-for-byte
 unchanged outside Research Edition. The patch is fail-closed: missing markers
 abort the build rather than shipping an unsanitized artifact.
+
+Where the sanitizer hooks in: since aw-server-rust#677 the export is streamed
+by `aw_datastore::export_to_file` with bounded event buffering, and both
+`/api/0/export` and `/api/0/buckets/<id>/export` are one-line calls to
+`BucketsExportRocket::new` in `endpoints/util.rs`. No whole `BucketsExport`
+value exists at the endpoints any more, so the sanitizer — which needs the
+whole export to fail closed on unfiltered events and to detect identity
+collisions across buckets — is spliced into `BucketsExportRocket::new`: the
+spooled JSON is re-read, sanitized, and spooled again. Research exports are
+category-only, so this relaxes the streaming memory bound only where the
+data is already small.
 """
 from __future__ import annotations
 
@@ -17,38 +28,47 @@ import sys
 
 MARKER = "RESEARCH_EDITION_EXPORT_SANITIZE"
 
-EXPORT_INSERT_NEEDLE = """        export.buckets.insert(bid, bucket);
-    }
-
-    Ok(export.into())
+# The two lines in BucketsExportRocket::new that spool the export and rewind
+# it. The sanitizer is inserted right after them and shadows `file`.
+EXPORT_INSERT_NEEDLE = """        let (mut file, name) = datastore.export_to_file(bucket_id, file)?;
+        file.seek(SeekFrom::Start(0)).map_err(io_error)?;
 """
 
-EXPORT_INSERT_REPLACEMENT = f"""        export.buckets.insert(bid, bucket);
-    }}
-
-    // {MARKER}
-    let export = match super::export_sanitize::sanitize_buckets_export(export) {{
-        Ok(export) => export,
-        Err(err) => {{
-            return Err(HttpErrorJson::new(rocket::http::Status::Conflict, err))
-        }}
-    }};
-    Ok(export.into())
-"""
-
-BUCKET_INSERT_NEEDLE = """    export.buckets.insert(bucket_id.into(), bucket);
-
-    Ok(export.into())
-"""
-
-BUCKET_INSERT_REPLACEMENT = f"""    export.buckets.insert(bucket_id.into(), bucket);
-
-    // {MARKER}
-    let export = match super::export_sanitize::sanitize_buckets_export(export) {{
-        Ok(export) => export,
-        Err(err) => return Err(HttpErrorJson::new(Status::Conflict, err)),
-    }};
-    Ok(export.into())
+EXPORT_INSERT_REPLACEMENT = f"""        let (mut file, name) = datastore.export_to_file(bucket_id, file)?;
+        file.seek(SeekFrom::Start(0)).map_err(io_error)?;
+        // {MARKER}
+        // The datastore streams the export with bounded event buffering, so no
+        // whole `BucketsExport` exists here. The Research Edition sanitizer
+        // needs one (fail closed on unfiltered events, identity rewriting with
+        // collision detection across buckets): re-read the spooled JSON,
+        // sanitize, and spool again. Research exports are category-only, so
+        // this relaxes the memory bound only where the data is already small.
+        let file = {{
+            let export: aw_models::BucketsExport =
+                serde_json::from_reader(std::io::BufReader::new(&file)).map_err(|err| {{
+                    error!("Failed to parse export for sanitizing: {{err}}");
+                    HttpErrorJson::new(
+                        Status::InternalServerError,
+                        "Failed to prepare export file".into(),
+                    )
+                }})?;
+            let export = super::export_sanitize::sanitize_buckets_export(export)
+                .map_err(|err| HttpErrorJson::new(Status::Conflict, err))?;
+            let mut sanitized = tempfile::tempfile().map_err(io_error)?;
+            {{
+                let mut writer = std::io::BufWriter::new(&mut sanitized);
+                serde_json::to_writer(&mut writer, &export).map_err(|err| {{
+                    error!("Failed to write sanitized export: {{err}}");
+                    HttpErrorJson::new(
+                        Status::InternalServerError,
+                        "Failed to prepare export file".into(),
+                    )
+                }})?;
+                std::io::Write::flush(&mut writer).map_err(io_error)?;
+            }}
+            sanitized.seek(SeekFrom::Start(0)).map_err(io_error)?;
+            sanitized
+        }};
 """
 
 MOD_NEEDLE = "mod export;\n"
@@ -82,20 +102,18 @@ def patch_tree(repo_root: pathlib.Path) -> None:
     endpoints = (
         repo_root / "aw-server-rust" / "aw-server" / "src" / "endpoints"
     )
-    export_rs = endpoints / "export.rs"
-    bucket_rs = endpoints / "bucket.rs"
+    util_rs = endpoints / "util.rs"
     mod_rs = endpoints / "mod.rs"
     dest = endpoints / "export_sanitize.rs"
 
-    for required in (export_rs, bucket_rs, mod_rs):
+    for required in (util_rs, mod_rs):
         if not required.is_file():
             raise FileNotFoundError(f"expected Rust export source at {required}")
 
     shutil.copyfile(source, dest)
 
     _replace_once(mod_rs, MOD_NEEDLE, MOD_REPLACEMENT, "mod export_sanitize;")
-    _replace_once(export_rs, EXPORT_INSERT_NEEDLE, EXPORT_INSERT_REPLACEMENT, MARKER)
-    _replace_once(bucket_rs, BUCKET_INSERT_NEEDLE, BUCKET_INSERT_REPLACEMENT, MARKER)
+    _replace_once(util_rs, EXPORT_INSERT_NEEDLE, EXPORT_INSERT_REPLACEMENT, MARKER)
 
 
 def main() -> None:
