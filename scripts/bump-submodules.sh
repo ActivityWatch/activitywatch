@@ -182,11 +182,67 @@ done
 if [ -n "$(git diff --cached --name-only)" ]; then
     echo "bundle has staged changes; commit or unstage them first" >&2; exit 1
 fi
+# --- the bundle itself: on master, and at origin/master before anything is
+# committed on top of it. The first real run committed 7 pointer updates on a
+# master that was already two commits behind upstream and the final push was
+# rejected non-fast-forward; nothing had raced, the script just never looked.
+if [ "$(git rev-parse --abbrev-ref HEAD)" != master ]; then
+    echo "bundle is on '$(git rev-parse --abbrev-ref HEAD)', not master; switch first" >&2; exit 1
+fi
+git fetch -q origin master
+if ! git merge-base --is-ancestor origin/master HEAD; then
+    if git merge-base --is-ancestor HEAD origin/master; then
+        if [ "$DRY" = 1 ]; then
+            echo "  [dry-run] bundle master would fast-forward $(git rev-parse --short HEAD) -> $(git rev-parse --short origin/master)"
+        else
+            git merge -q --ff-only origin/master
+            echo "  bundle master fast-forwarded to $(git rev-parse --short HEAD)"
+        fi
+    else
+        echo "bundle master has diverged from origin/master ($(git rev-list --left-right --count HEAD...origin/master | tr '\t' '/') ahead/behind); rebase or reset it first" >&2; exit 1
+    fi
+fi
+if [ -n "$(git status --porcelain --untracked-files=no --ignore-submodules=dirty)" ]; then
+    warn "bundle has uncommitted tracked changes; only submodule pointers will be committed, but check this is intended:"
+    git status --porcelain --untracked-files=no --ignore-submodules=dirty | sed 's/^/    /' >&2
+fi
 git submodule update --init --recursive -q
-echo "submodule branches before:"
-./scripts/submodule-branch.sh | sed 's/^/  /'
 
 DIRECT=$(git submodule --quiet foreach 'echo $sm_path')
+
+# --- every submodule, direct and nested: fetch, then show the full starting
+# state in one table so the plan can be judged before the first mutation.
+#   branch          what the submodule checkout is on (HEAD = detached)
+#   vs origin/master  ahead/behind counts; "diverged" means local commits
+#                   that are not upstream -> ff_master will leave it alone
+#   dirty           tracked-file modifications -> left alone
+step "preflight: fetch every submodule and show the plan"
+printf '  %-32s %-10s %-18s %s\n' "submodule" "branch" "vs origin/master" "note"
+DIVERGED=""
+for m in $DIRECT $(for p in $DIRECT; do git -C "$p" submodule --quiet foreach 'echo $sm_path' 2>/dev/null | sed "s|^|$p/|"; done); do
+    note=""
+    if in_skip "$m" || in_skip "${m%%/*}"; then
+        printf '  %-32s %-10s %-18s %s\n' "$m" "$(git -C "$m" rev-parse --abbrev-ref HEAD)" "-" "skipped"
+        continue
+    fi
+    git -C "$m" fetch -q origin master 2>/dev/null || { printf '  %-32s %-10s %-18s %s\n' "$m" "?" "fetch failed" "$note"; continue; }
+    br=$(git -C "$m" rev-parse --abbrev-ref HEAD)
+    ab=$(git -C "$m" rev-list --left-right --count HEAD...origin/master | tr '\t' '/')
+    ahead=${ab%%/*}; behind=${ab##*/}
+    vs="up to date"
+    [ "$behind" != 0 ] && vs="behind $behind"
+    if [ "$ahead" != 0 ]; then vs="DIVERGED +$ahead/-$behind"; DIVERGED="$DIVERGED $m"; fi
+    dirty "$m" && note="${note:+$note, }dirty"
+    printf '  %-32s %-10s %-18s %s\n' "$m" "$br" "$vs" "$note"
+done
+if [ -n "$DIVERGED" ]; then
+    warn "diverged submodules have local commits not on origin/master and will NOT be moved:$(printf ' %s' $DIVERGED)"
+    warn "push or drop those commits first if they were meant to be included"
+fi
+echo "  bundle: master @ $(git rev-parse --short HEAD) (= origin/master)"
+if [ "$DRY" = 0 ]; then
+    confirm "proceed with the bump?" || { echo "nothing done"; exit 0; }
+fi
 
 # ---------------------------------------------------------------- 1. nested submodules
 
