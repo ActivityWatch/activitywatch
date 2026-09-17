@@ -253,9 +253,12 @@ step "1/4 nested submodules inside each direct submodule"
 NESTED_PARENTS=""
 for parent in $DIRECT; do
     in_skip "$parent" && { echo "  $parent: skipped"; continue; }
+    ff_master "$parent" >/dev/null || continue          # parent itself on master first
+    # Initialise nested submodules *after* the parent moved: a new parent
+    # revision may introduce one that `foreach` cannot see until it exists.
+    [ "$DRY" = 1 ] || git -C "$parent" submodule update --init -q
     nested=$(git -C "$parent" submodule --quiet foreach 'echo $sm_path' 2>/dev/null || true)
     [ -n "$nested" ] || continue
-    ff_master "$parent" >/dev/null || continue          # parent itself on master first
     for child in $nested; do
         ff_master "$parent/$child" || continue
         commit_pointer "$parent" "$child" "build(deps): updated $(basename "$child")"
@@ -277,19 +280,30 @@ done
 step "3/4 aw-tauri Cargo.lock -> aw-server-rust @ HEAD"
 SERVER_SHA=$(target_sha aw-server-rust)
 LOCK=aw-tauri/src-tauri/Cargo.lock
+# Step 4 must know whether the lock really matches the server pointer we are
+# about to commit. The lock is what check_tauri_server.py --sync treats as
+# authoritative, so running --sync against an unaligned lock would silently
+# check aw-server-rust back out at the OLD revision and undo step 2.
+LOCK_ALIGNED=0
+lock_at_server() {
+    grep -q "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK" \
+      && [ "$(grep -c "aw-server-rust.git?branch=master#" "$LOCK")" = "$(grep -c "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK")" ]
+}
 if in_skip aw-tauri || in_skip aw-server-rust; then
     echo "  skipped (aw-tauri or aw-server-rust in --skip)"
+    lock_at_server && LOCK_ALIGNED=1
+elif lock_at_server; then
+    echo "  $LOCK already at ${SERVER_SHA:0:7} for every aw-* crate"
+    LOCK_ALIGNED=1
 elif [ "$PUSH" = 0 ]; then
     warn "skipped: cargo can only relock to a revision on GitHub, and --no-push may leave ${SERVER_SHA:0:7} local-only"
 elif ! git -C aw-server-rust branch -r --contains "$SERVER_SHA" | grep -q 'origin/master'; then
     warn "skipped: aw-server-rust ${SERVER_SHA:0:7} is not on origin/master yet (push it first)"
-elif grep -q "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK" \
-     && [ "$(grep -c "aw-server-rust.git?branch=master#" "$LOCK")" = "$(grep -c "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK")" ]; then
-    echo "  $LOCK already at ${SERVER_SHA:0:7} for every aw-* crate"
 elif [ "$DRY" = 1 ]; then
     echo "  [dry-run] would relock aw-server-rust git deps to ${SERVER_SHA:0:7}:"
     # crates whose [[package]] source is the aw-server-rust git repo
     awk '/^\[\[package\]\]/{n=""} /^name = /{n=$3} /^source = .*aw-server-rust\.git/{print "    " n}' "$LOCK" | sort -u
+    LOCK_ALIGNED=1
 else
     # One --precise moves every package that shares the git source.
     (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA")
@@ -306,6 +320,12 @@ else
 
 aw-server-rust -> $SERVER_SHA"
         push_master aw-tauri
+        LOCK_ALIGNED=1
+    else
+        # A dirty, uncommitted lock would pass the checker here and vanish in
+        # CI. Restore it so the tree matches what will actually be built.
+        git -C aw-tauri checkout -q -- src-tauri/Cargo.lock
+        warn "aw-tauri lock commit declined; lock restored to the committed (old) revision"
     fi
 fi
 
@@ -313,16 +333,24 @@ fi
 
 step "4/4 bundle: align, validate, commit"
 VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' aw-server-rust/aw-server/Cargo.toml | head -1)
-if [ "$DRY" = 1 ]; then
-    echo "  [dry-run] would run: check_tauri_server.py --sync && check_tauri_server.py $VERSION"
+if [ "$LOCK_ALIGNED" = 1 ]; then
+    if [ "$DRY" = 1 ]; then
+        echo "  [dry-run] would run: check_tauri_server.py --sync && check_tauri_server.py $VERSION"
+    else
+        python3 scripts/check_tauri_server.py --sync | sed 's/^/  /'
+        python3 scripts/check_tauri_server.py "$VERSION" | sed 's/^/  /'
+    fi
 else
-    python3 scripts/check_tauri_server.py --sync | sed 's/^/  /'
-    python3 scripts/check_tauri_server.py "$VERSION" | sed 's/^/  /'
+    # Not aligned: --sync would check aw-server-rust back out at the lock's
+    # old revision. Skip it, and do not commit a server pointer the Tauri
+    # lock does not match — a release would fail check_tauri_server.py.
+    warn "Tauri lock is NOT aligned with aw-server-rust ${SERVER_SHA:0:7}; skipping --sync and leaving the aw-server-rust pointer out of this commit"
 fi
 
 CHANGED=""
 for m in $DIRECT; do
     in_skip "$m" && continue
+    if [ "$m" = aw-server-rust ] && [ "$LOCK_ALIGNED" != 1 ]; then continue; fi
     pointer_changed . "$m" && CHANGED="$CHANGED $m"
 done
 if [ -z "$CHANGED" ]; then
