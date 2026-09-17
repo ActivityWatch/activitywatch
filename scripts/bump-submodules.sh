@@ -8,8 +8,10 @@
 # aw-server-rust revision ships (see scripts/check_tauri_server.py and
 # `make sync-tauri-server`):
 #
-#   1. nested aw-webui inside aw-server, aw-server-rust and aw-tauri
-#      -> commit + push "build(deps): updated aw-webui" in each
+#   1. nested submodules, recursively: aw-webui inside aw-server,
+#      aw-server-rust and aw-tauri, and media inside aw-webui and aw-qt
+#      -> commit + push "build(deps): updated <name>" in each parent,
+#         deepest first
 #   2. every direct submodule: checkout master, fast-forward
 #   3. aw-tauri/src-tauri/Cargo.lock: relock the aw-server-rust git deps
 #      to the aw-server-rust submodule's HEAD
@@ -30,7 +32,9 @@
 #   --no-push   commit locally but never push (step 3 is skipped: cargo
 #               can only relock to a revision that exists on GitHub)
 #   --dry-run   fetch and report what would change; move nothing
-#   --skip      comma-separated submodules to leave alone (default: awatcher)
+#   --skip      comma-separated submodules to leave alone (default: awatcher);
+#               a name matches at any depth (aw-webui = every copy), a path
+#               (aw-server/aw-webui) matches that copy and everything under it
 
 set -euo pipefail
 
@@ -77,6 +81,17 @@ run() {
 }
 
 in_skip() { case ",$SKIP," in *",$1,"*) return 0 ;; esac; return 1; }
+
+# skipped <path>: --skip names either a path (matches it and everything
+# below) or a bare name (matches every submodule with that basename).
+skipped() {
+    local p=$1
+    while :; do
+        in_skip "$p" && return 0
+        in_skip "${p##*/}" && return 0
+        case "$p" in */*) p=${p%/*} ;; *) return 1 ;; esac
+    done
+}
 
 # A parent may only pin a submodule commit that already exists on GitHub:
 # CI checks the submodule out at that SHA. unpushed <repo> -> 0 if HEAD is
@@ -128,13 +143,24 @@ ff_master() {
     before=$(git -C "$dir" rev-parse HEAD)
     git -C "$dir" fetch -q origin master
     after=$(git -C "$dir" rev-parse origin/master)
+    # `pull --ff-only` is happy with a local master that is *ahead*: it would
+    # quietly make that unrelated commit the new pointer. Refuse.
+    if git -C "$dir" show-ref -q --verify refs/heads/master \
+       && [ "$(git -C "$dir" rev-list --count origin/master..master)" != 0 ]; then
+        warn "$dir: local master has $(git -C "$dir" rev-list --count origin/master..master) commit(s) not on origin/master; leaving as-is (push or drop them first)"
+        return 1
+    fi
     if [ "$before" = "$after" ] && [ "$(git -C "$dir" rev-parse --abbrev-ref HEAD)" = master ]; then
         echo "  $dir: master @ ${after:0:7} (up to date)"
         return 0
     fi
     if [ "$DRY" = 1 ]; then
-        echo "  [dry-run] $dir: would fast-forward ${before:0:7} -> ${after:0:7}"
-        git -C "$dir" log --oneline "${before}..${after}" | sed 's/^/      /'
+        if [ "$before" = "$after" ]; then
+            echo "  [dry-run] $dir: would check out master @ ${after:0:7} (detached at the same commit)"
+        else
+            echo "  [dry-run] $dir: would fast-forward ${before:0:7} -> ${after:0:7}"
+            git -C "$dir" log --oneline "${before}..${after}" | sed 's/^/      /'
+        fi
         return 0
     fi
     git -C "$dir" checkout -q master
@@ -190,23 +216,34 @@ if [ "$(git rev-parse --abbrev-ref HEAD)" != master ]; then
     echo "bundle is on '$(git rev-parse --abbrev-ref HEAD)', not master; switch first" >&2; exit 1
 fi
 git fetch -q origin master
-if ! git merge-base --is-ancestor origin/master HEAD; then
-    if git merge-base --is-ancestor HEAD origin/master; then
+if git merge-base --is-ancestor HEAD origin/master; then
+    if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/master)" ]; then
         if [ "$DRY" = 1 ]; then
             echo "  [dry-run] bundle master would fast-forward $(git rev-parse --short HEAD) -> $(git rev-parse --short origin/master)"
         else
             git merge -q --ff-only origin/master
             echo "  bundle master fast-forwarded to $(git rev-parse --short HEAD)"
         fi
-    else
-        echo "bundle master has diverged from origin/master ($(git rev-list --left-right --count HEAD...origin/master | tr '\t' '/') ahead/behind); rebase or reset it first" >&2; exit 1
     fi
+elif git merge-base --is-ancestor origin/master HEAD; then
+    # Ahead, not diverged: a bump commit on top would push those commits too.
+    echo "bundle master is $(git rev-list --count origin/master..HEAD) commit(s) ahead of origin/master; push or stash them first" >&2; exit 1
+else
+    echo "bundle master has diverged from origin/master ($(git rev-list --left-right --count HEAD...origin/master | tr '\t' '/') ahead/behind); rebase or reset it first" >&2; exit 1
 fi
 if [ -n "$(git status --porcelain --untracked-files=no --ignore-submodules=dirty)" ]; then
     warn "bundle has uncommitted tracked changes; only submodule pointers will be committed, but check this is intended:"
     git status --porcelain --untracked-files=no --ignore-submodules=dirty | sed 's/^/    /' >&2
 fi
-git submodule update --init --recursive -q
+# Initialise (never move) direct submodules that have no checkout yet. A
+# populated submodule stays wherever it is until ff_master looks at it, so
+# --dry-run and --skip mean what they say.
+for p in $(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}'); do
+    in_skip "$p" && continue
+    [ -e "$p/.git" ] && continue
+    if [ "$DRY" = 1 ]; then echo "  [dry-run] $p: not initialised; would init"
+    else git submodule update --init -q -- "$p"; fi
+done
 
 DIRECT=$(git submodule --quiet foreach 'echo $sm_path')
 
@@ -219,9 +256,9 @@ DIRECT=$(git submodule --quiet foreach 'echo $sm_path')
 step "preflight: fetch every submodule and show the plan"
 printf '  %-32s %-10s %-18s %s\n' "submodule" "branch" "vs origin/master" "note"
 DIVERGED=""
-for m in $DIRECT $(for p in $DIRECT; do git -C "$p" submodule --quiet foreach 'echo $sm_path' 2>/dev/null | sed "s|^|$p/|"; done); do
+for m in $(git submodule --quiet foreach --recursive 'echo $displaypath'); do
     note=""
-    if in_skip "$m" || in_skip "${m%%/*}"; then
+    if skipped "$m"; then
         printf '  %-32s %-10s %-18s %s\n' "$m" "$(git -C "$m" rev-parse --abbrev-ref HEAD)" "-" "skipped"
         continue
     fi
@@ -232,6 +269,11 @@ for m in $DIRECT $(for p in $DIRECT; do git -C "$p" submodule --quiet foreach 'e
     vs="up to date"
     [ "$behind" != 0 ] && vs="behind $behind"
     if [ "$ahead" != 0 ]; then vs="DIVERGED +$ahead/-$behind"; DIVERGED="$DIVERGED $m"; fi
+    # HEAD is usually detached at the pin; an ahead local master hides behind it.
+    if git -C "$m" show-ref -q --verify refs/heads/master; then
+        la=$(git -C "$m" rev-list --count origin/master..master)
+        [ "$la" != 0 ] && { note="${note:+$note, }local master +$la"; DIVERGED="$DIVERGED $m"; }
+    fi
     dirty "$m" && note="${note:+$note, }dirty"
     printf '  %-32s %-10s %-18s %s\n' "$m" "$br" "$vs" "$note"
 done
@@ -239,31 +281,41 @@ if [ -n "$DIVERGED" ]; then
     warn "diverged submodules have local commits not on origin/master and will NOT be moved:$(printf ' %s' $DIVERGED)"
     warn "push or drop those commits first if they were meant to be included"
 fi
-echo "  bundle: master @ $(git rev-parse --short HEAD) (= origin/master)"
+echo "  bundle: master @ $(git rev-parse --short HEAD)$([ "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)" ] && echo ' (= origin/master)')"
 if [ "$DRY" = 0 ]; then
     confirm "proceed with the bump?" || { echo "nothing done"; exit 0; }
 fi
 
 # ---------------------------------------------------------------- 1. nested submodules
 
-# Every submodule that a direct submodule carries itself (aw-webui inside
-# aw-server / aw-server-rust / aw-tauri, media inside aw-qt and aw-webui, ...).
-# Discovered, not listed, so a new nested submodule is picked up automatically.
+# Every submodule that a direct submodule carries itself, at any depth
+# (aw-webui inside aw-server / aw-server-rust / aw-tauri, media inside aw-qt
+# and inside every aw-webui, ...). Discovered, not listed, so a new nested
+# submodule is picked up automatically.
 step "1/4 nested submodules inside each direct submodule"
 NESTED_PARENTS=""
+# bump_nested <repo>: fast-forward every submodule inside <repo>, deepest
+# first, so a grandchild is committed in its parent before that parent's own
+# pointer is committed one level up. <repo> must already be where it should.
+bump_nested() {
+    local repo=$1 child nested
+    # Initialise nested submodules *after* the parent moved: a new parent
+    # revision may introduce one that `foreach` cannot see until it exists.
+    [ "$DRY" = 1 ] || git -C "$repo" submodule update --init -q
+    nested=$(git -C "$repo" submodule --quiet foreach 'echo $sm_path' 2>/dev/null || true)
+    [ -n "$nested" ] || return 0
+    for child in $nested; do
+        if skipped "$repo/$child"; then echo "  $repo/$child: skipped"; continue; fi
+        ff_master "$repo/$child" || continue
+        bump_nested "$repo/$child"
+        commit_pointer "$repo" "$child" "build(deps): updated $(basename "$child")"
+    done
+    NESTED_PARENTS="$NESTED_PARENTS $repo"
+}
 for parent in $DIRECT; do
     in_skip "$parent" && { echo "  $parent: skipped"; continue; }
     ff_master "$parent" >/dev/null || continue          # parent itself on master first
-    # Initialise nested submodules *after* the parent moved: a new parent
-    # revision may introduce one that `foreach` cannot see until it exists.
-    [ "$DRY" = 1 ] || git -C "$parent" submodule update --init -q
-    nested=$(git -C "$parent" submodule --quiet foreach 'echo $sm_path' 2>/dev/null || true)
-    [ -n "$nested" ] || continue
-    for child in $nested; do
-        ff_master "$parent/$child" || continue
-        commit_pointer "$parent" "$child" "build(deps): updated $(basename "$child")"
-    done
-    NESTED_PARENTS="$NESTED_PARENTS $parent"
+    bump_nested "$parent"
 done
 [ -n "$NESTED_PARENTS" ] || echo "  (no direct submodule carries nested submodules)"
 
@@ -344,13 +396,15 @@ else
     # Not aligned: --sync would check aw-server-rust back out at the lock's
     # old revision. Skip it, and do not commit a server pointer the Tauri
     # lock does not match — a release would fail check_tauri_server.py.
-    warn "Tauri lock is NOT aligned with aw-server-rust ${SERVER_SHA:0:7}; skipping --sync and leaving the aw-server-rust pointer out of this commit"
+    warn "Tauri lock is NOT aligned with aw-server-rust ${SERVER_SHA:0:7}; skipping --sync and leaving the aw-server-rust and aw-tauri pointers out of this commit"
 fi
 
 CHANGED=""
 for m in $DIRECT; do
     in_skip "$m" && continue
-    if [ "$m" = aw-server-rust ] && [ "$LOCK_ALIGNED" != 1 ]; then continue; fi
+    # Unaligned: neither pointer may move alone — a new aw-tauri whose lock
+    # pins a different server revision fails check_tauri_server.py in CI.
+    if [ "$LOCK_ALIGNED" != 1 ]; then case "$m" in aw-server-rust|aw-tauri) continue ;; esac; fi
     pointer_changed . "$m" && CHANGED="$CHANGED $m"
 done
 if [ -z "$CHANGED" ]; then
