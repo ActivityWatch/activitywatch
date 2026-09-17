@@ -100,14 +100,22 @@ unpushed() {
     ! git -C "$1" branch -r --contains "$(git -C "$1" rev-parse HEAD)" 2>/dev/null | grep -q 'origin/'
 }
 
-# Dependency order for pushes: aw-tauri's lock references aw-server-rust,
-# and the bundle references everything. Everything else is independent.
+# Dependency order for pushes: a nested repo before the parent whose gitlink
+# points at it (deepest first), aw-server-rust before aw-tauri (the lock
+# references it), the bundle last. Everything else is independent.
 push_order() {
-    local first="" rest=""
+    local nested="" first="" rest=""
     for m in "$@"; do
-        case "$m" in aw-server-rust) first="aw-server-rust $first" ;; aw-tauri) first="$first aw-tauri" ;; *) rest="$rest $m" ;; esac
+        case "$m" in
+            */*) nested="$nested
+$m" ;;
+            aw-server-rust) first="aw-server-rust $first" ;;
+            aw-tauri) first="$first aw-tauri" ;;
+            *) rest="$rest $m" ;;
+        esac
     done
-    echo $first $rest
+    nested=$(printf '%s\n' "$nested" | awk -F/ 'NF{print NF, $0}' | sort -rn | cut -d' ' -f2-)
+    echo $nested $first $rest
 }
 
 # Tracked-file modifications inside a submodule (untracked files are fine).
@@ -184,6 +192,17 @@ commit_pointer() {
         echo "  [dry-run] $repo: $path $(git -C "$repo" rev-parse --short "HEAD:$path") -> $(git -C "$repo/$path" rev-parse --short origin/master)"
     else
         git -C "$repo" diff --submodule=log --ignore-submodules=dirty -- "$path" | sed 's/^/    /'
+    fi
+    # Same rule as the bundle: never pin a commit CI cannot fetch. A declined
+    # push of the child stops here, so a parent can never publish a gitlink
+    # to a commit that exists only on this machine.
+    if [ "$DRY" = 0 ] && unpushed "$repo/$path"; then
+        if [ "$PUSH" = 1 ] && confirm "$repo/$path @ $(git -C "$repo/$path" rev-parse --short HEAD) is not on GitHub; push it first?"; then
+            run "$repo/$path" push -q origin master
+        else
+            warn "$repo: not committing the $path pointer; push $repo/$path first, then re-run"
+            return 0
+        fi
     fi
     confirm "commit in $repo: \"$msg\"?" || return 0
     run "$repo" add -- "$path"
@@ -299,13 +318,18 @@ NESTED_PARENTS=""
 # pointer is committed one level up. <repo> must already be where it should.
 bump_nested() {
     local repo=$1 child nested
-    # Initialise nested submodules *after* the parent moved: a new parent
-    # revision may introduce one that `foreach` cannot see until it exists.
-    [ "$DRY" = 1 ] || git -C "$repo" submodule update --init -q
-    nested=$(git -C "$repo" submodule --quiet foreach 'echo $sm_path' 2>/dev/null || true)
-    [ -n "$nested" ] || return 0
+    [ -f "$repo/.gitmodules" ] || return 0
+    # Children come from .gitmodules, not `foreach`: a new parent revision
+    # may declare one that has no checkout yet. Initialise (or move to the
+    # parent's recorded commit) only the ones not skipped.
+    nested=$(git -C "$repo" config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
     for child in $nested; do
         if skipped "$repo/$child"; then echo "  $repo/$child: skipped"; continue; fi
+        if [ "$DRY" = 1 ]; then
+            [ -e "$repo/$child/.git" ] || { echo "  [dry-run] $repo/$child: not initialised; would init"; continue; }
+        else
+            git -C "$repo" submodule update --init -q -- "$child"
+        fi
         ff_master "$repo/$child" || continue
         bump_nested "$repo/$child"
         commit_pointer "$repo" "$child" "build(deps): updated $(basename "$child")"
@@ -440,9 +464,8 @@ fi
 # in what order, so CI never sees a pointer to a commit it cannot fetch.
 if [ "$DRY" = 0 ]; then
     TODO=""
-    for m in $DIRECT; do
-        case " $TODO " in *" $m "*) continue ;; esac
-        in_skip "$m" && continue
+    for m in $(git submodule --quiet foreach --recursive 'echo $displaypath'); do
+        skipped "$m" && continue
         unpushed "$m" && TODO="$TODO $m"
     done
     if [ -n "$TODO" ] || unpushed .; then
