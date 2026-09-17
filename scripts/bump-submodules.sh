@@ -139,6 +139,7 @@ pointer_to_commit() {
 # origin/master has not moved for them, but the preview must carry the
 # hypothetical commit upwards (media -> aw-webui -> aw-server -> bundle).
 DRY_BUMPED=""
+dry_bumped() { case " $DRY_BUMPED " in *" $1 "*) return 0 ;; esac; return 1; }
 
 # Where <dir> will be after this run: its HEAD normally, but under --dry-run
 # nothing moves, so reason about origin/master instead (unless it is dirty
@@ -154,7 +155,7 @@ target_sha() {
 pointer_changed() {
     if [ "$DRY" = 1 ]; then
         local key=$2; [ "$1" = . ] || key="$1/$2"
-        case " $DRY_BUMPED " in *" $key "*) return 0 ;; esac
+        dry_bumped "$key" && return 0
         [ "$(git -C "$1" rev-parse "HEAD:$2")" != "$(target_sha "$1/$2")" ]
     else
         ! git -C "$1" diff --quiet --ignore-submodules=dirty -- "$2"
@@ -172,8 +173,14 @@ ff_master() {
     before=$(git -C "$dir" rev-parse HEAD)
     git -C "$dir" fetch -q origin master
     after=$(git -C "$dir" rev-parse origin/master)
-    # `pull --ff-only` is happy with a local master that is *ahead*: it would
-    # quietly make that unrelated commit the new pointer. Refuse.
+    # Local commits that are not upstream must never be abandoned or turned
+    # into the pointer: a detached HEAD or another branch would be dropped
+    # by `checkout master`, and `pull --ff-only` is happy with a local
+    # master that is *ahead*. Refuse both (the preflight table said so).
+    if [ "$(git -C "$dir" rev-list --count origin/master..HEAD)" != 0 ]; then
+        warn "$dir: HEAD has $(git -C "$dir" rev-list --count origin/master..HEAD) commit(s) not on origin/master; leaving as-is (push or drop them first)"
+        return 1
+    fi
     if git -C "$dir" show-ref -q --verify refs/heads/master \
        && [ "$(git -C "$dir" rev-list --count origin/master..master)" != 0 ]; then
         warn "$dir: local master has $(git -C "$dir" rev-list --count origin/master..master) commit(s) not on origin/master; leaving as-is (push or drop them first)"
@@ -211,10 +218,8 @@ commit_pointer() {
     fi
     if [ "$DRY" = 1 ]; then
         local key=$path to; [ "$repo" = . ] || key="$repo/$path"
-        case " $DRY_BUMPED " in
-            *" $key "*) to="(new commit from its own pointer bump)" ;;
-            *) to=$(git -C "$repo/$path" rev-parse --short origin/master) ;;
-        esac
+        if dry_bumped "$key"; then to="(new commit from its own pointer bump)"
+        else to=$(git -C "$repo/$path" rev-parse --short origin/master); fi
         echo "  [dry-run] $repo: $path $(git -C "$repo" rev-parse --short "HEAD:$path") -> $to"
         DRY_BUMPED="$DRY_BUMPED ${repo#./}"
     else
@@ -415,6 +420,17 @@ if [ ! -e aw-server-rust/.git ] || [ ! -e aw-tauri/.git ]; then
 elif [ "$PAIR_FIXED" = 1 ]; then
     echo "  aw-tauri or aw-server-rust is skipped/held; judging the lock at the pointers to be committed (aw-tauri ${TAURI_REV:0:7}, aw-server-rust ${SERVER_SHA:0:7})"
     if lock_at_server; then LOCK_ALIGNED=1; echo "  aligned"; fi
+elif [ "$DRY" = 1 ] && dry_bumped aw-server-rust; then
+    # Step 1 would commit a nested pointer in aw-server-rust, so the real
+    # run relocks to a commit that does not exist yet — or, under
+    # --no-push, cannot relock at all (that commit would stay local-only).
+    if [ "$PUSH" = 1 ]; then
+        echo "  [dry-run] aw-server-rust would get a new commit (nested bump); would relock aw-tauri to it and commit the lock"
+        LOCK_ALIGNED=1
+        DRY_BUMPED="$DRY_BUMPED aw-tauri"
+    else
+        warn "skipped: aw-server-rust would get a new commit (nested bump) that --no-push leaves local-only; cargo can only relock to a revision on GitHub"
+    fi
 elif lock_at_server; then
     echo "  $LOCK already at ${SERVER_SHA:0:7} for every aw-* crate"
     LOCK_ALIGNED=1
