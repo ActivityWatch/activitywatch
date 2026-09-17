@@ -420,9 +420,10 @@ if [ ! -e aw-server-rust/.git ] || [ ! -e aw-tauri/.git ]; then
 elif [ "$PAIR_FIXED" = 1 ]; then
     echo "  aw-tauri or aw-server-rust is skipped/held; judging the lock at the pointers to be committed (aw-tauri ${TAURI_REV:0:7}, aw-server-rust ${SERVER_SHA:0:7})"
     if lock_at_server; then LOCK_ALIGNED=1; echo "  aligned"; fi
-elif [ "$DRY" = 1 ] && dry_bumped aw-server-rust; then
+elif [ "$DRY" = 1 ] && [ "$PUSH" = 1 ] && dry_bumped aw-server-rust; then
     # Step 1 would commit a nested pointer in aw-server-rust, so the real
-    # run relocks to a commit that does not exist yet.
+    # run relocks to a commit that does not exist yet (under --no-push it
+    # cannot: the branch below says so).
     echo "  [dry-run] aw-server-rust would get a new commit (nested bump); would relock aw-tauri to it and commit the lock"
     LOCK_ALIGNED=1
     DRY_BUMPED="$DRY_BUMPED aw-tauri"
