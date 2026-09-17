@@ -31,7 +31,9 @@
 #   --yes       accept every prompt
 #   --no-push   commit locally but never push (step 3 is skipped: cargo
 #               can only relock to a revision that exists on GitHub)
-#   --dry-run   fetch and report what would change; move nothing
+#   --dry-run   fetch and report what would change; move nothing that
+#               exists (submodules with no checkout yet are initialised so
+#               the plan is complete, also on a fresh clone)
 #   --skip      comma-separated submodules to leave alone (default: awatcher);
 #               a name matches at any depth (aw-webui = every copy), a path
 #               (aw-server/aw-webui) matches that copy and everything under it
@@ -254,15 +256,22 @@ if [ -n "$(git status --porcelain --untracked-files=no --ignore-submodules=dirty
     warn "bundle has uncommitted tracked changes; only submodule pointers will be committed, but check this is intended:"
     git status --porcelain --untracked-files=no --ignore-submodules=dirty | sed 's/^/    /' >&2
 fi
-# Initialise (never move) direct submodules that have no checkout yet. A
-# populated submodule stays wherever it is until ff_master looks at it, so
-# --dry-run and --skip mean what they say.
-for p in $(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}'); do
-    in_skip "$p" && continue
-    [ -e "$p/.git" ] && continue
-    if [ "$DRY" = 1 ]; then echo "  [dry-run] $p: not initialised; would init"
-    else git submodule update --init -q -- "$p"; fi
-done
+# init_missing <repo>: initialise (never move) the submodules of <repo>
+# that have no checkout yet, skipped ones excepted. A populated submodule
+# stays wherever it is until ff_master looks at it, so --dry-run and --skip
+# mean what they say, and a fresh clone still yields a complete plan.
+init_missing() {
+    local repo=$1 p prefix=""
+    [ "$repo" = . ] || prefix="$repo/"
+    [ -f "$repo/.gitmodules" ] || return 0
+    for p in $(git -C "$repo" config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}'); do
+        skipped "$prefix$p" && continue
+        [ -e "$repo/$p/.git" ] && continue
+        echo "  $prefix$p: no checkout yet; initialising"
+        git -C "$repo" submodule update --init -q -- "$p"
+    done
+}
+init_missing .
 
 DIRECT=$(git submodule --quiet foreach 'echo $sm_path')
 
@@ -319,17 +328,12 @@ NESTED_PARENTS=""
 bump_nested() {
     local repo=$1 child nested
     [ -f "$repo/.gitmodules" ] || return 0
-    # Children come from .gitmodules, not `foreach`: a new parent revision
-    # may declare one that has no checkout yet. Initialise (or move to the
-    # parent's recorded commit) only the ones not skipped.
+    # A new parent revision may declare a child that has no checkout yet:
+    # initialise those (never move an existing one — ff_master does that).
+    init_missing "$repo"
     nested=$(git -C "$repo" config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
     for child in $nested; do
         if skipped "$repo/$child"; then echo "  $repo/$child: skipped"; continue; fi
-        if [ "$DRY" = 1 ]; then
-            [ -e "$repo/$child/.git" ] || { echo "  [dry-run] $repo/$child: not initialised; would init"; continue; }
-        else
-            git -C "$repo" submodule update --init -q -- "$child"
-        fi
         ff_master "$repo/$child" || continue
         bump_nested "$repo/$child"
         commit_pointer "$repo" "$child" "build(deps): updated $(basename "$child")"
@@ -346,15 +350,18 @@ done
 # ---------------------------------------------------------------- 2. direct submodules
 
 step "2/4 direct submodules -> origin/master"
+# Modules ff_master refused (dirty, or a local master ahead of origin) sit
+# at whatever commit they were on; step 4 must not mistake that for a bump.
+HELD=""
 for m in $DIRECT; do
     in_skip "$m" && { echo "  $m: skipped"; continue; }
-    ff_master "$m" || true
+    ff_master "$m" || HELD="$HELD $m"
 done
 
 # ---------------------------------------------------------------- 3. Tauri Cargo pin
 
 step "3/4 aw-tauri Cargo.lock -> aw-server-rust @ HEAD"
-SERVER_SHA=$(target_sha aw-server-rust)
+SERVER_SHA=$([ -e aw-server-rust/.git ] && target_sha aw-server-rust || echo none)
 LOCK=aw-tauri/src-tauri/Cargo.lock
 # Step 4 must know whether the lock really matches the server pointer we are
 # about to commit. The lock is what check_tauri_server.py --sync treats as
@@ -365,7 +372,9 @@ lock_at_server() {
     grep -q "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK" \
       && [ "$(grep -c "aw-server-rust.git?branch=master#" "$LOCK")" = "$(grep -c "aw-server-rust.git?branch=master#$SERVER_SHA" "$LOCK")" ]
 }
-if in_skip aw-tauri || in_skip aw-server-rust; then
+if [ ! -e aw-server-rust/.git ] || [ ! -e aw-tauri/.git ]; then
+    echo "  skipped (aw-server-rust or aw-tauri has no checkout)"
+elif in_skip aw-tauri || in_skip aw-server-rust; then
     echo "  skipped (aw-tauri or aw-server-rust in --skip)"
     lock_at_server && LOCK_ALIGNED=1
 elif lock_at_server; then
@@ -408,7 +417,7 @@ fi
 # ---------------------------------------------------------------- 4. bundle
 
 step "4/4 bundle: align, validate, commit"
-VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' aw-server-rust/aw-server/Cargo.toml | head -1)
+VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' aw-server-rust/aw-server/Cargo.toml 2>/dev/null | head -1)
 if [ "$LOCK_ALIGNED" = 1 ]; then
     if [ "$DRY" = 1 ]; then
         echo "  [dry-run] would run: check_tauri_server.py --sync && check_tauri_server.py $VERSION"
@@ -426,6 +435,7 @@ fi
 CHANGED=""
 for m in $DIRECT; do
     in_skip "$m" && continue
+    case " $HELD " in *" $m "*) warn "$m: fast-forward was refused above; its pointer is left out of this commit"; continue ;; esac
     # Unaligned: neither pointer may move alone — a new aw-tauri whose lock
     # pins a different server revision fails check_tauri_server.py in CI.
     if [ "$LOCK_ALIGNED" != 1 ]; then case "$m" in aw-server-rust|aw-tauri) continue ;; esac; fi
