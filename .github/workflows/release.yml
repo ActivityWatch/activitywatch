@@ -275,13 +275,21 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   nightly-submodules:
-    # Always runs (cheap) so the build jobs' `needs:` never short-circuits
-    # them. Only does real work on the nightly cron or `submodules=latest`:
-    # resolves every submodule, recursively, to its upstream master and
+    # Only runs in latest mode: the nightly cron or `submodules=latest`.
+    # Resolves every submodule, recursively, to its upstream master and
     # reports whether anything moved relative to the committed pointers.
     # Build jobs check out exactly these SHAs so every leg tests the same
     # tips even when they start minutes apart. Nothing is committed.
+    #
+    # On every other trigger this job is skipped, so ordinary pushes, PRs and
+    # release tags do not queue a runner to do nothing. Its dependents carry
+    # `!cancelled()` so a skipped dependency does not cascade into skipping
+    # them, and they read its outputs as empty, which their conditions and
+    # `name:` expressions already treat as pinned mode.
     name: Resolve latest submodule tips (nightly)
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *')
+      || inputs.submodules == 'latest'
     runs-on: ubuntu-latest
     outputs:
       latest: ${{ steps.resolve.outputs.latest }}
@@ -379,8 +387,9 @@ jobs:
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
-      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
+      !cancelled()
+      && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7
@@ -451,8 +460,9 @@ jobs:
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
-      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
+      !cancelled()
+      && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
@@ -809,8 +819,9 @@ jobs:
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
-      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
+      !cancelled()
+      && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ubuntu-22.04
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
@@ -1115,8 +1126,9 @@ jobs:
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
-      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
+      !cancelled()
+      && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
