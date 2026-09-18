@@ -414,11 +414,22 @@ Thanks to everyone who contributed to this release:
 See the [getting started guide in the documentation](https://docs.activitywatch.net/en/latest/getting-started.html).
         """.strip()
         output += "\n\n"
+        # Tauri auto-updater AppImage assets use version without the 'v' prefix
+        tag_no_v = tag.lstrip("v")
+        base = f"https://github.com/ActivityWatch/activitywatch/releases/download/{tag}"
         output += f"""# Downloads
 
- - [**Windows**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
- - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
- - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
+## Classic distribution
+
+ - [**Windows**]({base}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe installer)
+ - **macOS**: [Intel]({base}/activitywatch-{tag}-macos-x86_64.dmg) | [Apple Silicon]({base}/activitywatch-{tag}-macos-arm64.dmg) (.dmg)
+ - **Linux**: [.zip]({base}/activitywatch-{tag}-linux-x86_64.zip) | [.AppImage]({base}/activitywatch-linux-x86_64.AppImage) | [.deb]({base}/activitywatch-{tag}-linux-x86_64.deb)
+
+## Tauri distribution (experimental — native Wayland support on Linux)
+
+ - [**Windows**]({base}/activitywatch-tauri-{tag}-windows-x86_64-setup.exe) (.exe installer)
+ - **macOS**: [Intel]({base}/activitywatch-tauri-{tag}-macos-x86_64.dmg) | [Apple Silicon]({base}/activitywatch-tauri-{tag}-macos-arm64.dmg) (.dmg)
+ - **Linux**: [.AppImage]({base}/activitywatch-tauri-{tag_no_v}-linux-x86_64.AppImage) | [.zip]({base}/activitywatch-tauri-{tag}-linux-x86_64.zip)
      """.strip()
         output += "\n\n"
 
