@@ -1618,13 +1618,27 @@ jobs:
           # filenames, which do not exist on research releases (research
           # artifacts carry a -research token). Point at the asset
           # list instead of linking to 404s.
+          #
+          # Download lines come in two forms: a linked bold label
+          # (` - [**Windows**](url) ...`) or a plain bold label followed by
+          # per-arch links (` - **macOS**: [Intel](url) | ... `) — both must
+          # be stripped, on both the Classic and Tauri sections, or the
+          # plain-label form survives and keeps pointing at nonexistent
+          # standard-edition filenames.
           python3 - <<'PY'
           import re
 
           path = "release_notes.md"
           notes = open(path).read()
           notes = re.sub(
-              r"(?m)^ - \[\*\*(Windows|macOS|Linux)\*\*\]\([^)]*\)[^\n]*\n?",
+              r"(?m)^ - (?:\[\*\*(?:Windows|macOS|Linux)\*\*\]\([^)]*\)|\*\*(?:Windows|macOS|Linux)\*\*:)[^\n]*\n?",
+              "",
+              notes,
+          )
+          # Distribution sub-headings (Classic/Tauri) have no content left
+          # once their download lines are stripped above.
+          notes = re.sub(
+              r"(?m)^## (?:Classic|Tauri) distribution[^\n]*\n(?:\n)*",
               "",
               notes,
           )
