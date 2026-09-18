@@ -388,6 +388,7 @@ jobs:
     # a submodule actually moved off its committed pointer.
     if: >-
       !cancelled()
+      && contains(fromJSON('["success", "skipped"]'), needs.nightly-submodules.result)
       && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
       || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ubuntu-22.04
@@ -455,12 +456,13 @@ jobs:
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
 
   build-qt:
-    name: Build Qt artifacts (${{ matrix.os }}${{ matrix.research && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    name: Build Qt artifacts (${{ matrix.os }}${{ (matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
       !cancelled()
+      && contains(fromJSON('["success", "skipped"]'), needs.nightly-submodules.result)
       && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
       || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ${{ matrix.os }}
@@ -814,12 +816,13 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-qt-manylinux-2-28:
-    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor)${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor${{ ((github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
       !cancelled()
+      && contains(fromJSON('["success", "skipped"]'), needs.nightly-submodules.result)
       && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
       || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ubuntu-22.04
@@ -1121,12 +1124,13 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-tauri:
-    name: Build Tauri artifacts (${{ matrix.os }}${{ matrix.research && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    name: Build Tauri artifacts (${{ matrix.os }}${{ (matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
     if: >-
       !cancelled()
+      && contains(fromJSON('["success", "skipped"]'), needs.nightly-submodules.result)
       && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
       || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ${{ matrix.os }}
