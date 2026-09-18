@@ -455,7 +455,7 @@ jobs:
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
 
   build-qt:
-    name: Build Qt artifacts${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    name: Build Qt artifacts (${{ matrix.os }}${{ matrix.research && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
@@ -1121,7 +1121,7 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-tauri:
-    name: Build Tauri artifacts${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    name: Build Tauri artifacts (${{ matrix.os }}${{ matrix.research && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
