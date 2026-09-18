@@ -312,14 +312,37 @@ jobs:
           # shellcheck disable=SC2016
           tips='echo "$(git rev-parse HEAD) $displaypath"'
           before=$(git submodule foreach --recursive --quiet "$tips")
-          # Move each first-party submodule (and its nested submodules) to the
-          # tip of its upstream default branch. awatcher is third-party and is
-          # left at its pinned revision: a nightly must not execute unreviewed
-          # third-party code in jobs that carry signing secrets.
-          # shellcheck disable=SC2016
-          firstparty=$(git submodule --quiet foreach 'echo $sm_path' | grep -vx awatcher || true)
+          # Build the first-party submodule list by URL, not by name: a
+          # submodule is first-party iff its URL is under
+          # github.com/ActivityWatch/ (case-insensitive). Third-party
+          # submodules are excluded from --remote so unreviewed code is
+          # never executed in jobs that carry signing secrets.
+          firstparty=""
+          excluded=""
+          # Read name/path pairs straight from .gitmodules: the section name
+          # (needed for the "submodule.<name>.url" lookup) is not guaranteed
+          # to equal the path, so deriving the name from $sm_path would risk
+          # a silent empty-URL lookup for any submodule where they differ.
+          while read -r key path; do
+            [ -z "$path" ] && continue
+            name="${key#submodule.}"
+            name="${name%.path}"
+            url=$(git config -f .gitmodules --get "submodule.$name.url" 2>/dev/null || true)
+            # Anchored (no leading *) so only an actual github.com/ActivityWatch/
+            # host+org prefix matches — a URL merely containing that string
+            # later in the path (e.g. a mirror) does not.
+            case "${url,,}" in
+              https://github.com/activitywatch/*|http://github.com/activitywatch/*|git@github.com:activitywatch/*|ssh://git@github.com/activitywatch/*)
+                firstparty="${firstparty:+$firstparty }$path" ;;
+              *) excluded="${excluded:+$excluded }$path" ;;
+            esac
+          done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.path$')
+          # Print the excluded set every run so the boundary stays visible.
+          if [ -n "$excluded" ]; then
+            echo "Third-party submodules (excluded from --remote, kept at pinned revision): $excluded"
+          fi
           # An empty list would drop the `--` argument and move *every*
-          # submodule, awatcher included; refuse instead.
+          # submodule, including third-party; refuse instead.
           if [ -z "$firstparty" ]; then echo "no first-party submodules to move" >&2; exit 1; fi
           # shellcheck disable=SC2086
           git submodule update --init --recursive --remote --depth 1 -- $firstparty 2>&1 | tail -20
