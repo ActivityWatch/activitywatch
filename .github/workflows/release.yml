@@ -583,7 +583,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         id: toolchain
         with:
           toolchain: stable
@@ -928,7 +928,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         id: toolchain
         with:
           toolchain: stable
@@ -1217,7 +1217,7 @@ jobs:
       # which this job only installs later — the toolchain action is idempotent.
       - name: Set up Rust for the nightly relock
         if: needs.nightly-submodules.outputs.latest == 'true'
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
 
       - name: Relock aw-tauri Cargo.lock to the latest aw-server-rust (nightly)
         if: needs.nightly-submodules.outputs.latest == 'true'
@@ -1241,7 +1241,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         id: toolchain
         with:
           toolchain: stable
