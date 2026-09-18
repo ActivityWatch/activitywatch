@@ -180,7 +180,10 @@ jobs:
             --jq '.check_suite_id' 2>/dev/null || echo "0")
 
           # Auxiliary workflow jobs are not CI signals; exclude them so their
-          # skipped or failed conclusions do not block the release.
+          # skipped or failed conclusions do not block the release. Nightly
+          # latest-submodule builds run against the same master SHA and are
+          # named "… [latest submodules]": a red nightly says nothing about
+          # the pinned tree that a dev release ships, so they are excluded too.
           conclusions=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs" \
             --paginate \
             --slurp 2>/dev/null | jq -r --arg suite "$current_suite_id" '
@@ -188,7 +191,8 @@ jobs:
                | select(
                    .app.slug == "github-actions" and
                    ((.check_suite.id | tostring) != $suite) and
-                   (.name | test("^(Dependabot|Auto-merge|greeting|Pre-flight checks|Create dev release tag)$") | not)
+                   (.name | test("^(Dependabot|Auto-merge|greeting|Pre-flight checks|Create dev release tag|Resolve latest submodule tips \\(nightly\\))$") | not) and
+                   (.name | test("\\[latest submodules\\]") | not)
                  )
                | .conclusion]
               | unique
@@ -313,7 +317,10 @@ jobs:
           # left at its pinned revision: a nightly must not execute unreviewed
           # third-party code in jobs that carry signing secrets.
           # shellcheck disable=SC2016
-          firstparty=$(git submodule --quiet foreach 'echo $sm_path' | grep -vx awatcher)
+          firstparty=$(git submodule --quiet foreach 'echo $sm_path' | grep -vx awatcher || true)
+          # An empty list would drop the `--` argument and move *every*
+          # submodule, awatcher included; refuse instead.
+          if [ -z "$firstparty" ]; then echo "no first-party submodules to move" >&2; exit 1; fi
           # shellcheck disable=SC2086
           git submodule update --init --recursive --remote --depth 1 -- $firstparty 2>&1 | tail -20
           after=$(git submodule foreach --recursive --quiet "$tips")
@@ -340,7 +347,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   research-edition-checks:
-    name: Research Edition — patch and packaging smoke tests
+    name: Research Edition — patch and packaging smoke tests${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     # Run on every PR and push so drifted submodule pins fail at review time,
     # not when Erik pushes the annotated release tag.  The patcher is stdlib-only
     # so no poetry/build step is needed; only submodules (real source files) and
@@ -416,7 +423,7 @@ jobs:
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
 
   build-qt:
-    name: Build Qt artifacts
+    name: Build Qt artifacts${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
@@ -774,7 +781,7 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-qt-manylinux-2-28:
-    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor)
+    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor)${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
@@ -1080,7 +1087,7 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-tauri:
-    name: Build Tauri artifacts
+    name: Build Tauri artifacts${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
     # Normal triggers as before; additionally the nightly cron, but only when
     # a submodule actually moved off its committed pointer.
