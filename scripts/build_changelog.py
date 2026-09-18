@@ -417,8 +417,10 @@ See the [getting started guide in the documentation](https://docs.activitywatch.
         output += f"""# Downloads
 
  - [**Windows**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-windows-x86_64-setup.exe) (.exe, installer)
- - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg)
- - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip)
+ - [**macOS**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-x86_64.dmg) (.dmg, Intel) / [Apple Silicon](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-macos-arm64.dmg)
+ - [**Linux**](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.zip) (.zip) / [.deb](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-{tag}-linux-x86_64.deb) / [AppImage](https://github.com/ActivityWatch/activitywatch/releases/download/{tag}/activitywatch-linux-x86_64.AppImage)
+
+ℹ️ An alternate [Tauri-based build](https://github.com/ActivityWatch/activitywatch/tree/master/aw-tauri) is also available for Windows, macOS, and Linux — look for the `activitywatch-tauri-*` assets attached to this release below. On Linux, the Tauri build additionally supports Wayland.
      """.strip()
         output += "\n\n"
 
