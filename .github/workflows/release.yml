@@ -9,9 +9,23 @@ name: Release
 
 on:
   schedule:
+    # Weekly dev prerelease (goes through preflight/create-tag).
     - cron: '0 12 * * 4'
+    # Nightly integration build: every submodule moved to its upstream
+    # master, build + test, nothing committed or published. Skipped when
+    # no submodule moved since the pinned tree. Identified below via
+    # github.event.schedule == '0 3 * * *'.
+    - cron: '0 3 * * *'
   workflow_dispatch:
     inputs:
+      submodules:
+        description: 'pinned = build the committed submodule pointers; latest = move every submodule to its upstream master first (nothing is committed)'
+        required: false
+        type: choice
+        options:
+          - pinned
+          - latest
+        default: pinned
       release_line:
         description: 'Release line to prerelease from'
         required: true
@@ -43,7 +57,11 @@ permissions:
 jobs:
   preflight:
     name: Pre-flight checks
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # Never mint a dev release from the nightly cron or from a dispatch that
+    # moved submodules off their pinned pointers.
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule != '0 3 * * *')
+      || (github.event_name == 'workflow_dispatch' && inputs.submodules != 'latest')
     runs-on: ubuntu-latest
     concurrency:
       group: dev-release
@@ -162,7 +180,10 @@ jobs:
             --jq '.check_suite_id' 2>/dev/null || echo "0")
 
           # Auxiliary workflow jobs are not CI signals; exclude them so their
-          # skipped or failed conclusions do not block the release.
+          # skipped or failed conclusions do not block the release. Nightly
+          # latest-submodule builds run against the same master SHA and are
+          # named "… [latest submodules]": a red nightly says nothing about
+          # the pinned tree that a dev release ships, so they are excluded too.
           conclusions=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs" \
             --paginate \
             --slurp 2>/dev/null | jq -r --arg suite "$current_suite_id" '
@@ -170,7 +191,8 @@ jobs:
                | select(
                    .app.slug == "github-actions" and
                    ((.check_suite.id | tostring) != $suite) and
-                   (.name | test("^(Dependabot|Auto-merge|greeting|Pre-flight checks|Create dev release tag)$") | not)
+                   (.name | test("^(Dependabot|Auto-merge|greeting|Pre-flight checks|Create dev release tag|Resolve latest submodule tips \\(nightly\\))$") | not) and
+                   (.name | test("\\[latest submodules\\]") | not)
                  )
                | .conclusion]
               | unique
@@ -252,19 +274,124 @@ jobs:
             echo "The tag-triggered build jobs in this workflow will now build artifacts and create/update the draft prerelease."
           } >> "$GITHUB_STEP_SUMMARY"
 
+  nightly-submodules:
+    # Always runs (cheap) so the build jobs' `needs:` never short-circuits
+    # them. Only does real work on the nightly cron or `submodules=latest`:
+    # resolves every submodule, recursively, to its upstream master and
+    # reports whether anything moved relative to the committed pointers.
+    # Build jobs check out exactly these SHAs so every leg tests the same
+    # tips even when they start minutes apart. Nothing is committed.
+    name: Resolve latest submodule tips (nightly)
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.resolve.outputs.latest }}
+      moved: ${{ steps.resolve.outputs.moved }}
+      shas: ${{ steps.resolve.outputs.shas }}
+    steps:
+      # No submodules here: on ordinary pushes and PRs this job exits at the
+      # guard below, and a recursive submodule clone would be paid for nothing
+      # on every build. Submodules are initialised only in latest mode.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Resolve submodule tips
+        id: resolve
+        env:
+          LATEST: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *') || inputs.submodules == 'latest' }}
+        run: |
+          set -euo pipefail
+          if [ "$LATEST" != "true" ]; then
+            { echo "latest=false"; echo "moved=false"; echo "shas="; } >> "$GITHUB_OUTPUT"
+            echo "Pinned submodule build; nothing to resolve."
+            exit 0
+          fi
+          git submodule update --init --recursive --depth 1 2>&1 | tail -3
+          # Single quotes are deliberate: `git submodule foreach` expands
+          # $displaypath itself, once per submodule.
+          # shellcheck disable=SC2016
+          tips='echo "$(git rev-parse HEAD) $displaypath"'
+          before=$(git submodule foreach --recursive --quiet "$tips")
+          # Move each first-party submodule (and its nested submodules) to the
+          # tip of its upstream default branch. awatcher is third-party and is
+          # left at its pinned revision: a nightly must not execute unreviewed
+          # third-party code in jobs that carry signing secrets.
+          # shellcheck disable=SC2016
+          firstparty=$(git submodule --quiet foreach 'echo $sm_path' | grep -vx awatcher || true)
+          # An empty list would drop the `--` argument and move *every*
+          # submodule, awatcher included; refuse instead.
+          if [ -z "$firstparty" ]; then echo "no first-party submodules to move" >&2; exit 1; fi
+          # shellcheck disable=SC2086
+          git submodule update --init --recursive --remote --depth 1 -- $firstparty 2>&1 | tail -20
+          after=$(git submodule foreach --recursive --quiet "$tips")
+          if [ "$before" = "$after" ]; then
+            moved=false
+            echo "All submodules already at their upstream tips; nightly build skipped."
+          else
+            moved=true
+            echo "Submodules moved:"
+            diff <(echo "$before") <(echo "$after") | sed 's/^/  /' || true
+          fi
+          {
+            echo "latest=true"
+            echo "moved=$moved"
+            echo "shas<<EOF"
+            echo "$after"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Nightly submodule tips"
+            echo '```'
+            echo "$after"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   research-edition-checks:
-    name: Research Edition — patch and packaging smoke tests
+    name: Research Edition — patch and packaging smoke tests${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     # Run on every PR and push so drifted submodule pins fail at review time,
     # not when Erik pushes the annotated release tag.  The patcher is stdlib-only
     # so no poetry/build step is needed; only submodules (real source files) and
     # pytest (for the unit-test fixture suite).
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    needs: nightly-submodules
+    # Normal triggers as before; additionally the nightly cron, but only when
+    # a submodule actually moved off its committed pointer.
+    if: >-
+      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
           fetch-depth: 1
+
+      - name: Use latest submodule tips (nightly / submodules=latest)
+        if: needs.nightly-submodules.outputs.latest == 'true'
+        env:
+          SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
+        run: |
+          set -euo pipefail
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q --depth 1 origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
+          pass nested
+          git submodule status --recursive
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -296,8 +423,13 @@ jobs:
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
 
   build-qt:
-    name: Build Qt artifacts
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    name: Build Qt artifacts${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    needs: nightly-submodules
+    # Normal triggers as before; additionally the nightly cron, but only when
+    # a submodule actually moved off its committed pointer.
+    if: >-
+      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
@@ -342,6 +474,34 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 0
+
+      - name: Use latest submodule tips (nightly / submodules=latest)
+        if: needs.nightly-submodules.outputs.latest == 'true'
+        env:
+          SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
+        run: |
+          set -euo pipefail
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
+          pass nested
+          git submodule status --recursive
 
       - name: Set RELEASE
         run: |
@@ -621,8 +781,13 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-qt-manylinux-2-28:
-    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor)
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    name: Build Qt artifacts (manylinux_2_28 — glibc 2.28 ABI floor)${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    needs: nightly-submodules
+    # Normal triggers as before; additionally the nightly cron, but only when
+    # a submodule actually moved off its committed pointer.
+    if: >-
+      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
     runs-on: ubuntu-22.04
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
@@ -656,6 +821,40 @@ jobs:
       # the version probe to fall back to v0.0.0.dev-unknown.
       - name: Configure git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Use latest submodule tips (nightly / submodules=latest)
+        if: needs.nightly-submodules.outputs.latest == 'true'
+        env:
+          # The container runs as root over a runner-owned checkout; the
+          # global safe.directory above covers the workspace only, not the
+          # submodule worktrees this step runs git inside of. Step-scoped.
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: safe.directory
+          GIT_CONFIG_VALUE_0: '*'
+          SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
+        run: |
+          set -euo pipefail
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
+          pass nested
+          git submodule status --recursive
 
       - name: Set RELEASE
         run: |
@@ -888,8 +1087,13 @@ jobs:
           path: dist/activitywatch-*.*
 
   build-tauri:
-    name: Build Tauri artifacts
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    name: Build Tauri artifacts${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
+    needs: nightly-submodules
+    # Normal triggers as before; additionally the nightly cron, but only when
+    # a submodule actually moved off its committed pointer.
+    if: >-
+      github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+      || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true')
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     env:
@@ -945,6 +1149,34 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
+      - name: Use latest submodule tips (nightly / submodules=latest)
+        if: needs.nightly-submodules.outputs.latest == 'true'
+        env:
+          SUBMODULE_SHAS: ${{ needs.nightly-submodules.outputs.shas }}
+        run: |
+          set -euo pipefail
+          # Two passes: direct submodules first, then initialise whatever
+          # nested submodules the moved parents declare (a new parent revision
+          # may introduce one that the pinned checkout never had), then nested.
+          pass() {
+            printf '%s\n' "$SUBMODULE_SHAS" | while read -r sha path; do
+              [ -n "$path" ] || continue
+              case "$1" in
+                direct) case "$path" in */*) continue ;; esac ;;
+                nested) case "$path" in */*) ;; *) continue ;; esac ;;
+              esac
+              git -C "$path" fetch -q origin "$sha"
+              git -C "$path" checkout -q "$sha"
+            done
+          }
+          pass direct
+          # Initialise nested submodules from *inside* each direct submodule:
+          # a top-level `git submodule update --recursive` would check out
+          # the superproject-recorded (pinned) revisions and undo pass direct.
+          git submodule --quiet foreach 'git submodule update --init --recursive -q'
+          pass nested
+          git submodule status --recursive
+
       - name: Set environment variables
         run: |
           echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> "$GITHUB_ENV"
@@ -978,6 +1210,22 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python_version }}
+
+      # On a nightly the aw-server-rust submodule has moved but aw-tauri's
+      # Cargo.lock still pins the old revision; relock it so Tauri really builds
+      # the latest server and the verification below still holds. Needs cargo,
+      # which this job only installs later — the toolchain action is idempotent.
+      - name: Set up Rust for the nightly relock
+        if: needs.nightly-submodules.outputs.latest == 'true'
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+
+      - name: Relock aw-tauri Cargo.lock to the latest aw-server-rust (nightly)
+        if: needs.nightly-submodules.outputs.latest == 'true'
+        run: |
+          set -euo pipefail
+          sha=$(git -C aw-server-rust rev-parse HEAD)
+          (cd aw-tauri/src-tauri && cargo update -p aw-server --precise "$sha")
+          git -C aw-tauri diff --stat -- src-tauri/Cargo.lock
 
       - name: Verify Tauri and Qt embed the same aw-server-rust revision
         # Tauri embeds the Git revision in its Cargo.lock, independently of
