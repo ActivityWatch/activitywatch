@@ -11,8 +11,8 @@ Repos using this script:
 Submodules are flattened into a single section per repo, ordered by `repo_order`.
 A repo that is a submodule of several parents (like aw-webui, which is vendored by
 aw-server, aw-server-rust and aw-tauri) therefore gets one section, not one per parent.
-If those parents point at different commits, the section covers the union of the
-changes and carries a warning listing what each parent pinned.
+If those parents pin different commits, the section covers every pinned commit and
+carries a warning listing what each parent pinned.
 
 Manual actions needed to clean up for changelog:
  - Write the `## Summary` section (the human highlights, see the v0.13.0 release notes)
@@ -222,17 +222,27 @@ class Pointer:
     commit_range: Tuple[str, str]
 
 
+@dataclass(frozen=True)
+class Pin:
+    """The commit a parent currently pins a submodule at, whether or not it moved."""
+
+    parent: str
+    path: str
+    commit: str
+
+
 @dataclass
 class Repo:
     """A repo in the submodule tree, with every pointer to it (a shared submodule has several)."""
 
     name: str
     pointers: List[Pointer] = field(default_factory=list)
+    pins: List[Pin] = field(default_factory=list)
 
     @property
     def out_of_sync(self) -> bool:
-        """True if the parents pointing at this repo disagree about which commits to include."""
-        return len({p.commit_range for p in self.pointers}) > 1
+        """True if the parents that vendor this repo pin different commits."""
+        return len({pin.commit for pin in self.pins}) > 1
 
 
 def collect_repos(
@@ -290,19 +300,62 @@ def collect_repos(
     return repos
 
 
+def _submodule_pins(path: str) -> List[Tuple[str, str]]:
+    """The submodules a repo currently pins, as (name, commit), read from its index."""
+    if not os.path.isdir(path):
+        return []
+    pins = []
+    for line in run("git ls-files --stage", cwd=path).splitlines():
+        # gitlinks look like: 160000 <sha> 0\t<path>
+        if not line.startswith("160000 "):
+            continue
+        meta, _, name = line.partition("\t")
+        pins.append((name.strip(), meta.split()[1]))
+    return pins
+
+
+def collect_pins(
+    path: str,
+    repos: Dict[str, Repo],
+    parent: str,
+    seen: Optional[set] = None,
+) -> Dict[str, Repo]:
+    """
+    Records what each parent currently pins, including parents that didn't move.
+
+    `git submodule summary` only reports submodules that changed, so a parent left behind
+    on an older commit is invisible to `collect_repos`. Reading the pins separately is
+    what lets an unbumped parent still show up in the out-of-sync warning.
+    """
+    if seen is None:
+        seen = set()
+    if path in seen:
+        return repos
+    seen.add(path)
+
+    for name, commit in _submodule_pins(path):
+        entry = repos.setdefault(name, Repo(name=name))
+        pin = Pin(parent=parent, path=f"{path}/{name}", commit=commit[:7])
+        if pin not in entry.pins:
+            entry.pins.append(pin)
+        collect_pins(f"{path}/{name}", repos, name, seen)
+
+    return repos
+
+
 def _has_commit(path: str, ref: str) -> bool:
     return run_ok(f"git cat-file -e {ref}^{{commit}}", cwd=path)
 
 
-def _pick_checkout(repo: Repo) -> Tuple[str, List[Pointer]]:
+def _pick_checkout(repo: Repo) -> Tuple[Optional[str], List[Pointer]]:
     """
-    Picks which checkout to run `git log` in.
+    Picks which checkout to run `git log` in, or None if there is no usable one.
 
     Each parent has its own clone of a shared submodule, so when parents are out of sync
     a sibling's commits may be missing from any given one. Returns the checkout that
     resolves the most pointers, along with the pointers it cannot resolve.
     """
-    best: Tuple[str, List[Pointer]] = (repo.pointers[0].path, repo.pointers)
+    best: Tuple[Optional[str], List[Pointer]] = (None, repo.pointers)
     for pointer in repo.pointers:
         if not os.path.isdir(pointer.path):
             continue
@@ -311,31 +364,41 @@ def _pick_checkout(repo: Repo) -> Tuple[str, List[Pointer]]:
             for p in repo.pointers
             if not all(_has_commit(pointer.path, ref) for ref in p.commit_range if ref)
         ]
-        if len(unresolved) < len(best[1]):
+        if best[0] is None or len(unresolved) < len(best[1]):
             best = (pointer.path, unresolved)
         if not unresolved:
             break
     return best
 
 
-def _log_range(ranges: List[Tuple[str, str]]) -> str:
+def _log_commits(
+    path: str, ranges: List[Tuple[str, str]]
+) -> List[Tuple[str, str, str]]:
     """
-    Git revision spec covering the union of the given commit ranges.
+    The commits in the union of `ranges`, newest first, as (id, email, msg).
 
-    A single range is the usual `since...until`. Several ranges (a submodule shared by
-    parents that point at different commits) become `until1 until2 --not since1 since2`,
-    ie. everything that is new in any of them.
+    Each range is logged on its own and the results merged, rather than asking git for
+    `tip1 tip2 --not base1 base2`: that spec drops any commit one parent's range contains
+    but another parent's base already includes, which is exactly what happens when the
+    parents of a shared submodule started the release from different commits.
     """
-    if not ranges or any(not since and not until for since, until in ranges):
-        return ""  # no range = all commits
-    if len(ranges) == 1:
-        return "...".join(ranges[0])
-    tips = list(dict.fromkeys(until for _, until in ranges if until))
-    bases = list(dict.fromkeys(since for since, _ in ranges if since))
-    spec = " ".join(tips)
-    if bases:
-        spec += " --not " + " ".join(bases)
-    return spec
+    # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
+    pretty = "format:'%h%x09%ct%x09%an%x09%ae%x09%s'"
+    commits: Dict[str, Tuple[int, str, str, str]] = {}
+    for commit_range in ranges:
+        rev = "...".join(commit_range) if any(commit_range) else ""
+        for line in run(
+            f"git log {rev} --no-decorate --pretty={pretty}", cwd=path
+        ).split("\n"):
+            if line:
+                _id, timestamp, _author, email, msg = line.split("\t")
+                commits.setdefault(_id, (int(timestamp), _id, email, msg))
+
+    found = list(commits.values())
+    if len(ranges) > 1:
+        # merged ranges come out interleaved, so put them back in order
+        found.sort(key=lambda commit: -commit[0])
+    return [(_id, email, msg) for _, _id, email, msg in found]
 
 
 def _pick_by_ancestry(path: str, refs: List[str], newest: bool) -> str:
@@ -355,15 +418,14 @@ def _sync_notes(repo: Repo, unresolved: List[Pointer]) -> str:
     """Notes about parents that disagree, or pointers we could not resolve locally."""
     notes = ""
     if repo.out_of_sync:
-        pinned = ", ".join(
-            f"`{p.parent}` → `{p.commit_range[1]}`" for p in repo.pointers if p.parent
-        )
+        pinned = ", ".join(f"`{pin.parent}` → `{pin.commit}`" for pin in repo.pins)
         logger.warning(
             f"Submodule {repo.name} is out of sync between parents: {pinned}"
         )
         notes += (
-            f"\n\n> ⚠️ The parents of `{repo.name}` point at different commits"
-            f" ({pinned}), so the changes below are the union of all of them."
+            f"\n\n> ⚠️ `{repo.name}` is vendored by parents that pin different commits"
+            f" ({pinned}). The changes below cover every pinned commit, so not all of"
+            " them ship in every parent."
         )
     if unresolved:
         missing = ", ".join(
@@ -380,14 +442,19 @@ def _sync_notes(repo: Repo, unresolved: List[Pointer]) -> str:
 
 def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
     """Renders a single changelog section for a repo, covering every pointer to it."""
+    if not repo.pointers:
+        # only reached through parents that didn't move it, so nothing changed
+        return ""
+
     path, unresolved = _pick_checkout(repo)
     pointers = [
         p
         for p in repo.pointers
         if p not in unresolved and p.commit_range[1] != "0000000"
     ]
-    if not pointers:
+    if path is None or not pointers:
         # Happens when a submodule has been removed, or nothing could be resolved
+        logger.warning(f"Nothing resolvable to report for {repo.name}, skipping")
         return ""
 
     ranges = list(dict.fromkeys(p.commit_range for p in pointers))
@@ -399,29 +466,23 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
     misc = ""
     hidden = 0
 
-    # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
-    summary_bundle = run(
-        f"git log {_log_range(ranges)} --no-decorate --pretty=format:'%h%x09%an%x09%ae%x09%s'",
-        cwd=path,
-    )
-    print(f"Found {len(summary_bundle.splitlines())} commits in {repo.name}")
-    for line in summary_bundle.split("\n"):
-        if line:
-            _id, _author, email, msg = line.split("\t")
-            # will add author email to contributor list
-            # the `contributor_emails` is global and collected later
-            contributor_emails.add(email)
-            commit = Commit(id=_id, msg=msg, org=org, repo=repo.name)
+    found = _log_commits(path, ranges)
+    print(f"Found {len(found)} commits in {repo.name}")
+    for _id, email, msg in found:
+        # will add author email to contributor list
+        # the `contributor_emails` is global and collected later
+        contributor_emails.add(email)
+        commit = Commit(id=_id, msg=msg, org=org, repo=repo.name)
 
-            entry = f"\n - {commit.format()}"
-            if commit.type == "feat":
-                feats += entry
-            elif commit.type == "fix":
-                fixes += entry
-            elif commit.type not in filter_types:
-                misc += entry
-            else:
-                hidden += 1
+        entry = f"\n - {commit.format()}"
+        if commit.type == "feat":
+            feats += entry
+        elif commit.type == "fix":
+            fixes += entry
+        elif commit.type not in filter_types:
+            misc += entry
+        else:
+            hidden += 1
 
     for name, entries in (
         ("✨ Features", feats),
@@ -436,6 +497,7 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
             else:
                 out += f"\n\n### {title}\n"
                 out += entries
+    has_content = bool(feats or fixes or misc)
     if hidden > 1:
         # for shared submodules, compare the oldest base against the newest tip
         base = _pick_by_ancestry(path, [since for since, _ in ranges], newest=False)
@@ -444,8 +506,9 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
             f"https://github.com/{org}/{repo.name}/compare/{base}...{tip}"
         )
         out += f"\n\n*(excluded {hidden} less relevant [commits]({full_history_url}))*"
+        has_content = True
 
-    if not (feats or fixes or misc or hidden > 1 or repo.out_of_sync or unresolved):
+    if not has_content:
         # nothing worth a section (a parent that only bumped a submodule, say)
         return ""
 
@@ -471,6 +534,8 @@ def summary_repos(
 
     sections = []
     for name in ordered:
+        if not repos[name].pointers:
+            continue  # only seen through parents that didn't move it
         section = summary_repo(org, repos[name], filter_types=filter_types)
         if section:
             logger.info(f"{name:20} length: \t{len(section)}")
@@ -500,6 +565,8 @@ def build(
     # walk the submodule tree first, so that repos reachable through several parents
     # (aw-webui) are rendered once, instead of once per parent
     repos = collect_repos(repo, ".", commit_range)
+    # what each parent pins now, including parents that didn't move this release
+    collect_pins(".", repos, repo)
     logger.info(f"Found {len(repos)} repos: {', '.join(repos)}")
 
     output_changelog = summary_repos(org, repo, repos, repo_order, filter_types)

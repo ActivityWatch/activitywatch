@@ -87,8 +87,7 @@ def bump_submodule(parent: Path, name: str, to: str = "origin/master") -> None:
     commit(parent, f"build(deps): bump {name}")
 
 
-@pytest.fixture
-def bundle(tmp_path: Path):
+def build_tree(tmp_path: Path, server_start: int = 0, rust_start: int = 0) -> dict:
     """
     A miniature of the ActivityWatch tree: a bundle repo with two server repos,
     both of which vendor the same webui repo.
@@ -96,17 +95,21 @@ def bundle(tmp_path: Path):
         bundle ─┬─ server ──────┬─ webui
                 └─ server-rust ─┘
 
-    Yields the bundle path, the tag-like "since" commit, and a `release()` that bumps
-    everything and returns the "until" commit.
+    webui has three commits; `server_start`/`rust_start` index which one each server
+    vendors at the start of the release, so the parents can begin out of sync.
+
+    Returns the bundle path, the tag-like "since" commit, and a `release()` that bumps
+    what it is told to and returns the "until" commit.
     """
     webui = init(tmp_path, "webui")
-    old_webui = short(webui)
-    commit(webui, "fix(webui): stop the spinner from spinning forever")
-    new_webui = commit(webui, "feat(webui): add a button")
+    webui_commits = [
+        short(webui),
+        commit(webui, "fix(webui): stop the spinner from spinning forever"),
+        commit(webui, "feat(webui): add a button"),
+    ]
 
-    for name in ("server", "server-rust"):
-        repo = init(tmp_path, name)
-        add_submodule(repo, "webui", at=old_webui)
+    for name, start in (("server", server_start), ("server-rust", rust_start)):
+        add_submodule(init(tmp_path, name), "webui", at=webui_commits[start])
 
     bundle = init(tmp_path, "bundle")
     for name in ("server", "server-rust"):
@@ -114,27 +117,38 @@ def bundle(tmp_path: Path):
     git(bundle, "submodule", "update", "--init", "--recursive", "-q")
     since = short(bundle)
 
-    def release(rust_webui: str = new_webui) -> str:
-        """The release: both servers bump the webui they vendor, the bundle follows."""
-        bump_submodule(tmp_path / "server", "webui", to=new_webui)
+    def release(
+        server_webui: int = 2, rust_webui: int = 2, bump_rust: bool = True
+    ) -> str:
+        """The release: the servers bump the webui they vendor, the bundle follows."""
+        bump_submodule(tmp_path / "server", "webui", to=webui_commits[server_webui])
         commit(tmp_path / "server", "fix(server): return 200 instead of 500")
-        bump_submodule(tmp_path / "server-rust", "webui", to=rust_webui)
-        for name in ("server", "server-rust"):
-            bump_submodule(bundle, name)
+        bump_submodule(bundle, "server")
+        if bump_rust:
+            bump_submodule(
+                tmp_path / "server-rust", "webui", to=webui_commits[rust_webui]
+            )
+            bump_submodule(bundle, "server-rust")
         return short(bundle)
 
-    yield {
+    return {
         "path": bundle,
         "webui": webui,
+        "commits": webui_commits,
         "since": since,
         "release": release,
-        "old_webui": old_webui,
-        "new_webui": new_webui,
     }
+
+
+@pytest.fixture
+def bundle(tmp_path: Path) -> dict:
+    """The usual case: both servers start the release on the same webui commit."""
+    return build_tree(tmp_path)
 
 
 def render(bundle: Path, since: str, until: str) -> str:
     repos = changelog.collect_repos("bundle", str(bundle), (since, until))
+    changelog.collect_pins(str(bundle), repos, "bundle")
     return changelog.summary_repos("Test", "bundle", repos, REPO_ORDER, FILTER_TYPES)
 
 
@@ -176,22 +190,47 @@ def test_parent_with_only_a_submodule_bump_is_dropped(bundle):
 
 def test_out_of_sync_parents_get_the_union_and_a_warning(bundle):
     # server-rust lags one commit behind the webui that server vendors
-    lagging = short(bundle["webui"], "HEAD~1")
-    until = bundle["release"](rust_webui=lagging)
+    until = bundle["release"](rust_webui=1)
     out = render(bundle["path"], bundle["since"], until)
 
     assert sections(out).count("webui") == 1
-    assert "point at different commits" in out
-    assert f"`server` → `{bundle['new_webui']}`" in out
-    assert f"`server-rust` → `{lagging}`" in out
+    assert "pin different commits" in out
+    assert f"`server` → `{bundle['commits'][2]}`" in out
+    assert f"`server-rust` → `{bundle['commits'][1]}`" in out
     # the union: the commit only `server` points at is still in the changelog
     assert "feat(webui): add a button" in out
     assert "fix(webui): stop the spinner" in out
+
+
+def test_parent_that_never_bumped_is_named_in_the_warning(bundle):
+    # only server bumps webui; server-rust ships the commit it was already on.
+    # `git submodule summary` says nothing about a submodule that didn't move, so this
+    # only works because the current pins are read separately.
+    until = bundle["release"](bump_rust=False)
+    out = render(bundle["path"], bundle["since"], until)
+
+    assert sections(out).count("webui") == 1
+    assert "pin different commits" in out
+    assert f"`server` → `{bundle['commits'][2]}`" in out
+    assert f"`server-rust` → `{bundle['commits'][0]}`" in out
+
+
+def test_union_keeps_commits_when_the_parents_started_apart(tmp_path):
+    # server starts a commit ahead of server-rust, and both land on the same commit:
+    # the commit in between is only in server-rust's range and must not be dropped
+    bundle = build_tree(tmp_path, server_start=1, rust_start=0)
+    until = bundle["release"]()
+    out = render(bundle["path"], bundle["since"], until)
+
+    assert "fix(webui): stop the spinner" in out
+    assert "feat(webui): add a button" in out
+    # they agree on what ships now, so there is nothing to warn about
+    assert "pin different commits" not in out
 
 
 def test_in_sync_parents_get_no_warning(bundle):
     until = bundle["release"]()
     out = render(bundle["path"], bundle["since"], until)
 
-    assert "point at different commits" not in out
+    assert "pin different commits" not in out
     assert "⚠️" not in out
