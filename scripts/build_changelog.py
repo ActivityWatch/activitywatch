@@ -453,11 +453,20 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
         if p not in unresolved and p.commit_range[1] != "0000000"
     ]
     if path is None or not pointers:
-        # Happens when a submodule has been removed, or nothing could be resolved
-        logger.warning(f"Nothing resolvable to report for {repo.name}, skipping")
+        if unresolved and path is not None:
+            # nothing to log, but say why rather than dropping the repo silently
+            logger.warning(f"Nothing resolvable to report for {repo.name}")
+            return f"\n## 📦 {repo.name}" + _sync_notes(repo, unresolved)
+        # Happens when a submodule has been removed
         return ""
 
     ranges = list(dict.fromkeys(p.commit_range for p in pointers))
+    bounded = [commit_range for commit_range in ranges if any(commit_range)]
+    if bounded and len(bounded) < len(ranges):
+        # a parent that newly vendors this repo has no range of its own, and logging it
+        # would replay the whole history, so report what the other parents bumped
+        logger.info(f"{repo.name} was newly added by a parent, using the bumped ranges")
+        ranges = bounded
     out = f"\n## 📦 {repo.name}"
     out += _sync_notes(repo, unresolved)
 

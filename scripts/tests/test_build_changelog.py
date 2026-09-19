@@ -234,3 +234,51 @@ def test_in_sync_parents_get_no_warning(bundle):
 
     assert "pin different commits" not in out
     assert "⚠️" not in out
+
+
+def test_parent_that_newly_vendors_a_repo_does_not_replay_its_history(tmp_path):
+    # server has vendored webui for a while and bumps it; server-rust adopts webui
+    # during this release, which is not a reason to list webui's whole history
+    webui = init(tmp_path, "webui")
+    old = short(webui)
+    commit(webui, "fix(webui): stop the spinner from spinning forever")
+    new = commit(webui, "feat(webui): add a button")
+
+    server = init(tmp_path, "server")
+    add_submodule(server, "webui", at=old)
+    server_rust = init(tmp_path, "server-rust")
+
+    bundle = init(tmp_path, "bundle")
+    for name in ("server", "server-rust"):
+        add_submodule(bundle, name)
+    git(bundle, "submodule", "update", "--init", "--recursive", "-q")
+    since = short(bundle)
+
+    bump_submodule(server, "webui", to=new)
+    add_submodule(server_rust, "webui", at=new)
+    for name in ("server", "server-rust"):
+        bump_submodule(bundle, name)
+
+    out = render(bundle, since, short(bundle))
+
+    assert "feat(webui): add a button" in out  # what server actually bumped to
+    assert "chore: initial commit" not in out  # not webui's history from the start
+
+
+def test_unresolvable_pointers_are_reported_not_silently_dropped(tmp_path):
+    # a checkout that has none of the commits (a shallow clone, say): the repo should
+    # still show up saying so, rather than quietly vanishing from the release notes
+    repo = changelog.Repo(name="webui")
+    repo.pointers.append(
+        changelog.Pointer(
+            parent="server", path=str(tmp_path), commit_range=("1111111", "2222222")
+        )
+    )
+    repo.pins.append(
+        changelog.Pin(parent="server", path=str(tmp_path), commit="2222222")
+    )
+
+    out = changelog.summary_repo("Test", repo, FILTER_TYPES)
+
+    assert "## 📦 webui" in out
+    assert "Could not resolve" in out
