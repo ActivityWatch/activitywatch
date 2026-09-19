@@ -461,14 +461,22 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
         return ""
 
     ranges = list(dict.fromkeys(p.commit_range for p in pointers))
+    notes = _sync_notes(repo, unresolved)
     bounded = [commit_range for commit_range in ranges if any(commit_range)]
     if bounded and len(bounded) < len(ranges):
-        # a parent that newly vendors this repo has no range of its own, and logging it
-        # would replay the whole history, so report what the other parents bumped
-        logger.info(f"{repo.name} was newly added by a parent, using the bumped ranges")
-        ranges = bounded
-    out = f"\n## 📦 {repo.name}"
-    out += _sync_notes(repo, unresolved)
+        # A parent that newly vendors this repo has no range of its own, and logging it
+        # unbounded replays the whole history. Bound it by where the parents that
+        # already had it started instead, so that commits only the new pin has are
+        # still covered.
+        logger.info(f"{repo.name} was newly added by a parent, bounding its history")
+        base = _pick_by_ancestry(path, [since for since, _ in bounded], newest=False)
+        covered = {until for _, until in bounded}
+        ranges = bounded + [
+            (base, pin.commit)
+            for pin in repo.pins
+            if pin.commit not in covered and _has_commit(path, pin.commit)
+        ]
+    out = f"\n## 📦 {repo.name}" + notes
 
     feats = ""
     fixes = ""
@@ -517,8 +525,9 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
         out += f"\n\n*(excluded {hidden} less relevant [commits]({full_history_url}))*"
         has_content = True
 
-    if not has_content:
-        # nothing worth a section (a parent that only bumped a submodule, say)
+    if not has_content and not (found and notes):
+        # nothing worth a section (a parent that only bumped a submodule, say).
+        # A repo that did move keeps its section for the warning alone.
         return ""
 
     return out

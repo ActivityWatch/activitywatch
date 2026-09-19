@@ -282,3 +282,49 @@ def test_unresolvable_pointers_are_reported_not_silently_dropped(tmp_path):
 
     assert "## 📦 webui" in out
     assert "Could not resolve" in out
+
+
+def test_newly_vendored_pin_keeps_the_commits_only_it_has(tmp_path):
+    # server bumps webui partway; server-rust adopts webui at a *later* commit, which
+    # is the only place that commit ships from — it still belongs in the changelog
+    webui = init(tmp_path, "webui")
+    old = short(webui)
+    middle = commit(webui, "fix(webui): stop the spinner from spinning forever")
+    newest = commit(webui, "feat(webui): add a button")
+
+    server = init(tmp_path, "server")
+    add_submodule(server, "webui", at=old)
+    server_rust = init(tmp_path, "server-rust")
+
+    bundle = init(tmp_path, "bundle")
+    for name in ("server", "server-rust"):
+        add_submodule(bundle, name)
+    git(bundle, "submodule", "update", "--init", "--recursive", "-q")
+    since = short(bundle)
+
+    bump_submodule(server, "webui", to=middle)
+    add_submodule(server_rust, "webui", at=newest)
+    for name in ("server", "server-rust"):
+        bump_submodule(bundle, name)
+
+    out = render(bundle, since, short(bundle))
+
+    assert "fix(webui): stop the spinner" in out  # what server bumped to
+    assert "feat(webui): add a button" in out  # only server-rust's new pin has it
+    assert "chore: initial commit" not in out  # still not the whole history
+
+
+def test_warning_survives_when_every_commit_is_filtered(tmp_path):
+    # the only webui commit this release is a filtered one, and the parents disagree:
+    # the section has nothing to list, but the mismatch still has to be reported
+    # both parents start on the newest webui, so the release only moves server, and
+    # only onto a filtered commit
+    bundle = build_tree(tmp_path, server_start=2, rust_start=2)
+    bundle["commits"].append(
+        commit(bundle["webui"], "build(deps): bump some dependency")
+    )
+    until = bundle["release"](server_webui=3, rust_webui=2)
+    out = render(bundle["path"], bundle["since"], until)
+
+    assert "## 📦 webui" in out
+    assert "pin different commits" in out
