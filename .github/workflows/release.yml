@@ -1237,10 +1237,14 @@ jobs:
       # On a nightly the aw-server-rust submodule has moved but aw-tauri's
       # Cargo.lock still pins the old revision; relock it so Tauri really builds
       # the latest server and the verification below still holds. Needs cargo,
-      # which this job only installs later — the toolchain action is idempotent.
+      # which this job only installs later, so install stable here too. The
+      # `toolchain` input is required by dtolnay/rust-toolchain; re-installing a
+      # toolchain that is already present is a no-op.
       - name: Set up Rust for the nightly relock
         if: needs.nightly-submodules.outputs.latest == 'true'
         uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        with:
+          toolchain: stable
 
       - name: Relock aw-tauri Cargo.lock to the latest aw-server-rust (nightly)
         if: needs.nightly-submodules.outputs.latest == 'true'
