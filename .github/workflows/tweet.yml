@@ -1,0 +1,31 @@
+name: Tweet
+on:
+  release:
+      types: [published]
+
+jobs:
+  tweet-new-release:
+    name: New release
+    runs-on: ubuntu-latest
+    if: github.event.type == "ReleaseEvent" && !github.event.release.prerelease
+    steps:
+      - uses: ethomson/send-tweet-action@v1
+        with:
+          status: "🚢 New version! ActivityWatch v{{ github.event.release.tag_name }} was just released! 🎉
+📦 Check out the release description for more info: {{ github.event.release.html_url }}"
+          consumer-key: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
+          consumer-secret: ${{ secrets.TWITTER_CONSUMER_API_SECRET }}
+          access-token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          access-token-secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+
+  # Would be cool to tweet at new contributors when they are detected (by the build_changelog.py script, probably)
+  #tweet-new-contributor:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: ethomson/send-tweet-action@v1
+  #      with:
+  #        status: "Hi, this is a test!"
+  #        consumer-key: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
+  #        consumer-secret: ${{ secrets.TWITTER_CONSUMER_API_SECRET }}
+  #        access-token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+  #        access-token-secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
