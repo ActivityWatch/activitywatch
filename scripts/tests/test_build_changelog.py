@@ -328,3 +328,47 @@ def test_warning_survives_when_every_commit_is_filtered(tmp_path):
 
     assert "## 📦 webui" in out
     assert "pin different commits" in out
+
+
+def test_adoption_alone_does_not_replay_history(tmp_path):
+    # server has vendored webui all along and doesn't touch it this release; server-rust
+    # adopts webui at a newer commit. Nothing "bumped", but the history still isn't new.
+    webui = init(tmp_path, "webui")
+    commit(webui, "fix(webui): stop the spinner from spinning forever")
+    middle = short(webui)
+    newest = commit(webui, "feat(webui): add a button")
+
+    server = init(tmp_path, "server")
+    add_submodule(server, "webui", at=middle)
+    server_rust = init(tmp_path, "server-rust")
+
+    bundle = init(tmp_path, "bundle")
+    for name in ("server", "server-rust"):
+        add_submodule(bundle, name)
+    git(bundle, "submodule", "update", "--init", "--recursive", "-q")
+    since = short(bundle)
+
+    add_submodule(server_rust, "webui", at=newest)
+    bump_submodule(bundle, "server-rust")
+
+    out = render(bundle, since, short(bundle))
+
+    assert "chore: initial commit" not in out  # not webui's whole history
+    assert "feat(webui): add a button" in out  # what the new pin brings
+    assert "pin different commits" in out  # server still ships the older one
+
+
+def test_uninitialized_submodule_does_not_derail_pin_collection(tmp_path):
+    # a deinitialized submodule leaves an empty directory whose git commands answer for
+    # the superproject: `git ls-files --stage` there reports the gitlink itself as "./"
+    bundle = build_tree(tmp_path)
+    until = bundle["release"]()
+    git(bundle["path"], "submodule", "deinit", "-f", "-q", "server")
+
+    repos = changelog.collect_repos(
+        "bundle", str(bundle["path"]), (bundle["since"], until)
+    )
+    changelog.collect_pins(str(bundle["path"]), repos, "bundle")
+
+    assert "server" in repos
+    assert "./" not in repos  # the superproject's own gitlink, read from inside

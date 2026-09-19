@@ -300,9 +300,25 @@ def collect_repos(
     return repos
 
 
+def _is_checkout(path: str) -> bool:
+    """
+    True if `path` is its own checkout rather than a plain directory inside one.
+
+    An uninitialized submodule leaves an empty directory behind, and git commands run
+    there answer for the *superproject* instead — which, left unchecked, has
+    `collect_pins` recursing on the same gitlink forever.
+    """
+    if not os.path.isdir(path):
+        return False
+    if not run_ok("git rev-parse --is-inside-work-tree", cwd=path):
+        return False
+    top = run("git rev-parse --show-toplevel", cwd=path).strip()
+    return bool(top) and os.path.realpath(top) == os.path.realpath(path)
+
+
 def _submodule_pins(path: str) -> List[Tuple[str, str]]:
     """The submodules a repo currently pins, as (name, commit), read from its index."""
-    if not os.path.isdir(path):
+    if not _is_checkout(path):
         return []
     pins = []
     for line in run("git ls-files --stage", cwd=path).splitlines():
@@ -329,6 +345,7 @@ def collect_pins(
     """
     if seen is None:
         seen = set()
+    path = os.path.normpath(path)
     if path in seen:
         return repos
     seen.add(path)
@@ -347,35 +364,45 @@ def _has_commit(path: str, ref: str) -> bool:
     return run_ok(f"git cat-file -e {ref}^{{commit}}", cwd=path)
 
 
-def _pick_checkout(repo: Repo) -> Tuple[Optional[str], List[Pointer]]:
-    """
-    Picks which checkout to run `git log` in, or None if there is no usable one.
+def _resolvable_in(path: str, refs: Collection[str]) -> bool:
+    return all(_has_commit(path, ref) for ref in refs if ref)
 
-    Each parent has its own clone of a shared submodule, so when parents are out of sync
-    a sibling's commits may be missing from any given one. Returns the checkout that
-    resolves the most pointers, along with the pointers it cannot resolve.
+
+def _find_checkout(paths: List[str], refs: Collection[str]) -> Optional[str]:
+    """The first of `paths` that holds every one of `refs`."""
+    return next((path for path in paths if _resolvable_in(path, refs)), None)
+
+
+def _resolve_ranges(
+    pointers: List[Pointer],
+) -> Tuple[List[Tuple[str, Tuple[str, str]]], List[Pointer]]:
     """
-    best: Tuple[Optional[str], List[Pointer]] = (None, repo.pointers)
-    for pointer in repo.pointers:
-        if not os.path.isdir(pointer.path):
+    Pairs each distinct commit range with a checkout that can log it.
+
+    Every parent has its own clone of a shared submodule, and with shallow clones
+    neither may hold the other's commits, so each range gets resolved on its own
+    (preferring the clone of the parent it came from) rather than all from one checkout.
+    Returns those pairs, plus the pointers no checkout could resolve.
+    """
+    checkouts = [p.path for p in pointers if _is_checkout(p.path)]
+    resolved: Dict[Tuple[str, str], str] = {}
+    unresolved = []
+    for pointer in pointers:
+        if pointer.commit_range in resolved:
             continue
-        unresolved = [
-            p
-            for p in repo.pointers
-            if not all(_has_commit(pointer.path, ref) for ref in p.commit_range if ref)
-        ]
-        if best[0] is None or len(unresolved) < len(best[1]):
-            best = (pointer.path, unresolved)
-        if not unresolved:
-            break
-    return best
+        path = _find_checkout([pointer.path] + checkouts, pointer.commit_range)
+        if path is None:
+            unresolved.append(pointer)
+        else:
+            resolved[pointer.commit_range] = path
+    return [(path, r) for r, path in resolved.items()], unresolved
 
 
 def _log_commits(
-    path: str, ranges: List[Tuple[str, str]]
+    ranges: List[Tuple[str, Tuple[str, str]]]
 ) -> List[Tuple[str, str, str]]:
     """
-    The commits in the union of `ranges`, newest first, as (id, email, msg).
+    The commits in the union of the (checkout, range) pairs, newest first.
 
     Each range is logged on its own and the results merged, rather than asking git for
     `tip1 tip2 --not base1 base2`: that spec drops any commit one parent's range contains
@@ -385,7 +412,7 @@ def _log_commits(
     # pretty format is modified version of: https://stackoverflow.com/a/1441062/965332
     pretty = "format:'%h%x09%ct%x09%an%x09%ae%x09%s'"
     commits: Dict[str, Tuple[int, str, str, str]] = {}
-    for commit_range in ranges:
+    for path, commit_range in ranges:
         rev = "...".join(commit_range) if any(commit_range) else ""
         for line in run(
             f"git log {rev} --no-decorate --pretty={pretty}", cwd=path
@@ -442,40 +469,44 @@ def _sync_notes(repo: Repo, unresolved: List[Pointer]) -> str:
 
 def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
     """Renders a single changelog section for a repo, covering every pointer to it."""
-    if not repo.pointers:
-        # only reached through parents that didn't move it, so nothing changed
+    live = [p for p in repo.pointers if p.commit_range[1] != "0000000"]
+    if not live:
+        # nothing moved it this release, or it was removed
         return ""
 
-    path, unresolved = _pick_checkout(repo)
-    pointers = [
-        p
-        for p in repo.pointers
-        if p not in unresolved and p.commit_range[1] != "0000000"
-    ]
-    if path is None or not pointers:
-        if unresolved and path is not None:
+    ranges, unresolved = _resolve_ranges(live)
+    notes = _sync_notes(repo, unresolved)
+    if not ranges:
+        if unresolved:
             # nothing to log, but say why rather than dropping the repo silently
             logger.warning(f"Nothing resolvable to report for {repo.name}")
-            return f"\n## 📦 {repo.name}" + _sync_notes(repo, unresolved)
-        # Happens when a submodule has been removed
+            return f"\n## 📦 {repo.name}" + notes
         return ""
 
-    ranges = list(dict.fromkeys(p.commit_range for p in pointers))
-    notes = _sync_notes(repo, unresolved)
-    bounded = [commit_range for commit_range in ranges if any(commit_range)]
-    if bounded and len(bounded) < len(ranges):
+    bounded = [r for r in ranges if any(r[1])]
+    if len(bounded) < len(ranges):
         # A parent that newly vendors this repo has no range of its own, and logging it
-        # unbounded replays the whole history. Bound it by where the parents that
-        # already had it started instead, so that commits only the new pin has are
-        # still covered.
-        logger.info(f"{repo.name} was newly added by a parent, bounding its history")
-        base = _pick_by_ancestry(path, [since for since, _ in bounded], newest=False)
-        covered = {until for _, until in bounded}
-        ranges = bounded + [
-            (base, pin.commit)
-            for pin in repo.pins
-            if pin.commit not in covered and _has_commit(path, pin.commit)
+        # unbounded replays the whole history. Bound each pin by where the parents that
+        # already had the repo started, so that commits only the new pin has are still
+        # covered. A repo that is new to every parent still lists everything.
+        starts = [since for _, (since, _) in bounded] or [
+            pin.commit for pin in repo.pins
         ]
+        if len(starts) > 1 or bounded:
+            logger.info(
+                f"{repo.name} was newly added by a parent, bounding its history"
+            )
+            checkouts = [path for path, _ in ranges]
+            base = _pick_by_ancestry(ranges[0][0], starts, newest=False)
+            covered = {until for _, (_, until) in bounded}
+            for pin in repo.pins:
+                if pin.commit in covered:
+                    continue
+                path = _find_checkout([pin.path] + checkouts, (base, pin.commit))
+                if path:
+                    bounded.append((path, (base, pin.commit)))
+            ranges = bounded
+
     out = f"\n## 📦 {repo.name}" + notes
 
     feats = ""
@@ -483,7 +514,7 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
     misc = ""
     hidden = 0
 
-    found = _log_commits(path, ranges)
+    found = _log_commits(ranges)
     print(f"Found {len(found)} commits in {repo.name}")
     for _id, email, msg in found:
         # will add author email to contributor list
@@ -517,8 +548,11 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
     has_content = bool(feats or fixes or misc)
     if hidden > 1:
         # for shared submodules, compare the oldest base against the newest tip
-        base = _pick_by_ancestry(path, [since for since, _ in ranges], newest=False)
-        tip = _pick_by_ancestry(path, [until for _, until in ranges], newest=True)
+        path = ranges[0][0]
+        base = _pick_by_ancestry(
+            path, [since for _, (since, _) in ranges], newest=False
+        )
+        tip = _pick_by_ancestry(path, [until for _, (_, until) in ranges], newest=True)
         full_history_url = (
             f"https://github.com/{org}/{repo.name}/compare/{base}...{tip}"
         )
