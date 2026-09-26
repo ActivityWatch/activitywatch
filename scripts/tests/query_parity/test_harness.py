@@ -7,9 +7,11 @@ from conftest import record_report
 from servers import Server
 
 # Listens on --port and answers /api/0/info, but only after 1.5 s the first
-# time, like a server that accepts connections before it's ready.
+# time (longer than Server.start's 1 s poll timeout), like a server that
+# accepts connections before it's ready. Each request is counted in
+# $HOME/requests (HOME is the server's tmpdir).
 SLOW_SERVER = """
-import sys, time
+import os, sys, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 port = int(sys.argv[sys.argv.index("--port") + 1])
@@ -17,6 +19,8 @@ first = [True]
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        with open(os.path.join(os.environ["HOME"], "requests"), "a") as f:
+            f.write("x")
         if first[0]:
             first[0] = False
             time.sleep(1.5)
@@ -36,6 +40,12 @@ def test_start_retries_on_read_timeout():
     server = Server("slow", [sys.executable, "-c", SLOW_SERVER], [])
     try:
         server.start(timeout=20)
+        # The first poll timed out and start() polled again: without a retry
+        # (or with a poll timeout above 1.5 s) there would be one request.
+        requests = (server.tmpdir / "requests").read_text()
+        assert len(requests) >= 2, (
+            f"expected a retried poll, got {len(requests)} request(s)"
+        )
     finally:
         server.stop()
 
