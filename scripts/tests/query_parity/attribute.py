@@ -11,10 +11,14 @@ the resulting known_failures.txt into a results directory, named:
 Then ``python attribute.py RESULTS_DIR`` prints the attribution and
 ``--write`` updates known_failures.txt. For each case that fails in base:
 
-- fixed by one fix alone: that key (``A | B`` if several each suffice)
-- fixed only by all fixes: the keys whose removal makes it fail again (``A,B``).
-  Optional ``<KEY>+<KEY>.txt`` runs (exactly those fixes) verify such
-  combinations; without them they are inferred, which the script reports
+- fixed with some fixes: every minimal set of fixes that is enough, as
+  alternatives (``A | B,C``). Candidates are single fixes, passing
+  ``<KEY>+<KEY>.txt`` runs (optional, exactly those fixes) and the
+  leave-one-out set (the keys whose removal from "all" makes it fail again),
+  which is only inferred unless such a run exists; the script says how many
+  are. Supersets of another alternative are dropped, and a run that may carry
+  an unneeded key (dropping it not known to fail, and not needed per
+  leave-one-out) is reported
 - still failing with all fixes: the keys it had (or the pattern suggestion),
   minus the measured fixes within each alternative, i.e. the causes that have
   no fix yet
@@ -28,7 +32,7 @@ the old (id only) or the new (id + spec) format.
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, FrozenSet, List, Optional, Set, Tuple
 
 from known_issues import (
     ISSUES,
@@ -96,23 +100,21 @@ def attribute(
     problems: List[str] = []
     unverified = 0
 
-    def combination(c: str, keys: List[str]) -> Optional[str]:
-        """Spec for "all of keys", or None if the runs show it isn't enough."""
-        nonlocal unverified
+    def fails_with(c: str, keys: FrozenSet[str]) -> Optional[bool]:
+        """Whether c fails with exactly these fixes applied, None if not run."""
+        if not keys:
+            return True  # c is in base
         if len(keys) == 1:
-            # keys[0] alone was run and didn't fix it, so something else is
-            # needed too, and the leave-one-out runs can't tell what.
-            return None
-        run = combos.get(frozenset(keys))
-        if run is None:
-            unverified += 1
-        elif c in run:
-            return None
-        return ",".join(keys)
+            return c in single[next(iter(keys))]
+        if keys == frozenset(fixes):
+            return c in all_
+        if len(keys) == len(fixes) - 1:
+            (left_out,) = set(fixes) - keys
+            return c in all_but[left_out]
+        run = combos.get(keys)
+        return None if run is None else c in run
 
     for c in sorted(base):
-        alone = [k for k in fixes if c not in single[k]]
-        needed = [k for k in fixes if c in all_but[k]]
         if c in all_:
             # Still failing: drop fixed keys within each alternative, and drop
             # alternatives that only consisted of fixed keys (disproven).
@@ -129,36 +131,54 @@ def attribute(
                 )
                 alts = [old]
             out[c] = "|".join(dict.fromkeys(alts))
-        elif alone:
-            alts = list(alone)
-            if needed and set(needed) != set(alone):
-                combo = combination(c, needed)
-                if combo is not None:
-                    alts.append(combo)
-            out[c] = "|".join(dict.fromkeys(alts))
-        else:
-            combo = combination(c, needed) if needed else None
-            if combo is None:
-                # Fall back to the supplied combination runs that fix it and
-                # contain every needed key, keeping only the minimal ones.
-                passing = [
-                    keys
-                    for keys, run in combos.items()
-                    if c not in run and set(needed) <= keys
-                ]
-                minimal = sorted(
-                    ",".join(k for k in fixes if k in keys)
-                    for keys in passing
-                    if not any(other < keys for other in passing)
-                )
-                combo = "|".join(minimal) or None
-            if combo is None:
+            continue
+
+        # Sets of fixes that are enough on their own: single fixes, supplied
+        # combination runs that pass, and the leave-one-out set (the keys
+        # whose removal from "all" makes it fail again), which is only
+        # inferred unless a run of exactly those fixes exists.
+        needed = frozenset(k for k in fixes if c in all_but[k])
+        candidates: Set[FrozenSet[str]] = {
+            frozenset([k]) for k in fixes if c not in single[k]
+        }
+        candidates |= {keys for keys, run in combos.items() if c not in run}
+        inferred: Optional[FrozenSet[str]] = None
+        if needed:
+            verdict = fails_with(c, needed)
+            if verdict is False:
+                candidates.add(needed)
+            elif verdict is None:
+                inferred = needed
+                candidates.add(needed)
+        # Keep only minimal sets: "A | A,B" means just "A".
+        minimal = [k for k in candidates if not any(o < k for o in candidates)]
+        if not minimal:
+            problems.append(
+                f"underdetermined: {c} is fixed by all fixes but not by "
+                f"{','.join(sorted(needed)) or 'any single one'}; add KEY+KEY.txt runs"
+            )
+            out[c] = ",".join(fixes)
+            continue
+        for keys in minimal:
+            if keys == inferred:
+                unverified += 1
+                continue
+            # A measured set may carry an unneeded key. Each key must be shown
+            # necessary: dropping it is known to fail, or the leave-one-out
+            # runs show it's needed.
+            unknown = [
+                k
+                for k in keys
+                if k not in needed and fails_with(c, keys - {k}) is not True
+            ]
+            if unknown:
                 problems.append(
-                    f"underdetermined: {c} is fixed by all fixes but not by "
-                    f"{','.join(needed) or 'any single one'}; add KEY+KEY.txt runs"
+                    f"underdetermined: {c} passes with {'+'.join(sorted(keys))}, "
+                    f"but runs without {', '.join(sorted(unknown))} are missing"
                 )
-                combo = ",".join(fixes)
-            out[c] = combo
+        out[c] = "|".join(
+            sorted(",".join(k for k in fixes if k in keys) for keys in minimal)
+        )
     if unverified:
         print(
             f"note: {unverified} combination specs are inferred from the leave-one-out "

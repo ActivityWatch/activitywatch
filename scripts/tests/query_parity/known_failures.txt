@@ -163,8 +163,8 @@ identical-p0-tag_list_names                                         SHAPE
 identical-p0-union_no_overlap                                       CORE_163
 identical-p0-union_no_overlap_empty                                 CORE_163
 identical-p0-union_no_overlap_flooded                               CORE_163,RUST_746
-identical-p0-union_no_overlap_rev                                   CORE_163 | CORE_161,RUST_744
-identical-p0-union_no_overlap_unsorted                              CORE_163 | CORE_161,CORE_163,RUST_744
+identical-p0-union_no_overlap_rev                                   CORE_161,RUST_744 | CORE_163
+identical-p0-union_no_overlap_unsorted                              CORE_163
 period-clip-p0-categorize                                           CORE_162
 period-clip-p0-chunk_events_by_key                                  SHAPE
 period-clip-p0-concat                                               CORE_162
@@ -193,7 +193,7 @@ period-clip-p0-union_no_overlap                                     CORE_162
 period-clip-p0-union_no_overlap_empty                               CORE_162
 period-clip-p0-union_no_overlap_flooded                             CORE_162
 period-clip-p0-union_no_overlap_rev                                 CORE_162
-period-clip-p0-union_no_overlap_unsorted                            CORE_162 | CORE_161,CORE_162,RUST_744
+period-clip-p0-union_no_overlap_unsorted                            CORE_162
 period-clip-p1-categorize                                           CORE_162
 period-clip-p1-chunk_events_by_key                                  SHAPE
 period-clip-p1-concat                                               CORE_162
@@ -222,7 +222,7 @@ period-clip-p1-union_no_overlap                                     CORE_162
 period-clip-p1-union_no_overlap_empty                               CORE_162
 period-clip-p1-union_no_overlap_flooded                             CORE_162
 period-clip-p1-union_no_overlap_rev                                 CORE_162
-period-clip-p1-union_no_overlap_unsorted                            CORE_162 | CORE_161,CORE_162,RUST_744
+period-clip-p1-union_no_overlap_unsorted                            CORE_162
 period-clip-us-p0-categorize                                        PRECISION
 period-clip-us-p0-chunk_events_by_key                               PRECISION,SHAPE
 period-clip-us-p0-concat                                            PRECISION
@@ -371,7 +371,7 @@ same-start-p0-union_no_overlap                                      CORE_163
 same-start-p0-union_no_overlap_empty                                CORE_163
 same-start-p0-union_no_overlap_flooded                              CORE_163,RUST_746
 same-start-p0-union_no_overlap_rev                                  CORE_161,CORE_163,RUST_744
-same-start-p0-union_no_overlap_unsorted                             CORE_163 | CORE_161,CORE_163,RUST_744
+same-start-p0-union_no_overlap_unsorted                             CORE_163
 seed00-p0-aw-client:canonicalEvents                                 CORE_165
 seed00-p0-aw-client:canonicalEvents-android                         SHAPE
 seed00-p0-aw-client:fullDesktopQuery                                SHAPE

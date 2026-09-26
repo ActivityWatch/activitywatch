@@ -4,7 +4,7 @@ known_failures.txt has one line per currently failing case: the case id and the
 issues it fails for, as keys of ISSUES below:
 
     identical-p0-flood          CORE_163,RUST_746
-    identical-p0-union_no_overlap_rev   CORE_163 | CORE_161,RUST_744
+    identical-p0-union_no_overlap_rev   CORE_161,RUST_744 | CORE_163
 
 ``,`` means every listed issue has to be fixed before the case passes, ``|``
 separates alternatives (either fix is enough). The cases are strict xfails, so
