@@ -59,6 +59,7 @@ let it work out which fixes flip which cases:
 | `<KEY>.txt` | only the fix for `KEY` |
 | `all.txt` | every fix |
 | `all-<KEY>.txt` | every fix except `KEY`'s |
+| `<KEY>+<KEY>.txt` (optional) | exactly those fixes, to verify a combination |
 
 ```sh
 python scripts/tests/query_parity/attribute.py RESULTS_DIR          # print
@@ -66,5 +67,8 @@ python scripts/tests/query_parity/attribute.py RESULTS_DIR --write  # update the
 ```
 
 A case that one fix flips gets that key. A case only the combination flips gets
-the keys whose removal breaks it again. A case that still fails with every fix
-keeps only keys that have no fix yet, since any other causes are masked until then.
+the keys whose removal breaks it again, which is only inferred until a
+`<KEY>+<KEY>.txt` run confirms it (the script says how many are unverified). A
+case that still fails with every fix keeps only keys that have no fix yet, since
+any other causes are masked until then. `--write` refuses when the runs can't
+attribute a case, or when a result file is missing.
