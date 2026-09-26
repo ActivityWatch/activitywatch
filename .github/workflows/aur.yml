@@ -1,0 +1,20 @@
+name: Update AUR package
+on:
+  release:
+    types: [released]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    if: '!github.event.release.prerelease'
+    steps:
+    - run: |
+        git clone git@github.com:ActivityWatch/aur-activitywatch-bin.git
+        cd aur-activitywatch-bin
+        # set pkgver, reset pkgrel in PKGBUILD
+        sed -E -i 's/pkgver=.+$/pkgver=\'{{ github.event.release.tag_name }}\'/' PKGBUILD
+        sed -E -i 's/pkgrel=.+$/pkgrel=1/' PKGBUILD
+        make
+        git add PKGBUILD .SRCINFO
+        git commit -m "updated to {{ github.event.release.tag_name }}"
+        git push
