@@ -149,6 +149,13 @@ def deterministic() -> List[Scenario]:
         [app(0, 10, "A"), app(0, 10, "A2"), app(20, 5, "A")],
         [app(0, 10, "b"), app(20, 5, "b")],
     )
+    # filter_period_intersect boundaries (ActivityWatch/aw-core#166): a
+    # zero-duration filter at the end of another filter, or at the end of the
+    # event, and two adjacent filters. Half-open [start, end) semantics keep the
+    # zero-duration piece at 6 s, since 6 s isn't inside [0, 6).
+    gen("fpi-zero-at-filter-end", [app(0, 10, "A")], [app(0, 6, "b"), app(6, 0, "z")])
+    gen("fpi-zero-at-event-end", [app(0, 10, "A")], [app(0, 10, "b"), app(10, 0, "z")])
+    gen("fpi-adjacent-filters", [app(0, 10, "A")], [app(0, 6, "b"), app(6, 4, "c")])
     # Equal start times. Storage order for ties differs between servers, and
     # order-sensitive transforms (flood, merge_events_by_keys, union) inherit it.
     gen(

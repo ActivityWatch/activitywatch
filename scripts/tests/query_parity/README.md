@@ -40,5 +40,35 @@ Then regenerate the list:
 python -m pytest scripts/tests/query_parity --update-known-failures
 ```
 
-It prints any failure that no pattern in `known_issues.py` explains: that is a new
-divergence, which needs an issue and a pattern before it goes into the list.
+Each line is a case id and the issues it fails for, as keys of `ISSUES` in
+`known_issues.py`: `A,B` means both need fixing, `A | B` that either fix is
+enough. Cases that still fail keep their keys. New failures get keys suggested
+by the id patterns in `known_issues.py`, and failures no pattern matches are
+printed: those are new divergences, which need an issue first.
+
+### Attributing failures to issues
+
+Patterns over-attribute (a `period-clip-*` scenario run through `flood` matches
+both), so the keys are measured with `attribute.py`: run the suite once per
+configuration, copy each resulting `known_failures.txt` into a directory, and
+let it work out which fixes flip which cases:
+
+| file | aw-core / aw-server-rust built with |
+|---|---|
+| `base.txt` | no fixes |
+| `<KEY>.txt` | only the fix for `KEY` |
+| `all.txt` | every fix |
+| `all-<KEY>.txt` | every fix except `KEY`'s |
+| `<KEY>+<KEY>.txt` (optional) | exactly those fixes, to verify a combination |
+
+```sh
+python scripts/tests/query_parity/attribute.py RESULTS_DIR          # print
+python scripts/tests/query_parity/attribute.py RESULTS_DIR --write  # update the list
+```
+
+A case that one fix flips gets that key. A case only the combination flips gets
+the keys whose removal breaks it again, which is only inferred until a
+`<KEY>+<KEY>.txt` run confirms it (the script says how many are unverified). A
+case that still fails with every fix keeps only keys that have no fix yet, since
+any other causes are masked until then. `--write` refuses when the runs can't
+attribute a case, or when a result file is missing.

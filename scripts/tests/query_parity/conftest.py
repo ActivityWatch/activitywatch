@@ -1,11 +1,17 @@
-import fnmatch
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import pytest
 
-from known_issues import KNOWN_ISSUES
+from known_issues import (
+    ISSUES,
+    read_known_failures,
+    spec_keys,
+    spec_reason,
+    suggest_spec,
+    write_known_failures,
+)
 from scenarios import BUCKET_TYPES, all_scenarios
 from servers import Server, python_server_cmd, rust_server_cmd
 
@@ -25,14 +31,6 @@ def pytest_addoption(parser):
     )
 
 
-def known_reason(case_id: str) -> Optional[str]:
-    kind = "invariant" if case_id.split(":")[0] in ("python", "rust") else "parity"
-    for k, pattern, reason in KNOWN_ISSUES:
-        if k == kind and fnmatch.fnmatchcase(case_id, pattern):
-            return reason
-    return None
-
-
 def _case_id(item) -> Optional[str]:
     callspec = getattr(item, "callspec", None)
     return callspec.params.get("case_id") if callspec else None
@@ -41,13 +39,11 @@ def _case_id(item) -> Optional[str]:
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--update-known-failures"):
         return
-    known = (
-        set(KNOWN_FAILURES.read_text().split()) if KNOWN_FAILURES.exists() else set()
-    )
+    known = read_known_failures(KNOWN_FAILURES)
     for item in items:
         case_id = _case_id(item)
         if case_id in known:
-            reason = known_reason(case_id) or "unclassified, see known_issues.py"
+            reason = spec_reason(known[case_id])
             # strict: a fix makes the case XPASS, which fails the run until
             # known_failures.txt is regenerated.
             item.add_marker(pytest.mark.xfail(reason=reason, strict=True))
@@ -66,16 +62,30 @@ def pytest_sessionfinish(session, exitstatus):
         return
     # Only cases that actually ran are updated; entries for cases that were
     # deselected, skipped or never reached (interrupted run) are kept.
-    old = set(KNOWN_FAILURES.read_text().split()) if KNOWN_FAILURES.exists() else set()
-    ids = sorted((old - set(_ran_ids)) | set(_failed_ids))
-    KNOWN_FAILURES.write_text("".join(i + "\n" for i in ids))
-    unclassified = [i for i in ids if known_reason(i) is None]
+    # Cases that still fail keep their (measured) spec, new ones get the
+    # pattern suggestion from known_issues.py, to be confirmed with attribute.py.
+    old = read_known_failures(KNOWN_FAILURES)
+    ids = (set(old) - set(_ran_ids)) | set(_failed_ids)
+    cases = {i: old[i] if old.get(i) else suggest_spec(i) for i in ids}
+    write_known_failures(KNOWN_FAILURES, cases)
     print(f"\nwrote {len(ids)} known failures to {KNOWN_FAILURES}")
+    suggested = sorted(i for i in ids if not old.get(i) and cases[i])
+    unclassified = sorted(i for i in ids if not cases[i])
+    unknown = sorted(
+        i for i in ids if any(k not in ISSUES for k in spec_keys(cases[i]))
+    )
+    if suggested:
+        print(
+            "new failures attributed by pattern only (confirm with attribute.py):\n  "
+            + "\n  ".join(f"{i}  {cases[i]}" for i in suggested)
+        )
     if unclassified:
         print(
             "not matched by any pattern in known_issues.py:\n  "
             + "\n  ".join(unclassified)
         )
+    if unknown:
+        print("unknown issue keys:\n  " + "\n  ".join(unknown))
 
 
 def _missing(what: str):
