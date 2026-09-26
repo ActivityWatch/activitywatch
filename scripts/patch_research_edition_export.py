@@ -27,6 +27,11 @@ B. CSV export (``/api/0/buckets/<id>/export/csv``, aw-server-rust#722) streams
    raw events and has no sanitizer, so research builds disable it:
    ``BucketEventsCsvRocket::new`` returns 403.
 
+The research legs run the full aw-server-rust test suite, so two upstream tests
+that assert the standard behaviour (the CSV export test in aw-server, and the
+export round trip in aw-client-rust) are rewritten to assert the research
+behaviour: CSV export is 403, and exports contain no real hostname or bucket id.
+
 Tempfiles come from ``tempfile::tempfile()``, which are unnamed (unlinked on
 Unix, delete-on-close on Windows), so they are removed on every path, including
 errors, as soon as the handle is dropped.
@@ -211,6 +216,113 @@ UTIL_EDITS: List[Tuple[str, str, str, str]] = [
 ]
 
 
+# Upstream tests that assert the standard export behaviour, rewritten for
+# research builds to assert the research behaviour instead (the research legs
+# run the full aw-server-rust test suite against the patched server).
+CSV_TEST_MARKER = "RESEARCH_EDITION_CSV_EXPORT_TEST"
+CSV_TEST_NEEDLE = r"""        let client = Client::untracked(server).unwrap();
+        let response = client
+            .get("/api/0/buckets/testbucket/export/csv")
+            .header(Header::new("Host", "127.0.0.1:5600"))
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        assert_eq!(
+            response.content_type(),
+            Some(ContentType::new("text", "csv"))
+        );
+        assert_eq!(
+            response.headers().get_one("Content-Disposition"),
+            Some("attachment; filename=\"aw-events-export-testbucket.csv\"")
+        );
+        let body = response.into_string().unwrap();
+        // Header row
+        assert!(body.starts_with("id,timestamp,duration,"), "header: {body}");
+        // Quoted field for title with embedded double-quote
+        assert!(
+            body.contains("\"A \"\"quoted\"\" title\""),
+            "quoting: {body}"
+        );
+        // Sub-millisecond duration is not truncated to 0.001000000
+        assert!(body.contains("0.001500000"), "duration: {body}");
+        // Spreadsheet formula prefixes are neutralized
+        assert!(body.contains("'=cmd|calc"), "formula: {body}");
+        // Event id present
+        let event_id = inserted[0].id.unwrap().to_string();
+        assert!(body.contains(&event_id), "id in body: {body}");
+
+        // Missing bucket → 404 with JSON body
+        let response = client
+            .get("/api/0/buckets/nosuchbucket/export/csv")
+            .header(Header::new("Host", "127.0.0.1:5600"))
+            .dispatch();
+        assert_eq!(response.status(), Status::NotFound);
+        let body: Value = serde_json::from_str(&response.into_string().unwrap()).unwrap();
+        assert!(body["message"].as_str().unwrap().contains("does not exist"));
+"""
+
+CSV_TEST_REPLACEMENT = f"""        let _ = inserted;
+        // {CSV_TEST_MARKER}: CSV export is disabled in research builds, for
+        // existing and missing buckets alike.
+        let client = Client::untracked(server).unwrap();
+        for bucket in ["testbucket", "nosuchbucket"] {{
+            let response = client
+                .get(format!("/api/0/buckets/{{bucket}}/export/csv"))
+                .header(Header::new("Host", "127.0.0.1:5600"))
+                .dispatch();
+            assert_eq!(response.status(), Status::Forbidden);
+            let body: Value = serde_json::from_str(&response.into_string().unwrap()).unwrap();
+            assert_eq!(body["message"], "CSV export is disabled in Research Edition");
+        }}
+"""
+
+CLIENT_TEST_MARKER = "RESEARCH_EDITION_CLIENT_EXPORT_TEST"
+CLIENT_TEST_NEEDLE = r"""        let all = client.export_all().unwrap();
+        assert!(all.buckets.contains_key(&bucketname));
+        let export = client.export_bucket(&bucketname).unwrap();
+        let exported = export.buckets[&bucketname].clone();
+        assert_eq!(exported.events.clone().unwrap().take_inner().len(), 1);
+
+        client.delete_bucket(&bucketname).unwrap();
+        client.import_bucket(&exported).unwrap();
+        let reimported = client.get_events(&bucketname, None, None, None).unwrap();
+        assert_eq!(reimported.len(), 1);
+        assert_eq!(reimported[0].timestamp, event.timestamp);
+        assert_eq!(reimported[0].duration, event.duration);
+        assert_eq!(reimported[0].data, event.data);
+"""
+
+CLIENT_TEST_REPLACEMENT = f"""        // {CLIENT_TEST_MARKER}: research exports rewrite bucket identities and
+        // hostnames, so the real hostname must not appear, and a sanitized
+        // export isn't meant to round-trip into the same database.
+        let all = client.export_all().unwrap();
+        assert!(!all.buckets.contains_key(&bucketname));
+        assert!(all
+            .buckets
+            .values()
+            .all(|bucket| bucket.hostname == "research-participant"));
+        if !client.hostname.is_empty() {{
+            assert!(all.buckets.keys().all(|key| !key.contains(&client.hostname)));
+        }}
+        let export = client.export_bucket(&bucketname).unwrap();
+        assert_eq!(export.buckets.len(), 1);
+        assert!(!export.buckets.contains_key(&bucketname));
+        let exported = export.buckets.values().next().unwrap();
+        assert_eq!(exported.events.clone().unwrap().take_inner().len(), 1);
+"""
+
+# (relative path, [(name, needle, replacement, marker)])
+TEST_EDITS: List[Tuple[str, List[Tuple[str, str, str, str]]]] = [
+    (
+        "aw-server/tests/api.rs",
+        [("csv-export test", CSV_TEST_NEEDLE, CSV_TEST_REPLACEMENT, CSV_TEST_MARKER)],
+    ),
+    (
+        "aw-client-rust/tests/test.rs",
+        [("client export test", CLIENT_TEST_NEEDLE, CLIENT_TEST_REPLACEMENT, CLIENT_TEST_MARKER)],
+    ),
+]
+
+
 def repo_root_from_args(argv: list[str]) -> pathlib.Path:
     if len(argv) > 1:
         return pathlib.Path(argv[1]).resolve()
@@ -256,9 +368,18 @@ def patch_tree(repo_root: pathlib.Path) -> None:
         mod_rs,
         [("export-sanitize module", MOD_NEEDLE, MOD_REPLACEMENT, "mod export_sanitize;")],
     )
+    server_rust = repo_root / "aw-server-rust"
+    test_texts = []
+    for relative, edits in TEST_EDITS:
+        path = server_rust / relative
+        if not path.is_file():
+            raise FileNotFoundError(f"expected Rust test source at {path}")
+        test_texts.append((path, _edited_text(path, edits)))
     shutil.copyfile(source, dest)
     util_rs.write_text(util_text, encoding="utf-8")
     mod_rs.write_text(mod_text, encoding="utf-8")
+    for path, text in test_texts:
+        path.write_text(text, encoding="utf-8")
 
 
 def main() -> None:

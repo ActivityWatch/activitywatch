@@ -18,11 +18,30 @@ config_patcher = importlib.util.module_from_spec(CONFIG_SPEC)
 CONFIG_SPEC.loader.exec_module(config_patcher)
 
 
-def _write_tree(tmp_path: Path, util: str, mod: str) -> Path:
-    endpoints = tmp_path / "aw-server-rust" / "aw-server" / "src" / "endpoints"
+API_TEST_SRC = "fn csv_test() {\n" + patcher.CSV_TEST_NEEDLE + "    }\n"
+CLIENT_TEST_SRC = "fn test_full() {\n" + patcher.CLIENT_TEST_NEEDLE + "    }\n"
+
+
+def _write_tree(
+    tmp_path: Path,
+    util: str,
+    mod: str,
+    api_test: str = None,
+    client_test: str = None,
+) -> Path:
+    server_rust = tmp_path / "aw-server-rust"
+    endpoints = server_rust / "aw-server" / "src" / "endpoints"
     endpoints.mkdir(parents=True)
     (endpoints / "util.rs").write_text(util, encoding="utf-8")
     (endpoints / "mod.rs").write_text(mod, encoding="utf-8")
+    (server_rust / "aw-server" / "tests").mkdir()
+    (server_rust / "aw-server" / "tests" / "api.rs").write_text(
+        API_TEST_SRC if api_test is None else api_test, encoding="utf-8"
+    )
+    (server_rust / "aw-client-rust" / "tests").mkdir(parents=True)
+    (server_rust / "aw-client-rust" / "tests" / "test.rs").write_text(
+        CLIENT_TEST_SRC if client_test is None else client_test, encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -170,17 +189,46 @@ def test_patch_fails_closed_on_pre_721_endpoints(tmp_path: Path):
         patcher.patch_tree(root)
 
 
+def test_upstream_tests_are_rewritten_for_research(tmp_path: Path):
+    root = _write_tree(tmp_path, UTIL_SRC, MOD_SRC)
+    patcher.patch_tree(root)
+    api = (root / "aw-server-rust/aw-server/tests/api.rs").read_text(encoding="utf-8")
+    client = (root / "aw-server-rust/aw-client-rust/tests/test.rs").read_text(
+        encoding="utf-8"
+    )
+    assert patcher.CSV_TEST_MARKER in api
+    assert "Status::Forbidden" in api and "Status::Ok" not in api
+    assert patcher.CLIENT_TEST_MARKER in client
+    assert "assert!(!all.buckets.contains_key(&bucketname));" in client
+    assert "research-participant" in client
+    assert "import_bucket" not in client
+
+
+@pytest.mark.parametrize("which", ["api_test", "client_test"])
+def test_patch_fails_closed_without_test_anchor(tmp_path: Path, which):
+    root = _write_tree(tmp_path, UTIL_SRC, MOD_SRC, **{which: "fn changed() {}\n"})
+    with pytest.raises(ValueError, match="test insertion point, found 0"):
+        patcher.patch_tree(root)
+    # Nothing was written, not even the server edits
+    assert _util(root) == UTIL_SRC
+
+
 def test_live_tree_is_patchable_or_already_patched():
     root = Path(__file__).resolve().parents[2]
     util = root / ENDPOINTS / "util.rs"
     if not util.is_file():
         pytest.skip("aw-server-rust not checked out")
-    text = util.read_text(encoding="utf-8")
-    for name, needle, _, marker in patcher.UTIL_EDITS:
-        assert marker in text or text.count(needle) == 1, (
-            f"aw-server-rust no longer matches the research export patch ({name}); "
-            "update scripts/patch_research_edition_export.py"
-        )
+    checks = [(util, patcher.UTIL_EDITS)] + [
+        (root / "aw-server-rust" / relative, edits)
+        for relative, edits in patcher.TEST_EDITS
+    ]
+    for path, edits in checks:
+        text = path.read_text(encoding="utf-8")
+        for name, needle, _, marker in edits:
+            assert marker in text or text.count(needle) == 1, (
+                f"aw-server-rust no longer matches the research export patch ({name}); "
+                "update scripts/patch_research_edition_export.py"
+            )
 
 
 def test_sanitizer_allowlist_covers_config_categories():
