@@ -1,0 +1,25 @@
+name: Changelog generator tests
+on:
+  pull_request:
+    paths:
+      - 'scripts/build_changelog.py'
+      - 'scripts/tests/test_build_changelog.py'
+      - '.github/workflows/changelog-tests.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/build_changelog.py'
+      - 'scripts/tests/test_build_changelog.py'
+      - '.github/workflows/changelog-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+      - run: pip install pytest requests
+      - run: python3 -m pytest scripts/tests/test_build_changelog.py -q
