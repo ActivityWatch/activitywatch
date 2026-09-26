@@ -53,12 +53,21 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.xfail(reason=reason, strict=True))
 
 
-def pytest_runtest_logreport(report):
-    if report.when == "call" and "[" in report.nodeid:
+def record_report(report, ran: List[str], failed: List[str]) -> None:
+    """Track which cases ran and failed, for --update-known-failures.
+
+    Skipped cases (e.g. test_invariant skips when the server errored) don't
+    count as run, so their known_failures.txt entries are kept.
+    """
+    if report.when == "call" and "[" in report.nodeid and not report.skipped:
         case_id = report.nodeid.split("[", 1)[1].rstrip("]")
-        _ran_ids.append(case_id)
+        ran.append(case_id)
         if report.failed:
-            _failed_ids.append(case_id)
+            failed.append(case_id)
+
+
+def pytest_runtest_logreport(report):
+    record_report(report, _ran_ids, _failed_ids)
 
 
 def pytest_sessionfinish(session, exitstatus):

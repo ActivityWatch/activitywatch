@@ -97,8 +97,11 @@ class Server:
             try:
                 if self.session.get(f"{self.url}/api/0/info", timeout=1).ok:
                     return
-            except requests.ConnectionError:
-                pass  # not listening yet, retry until the deadline
+            except requests.RequestException:
+                # Not listening yet, or accepted the connection but didn't
+                # answer within the poll timeout (ReadTimeout is not a
+                # ConnectionError): retry until the deadline.
+                pass
             time.sleep(0.2)
         self.stop()
         raise RuntimeError(
