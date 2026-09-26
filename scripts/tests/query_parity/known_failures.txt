@@ -76,6 +76,35 @@ flood-gaps-p0-nested_call_args                                      CORE_164
 flood-gaps-p0-tag_list_names                                        SHAPE
 flood-gaps-p0-union_no_overlap                                      CORE_161
 flood-gaps-p0-union_no_overlap_flooded                              CORE_161,RUST_746
+fpi-adjacent-filters-p0-chunk_events_by_key                         SHAPE
+fpi-adjacent-filters-p0-flood_pulsetime                             RUST_746
+fpi-adjacent-filters-p0-merge_events_by_keys_app                    SHAPE
+fpi-adjacent-filters-p0-merge_events_by_keys_missing                SHAPE
+fpi-adjacent-filters-p0-nested_call_args                            CORE_164
+fpi-adjacent-filters-p0-tag_list_names                              SHAPE
+fpi-adjacent-filters-p0-union_no_overlap                            CORE_161
+fpi-adjacent-filters-p0-union_no_overlap_flooded                    CORE_161
+fpi-zero-at-event-end-p0-chunk_events_by_key                        SHAPE
+fpi-zero-at-event-end-p0-filter_period_intersect_rev                RUST_747
+fpi-zero-at-event-end-p0-flood_pulsetime                            RUST_746
+fpi-zero-at-event-end-p0-merge_events_by_keys_app                   SHAPE
+fpi-zero-at-event-end-p0-merge_events_by_keys_missing               SHAPE
+fpi-zero-at-event-end-p0-nested_call_args                           CORE_164
+fpi-zero-at-event-end-p0-tag_list_names                             SHAPE
+fpi-zero-at-event-end-p0-union_no_overlap_flooded                   RUST_746
+fpi-zero-at-event-end-p0-union_no_overlap_unsorted                  CORE_161
+fpi-zero-at-filter-end-p0-chunk_events_by_key                       SHAPE
+fpi-zero-at-filter-end-p0-filter_period_intersect                   RUST_747
+fpi-zero-at-filter-end-p0-filter_period_intersect_rev               RUST_747
+fpi-zero-at-filter-end-p0-filter_period_intersect_unsorted          RUST_747
+fpi-zero-at-filter-end-p0-flood_pulsetime                           RUST_746
+fpi-zero-at-filter-end-p0-merge_events_by_keys_app                  SHAPE
+fpi-zero-at-filter-end-p0-merge_events_by_keys_missing              SHAPE
+fpi-zero-at-filter-end-p0-nested_call_args                          CORE_164
+fpi-zero-at-filter-end-p0-tag_list_names                            SHAPE
+fpi-zero-at-filter-end-p0-union_no_overlap_flooded                  RUST_744 | RUST_746
+fpi-zero-at-filter-end-p0-union_no_overlap_rev                      CORE_161
+fpi-zero-at-filter-end-p0-union_no_overlap_unsorted                 CORE_161,RUST_744
 fractional-ms-p0-chunk_events_by_key                                PRECISION,SHAPE
 fractional-ms-p0-flood                                              CORE_165
 fractional-ms-p0-flood_pulsetime                                    CORE_165,RUST_746
@@ -234,6 +263,11 @@ python:dst-p0-union_no_overlap_rev:measure_ab                       CORE_161
 python:dst-p0-union_no_overlap_rev:no_overlap                       CORE_161
 python:dst-p1-union_no_overlap_rev:measure_ab                       CORE_161
 python:dst-p1-union_no_overlap_rev:no_overlap                       CORE_161
+python:fpi-adjacent-filters-p0-union_no_overlap:measure_ab          CORE_161
+python:fpi-adjacent-filters-p0-union_no_overlap:no_overlap          CORE_161
+python:fpi-adjacent-filters-p0-union_no_overlap_flooded:no_overlap  CORE_161
+python:fpi-zero-at-filter-end-p0-union_no_overlap:no_overlap        CORE_161
+python:fpi-zero-at-filter-end-p0-union_no_overlap_rev:measure_ab    CORE_161
 python:fractional-p0-union_no_overlap_flooded:no_overlap            CORE_165
 python:period-clip-us-p0-union_no_overlap_rev:measure_ab            CORE_161
 python:seed00-p0-multidevice:md_no_overlap                          CORE_161
@@ -270,6 +304,8 @@ python:zero-duration-p0-union_no_overlap_rev:no_overlap             CORE_161
 python:zero-inside-b-p0-union_no_overlap:measure_ab                 CORE_161
 python:zero-inside-b-p0-union_no_overlap:no_overlap                 CORE_161
 rust:flood-gaps-p0-flood:no_overlap_positive                        RUST_746
+rust:fpi-zero-at-filter-end-p0-union_no_overlap:no_overlap          RUST_744
+rust:fpi-zero-at-filter-end-p0-union_no_overlap_flooded:no_overlap  RUST_744 | RUST_746
 rust:fractional-p0-sum_durations:sum_matches_a                      RUST_745
 rust:identical-p0-flood:no_overlap_positive                         RUST_746
 rust:same-start-p0-flood:no_overlap_positive                        RUST_746
