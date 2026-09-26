@@ -1,0 +1,68 @@
+name: Query parity
+
+# Runs the same queries on aw-server (Python) and aw-server-rust, built from
+# the pinned submodules, and fails when their results diverge beyond the
+# cases listed in scripts/tests/query_parity/known_failures.txt.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    paths:
+      - 'aw-core'
+      - 'aw-client'
+      - 'aw-server'
+      - 'aw-server-rust'
+      - 'scripts/tests/query_parity/**'
+      - '.github/workflows/query-parity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  query-parity:
+    name: aw-server vs aw-server-rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check out server submodules
+        run: git submodule update --init --depth 1 aw-core aw-client aw-server aw-server-rust
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        id: toolchain
+        with:
+          toolchain: stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v6
+        env:
+          cache-name: query-parity-cargo
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            aw-server-rust/target
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('aw-server-rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-
+
+      # Release build: the shipped binary, and debug_assert!s in the
+      # transforms would otherwise change behaviour on unsorted input.
+      - name: Build aw-server-rust
+        working-directory: aw-server-rust
+        run: cargo build --release --bin aw-server
+
+      - name: Install aw-core, aw-client and aw-server from the submodules
+        run: pip install ./aw-core ./aw-client ./aw-server pytest requests
+
+      - name: Run query parity tests
+        env:
+          AW_PARITY_REQUIRE: '1'
+        run: python -m pytest scripts/tests/query_parity -q -rfX -p no:cacheprovider

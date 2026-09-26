@@ -7,7 +7,7 @@
 #
 # We recommend creating and activating a Python virtualenv before building.
 # Instructions on how to do this can be found in the guide linked above.
-.PHONY: build install test clean clean_all update-submodules sync-tauri-server
+.PHONY: build install test test-query-parity clean clean_all update-submodules sync-tauri-server
 
 SHELL := /usr/bin/env bash
 
@@ -156,6 +156,11 @@ test-integration:
 	# aw-server-python
 	@echo "== Integration testing aw-server =="
 	@pytest ./scripts/tests/integration_tests.py ./aw-server/tests/ -v
+
+# Compares query results of aw-server (Python) and aw-server-rust on identical
+# events. See scripts/tests/query_parity/README.md.
+test-query-parity:
+	python3 -m pytest scripts/tests/query_parity -q -rfX -p no:cacheprovider
 
 %/.git:
 	git submodule update --init --recursive
