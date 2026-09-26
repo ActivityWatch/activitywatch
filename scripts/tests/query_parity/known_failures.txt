@@ -127,9 +127,6 @@ period-clip-us-p0-union_no_overlap_unsorted                         PRECISION
 python:data-shapes-p0-merge_events_by_keys_app:merge_conserves_app  SHAPE
 python:fractional-p0-union_no_overlap_flooded:no_overlap            CORE_165
 same-start-p0-chunk_events_by_key                                   SHAPE
-same-start-p0-filter_period_intersect                               CORE_166
-same-start-p0-filter_period_intersect_rev                           CORE_166
-same-start-p0-filter_period_intersect_unsorted                      CORE_166
 same-start-p0-merge_events_by_keys_app                              SHAPE
 same-start-p0-merge_events_by_keys_missing                          SHAPE
 same-start-p0-tag_list_names                                        SHAPE
@@ -139,9 +136,6 @@ seed00-p0-aw-client:fullDesktopQuery                                SHAPE
 seed00-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed00-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed00-p0-chunk_events_by_key                                       SHAPE
-seed00-p0-filter_period_intersect                                   CORE_166
-seed00-p0-filter_period_intersect_rev                               CORE_166
-seed00-p0-filter_period_intersect_unsorted                          CORE_166
 seed00-p0-merge_events_by_keys_app                                  SHAPE
 seed00-p0-merge_events_by_keys_app_title                            SHAPE
 seed00-p0-merge_events_by_keys_missing                              SHAPE
@@ -156,9 +150,6 @@ seed00-p1-aw-client:fullDesktopQuery                                SHAPE
 seed00-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed00-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed00-p1-chunk_events_by_key                                       SHAPE
-seed00-p1-filter_period_intersect                                   CORE_166
-seed00-p1-filter_period_intersect_rev                               CORE_166
-seed00-p1-filter_period_intersect_unsorted                          CORE_166
 seed00-p1-merge_events_by_keys_app                                  SHAPE
 seed00-p1-merge_events_by_keys_app_title                            SHAPE
 seed00-p1-merge_events_by_keys_missing                              SHAPE
@@ -172,9 +163,6 @@ seed01-p0-aw-client:fullDesktopQuery                                SHAPE
 seed01-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed01-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed01-p0-chunk_events_by_key                                       SHAPE
-seed01-p0-filter_period_intersect                                   CORE_166
-seed01-p0-filter_period_intersect_rev                               CORE_166
-seed01-p0-filter_period_intersect_unsorted                          CORE_166
 seed01-p0-merge_events_by_keys_app                                  SHAPE
 seed01-p0-merge_events_by_keys_app_title                            SHAPE
 seed01-p0-merge_events_by_keys_missing                              SHAPE
@@ -187,9 +175,6 @@ seed01-p1-aw-client:fullDesktopQuery                                SHAPE
 seed01-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed01-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed01-p1-chunk_events_by_key                                       SHAPE
-seed01-p1-filter_period_intersect                                   CORE_166
-seed01-p1-filter_period_intersect_rev                               CORE_166
-seed01-p1-filter_period_intersect_unsorted                          CORE_166
 seed01-p1-merge_events_by_keys_app                                  SHAPE
 seed01-p1-merge_events_by_keys_app_title                            SHAPE
 seed01-p1-merge_events_by_keys_missing                              SHAPE
@@ -203,9 +188,6 @@ seed02-p0-aw-client:fullDesktopQuery                                SHAPE
 seed02-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed02-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed02-p0-chunk_events_by_key                                       SHAPE
-seed02-p0-filter_period_intersect                                   CORE_166
-seed02-p0-filter_period_intersect_rev                               CORE_166
-seed02-p0-filter_period_intersect_unsorted                          CORE_166
 seed02-p0-merge_events_by_keys_app                                  SHAPE
 seed02-p0-merge_events_by_keys_app_title                            SHAPE
 seed02-p0-merge_events_by_keys_missing                              SHAPE
@@ -220,9 +202,6 @@ seed02-p1-aw-client:fullDesktopQuery                                SHAPE
 seed02-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed02-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed02-p1-chunk_events_by_key                                       SHAPE
-seed02-p1-filter_period_intersect                                   CORE_166
-seed02-p1-filter_period_intersect_rev                               CORE_166
-seed02-p1-filter_period_intersect_unsorted                          CORE_166
 seed02-p1-merge_events_by_keys_app                                  SHAPE
 seed02-p1-merge_events_by_keys_app_title                            SHAPE
 seed02-p1-merge_events_by_keys_missing                              SHAPE
@@ -237,8 +216,6 @@ seed03-p0-aw-client:fullDesktopQuery                                SHAPE
 seed03-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed03-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed03-p0-chunk_events_by_key                                       SHAPE
-seed03-p0-filter_period_intersect                                   CORE_166
-seed03-p0-filter_period_intersect_unsorted                          CORE_166
 seed03-p0-merge_events_by_keys_app                                  SHAPE
 seed03-p0-merge_events_by_keys_app_title                            SHAPE
 seed03-p0-merge_events_by_keys_missing                              SHAPE
@@ -253,8 +230,6 @@ seed03-p1-aw-client:fullDesktopQuery                                SHAPE
 seed03-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed03-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed03-p1-chunk_events_by_key                                       SHAPE
-seed03-p1-filter_period_intersect                                   CORE_166
-seed03-p1-filter_period_intersect_unsorted                          CORE_166
 seed03-p1-merge_events_by_keys_app                                  SHAPE
 seed03-p1-merge_events_by_keys_app_title                            SHAPE
 seed03-p1-merge_events_by_keys_missing                              SHAPE
@@ -268,8 +243,6 @@ seed04-p0-aw-client:fullDesktopQuery                                SHAPE
 seed04-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed04-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed04-p0-chunk_events_by_key                                       SHAPE
-seed04-p0-filter_period_intersect                                   CORE_166
-seed04-p0-filter_period_intersect_unsorted                          CORE_166
 seed04-p0-merge_events_by_keys_app                                  SHAPE
 seed04-p0-merge_events_by_keys_app_title                            SHAPE
 seed04-p0-merge_events_by_keys_missing                              SHAPE
@@ -283,8 +256,6 @@ seed04-p1-aw-client:fullDesktopQuery                                SHAPE
 seed04-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed04-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed04-p1-chunk_events_by_key                                       SHAPE
-seed04-p1-filter_period_intersect                                   CORE_166
-seed04-p1-filter_period_intersect_unsorted                          CORE_166
 seed04-p1-merge_events_by_keys_app                                  SHAPE
 seed04-p1-merge_events_by_keys_app_title                            SHAPE
 seed04-p1-merge_events_by_keys_missing                              SHAPE
@@ -298,7 +269,6 @@ seed05-p0-aw-client:fullDesktopQuery                                SHAPE
 seed05-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed05-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed05-p0-chunk_events_by_key                                       SHAPE
-seed05-p0-filter_period_intersect_rev                               CORE_166
 seed05-p0-merge_events_by_keys_app                                  SHAPE
 seed05-p0-merge_events_by_keys_app_title                            SHAPE
 seed05-p0-merge_events_by_keys_missing                              SHAPE
@@ -312,7 +282,6 @@ seed05-p1-aw-client:fullDesktopQuery                                SHAPE
 seed05-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed05-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed05-p1-chunk_events_by_key                                       SHAPE
-seed05-p1-filter_period_intersect_rev                               CORE_166
 seed05-p1-merge_events_by_keys_app                                  SHAPE
 seed05-p1-merge_events_by_keys_app_title                            SHAPE
 seed05-p1-merge_events_by_keys_missing                              SHAPE
@@ -326,7 +295,6 @@ seed06-p0-aw-client:fullDesktopQuery                                SHAPE
 seed06-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed06-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed06-p0-chunk_events_by_key                                       SHAPE
-seed06-p0-filter_period_intersect_rev                               CORE_166
 seed06-p0-merge_events_by_keys_app                                  SHAPE
 seed06-p0-merge_events_by_keys_app_title                            SHAPE
 seed06-p0-merge_events_by_keys_missing                              SHAPE
@@ -340,7 +308,6 @@ seed06-p1-aw-client:fullDesktopQuery                                SHAPE
 seed06-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed06-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed06-p1-chunk_events_by_key                                       SHAPE
-seed06-p1-filter_period_intersect_rev                               CORE_166
 seed06-p1-merge_events_by_keys_app                                  SHAPE
 seed06-p1-merge_events_by_keys_app_title                            SHAPE
 seed06-p1-merge_events_by_keys_missing                              SHAPE
@@ -354,9 +321,6 @@ seed07-p0-aw-client:fullDesktopQuery                                SHAPE
 seed07-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed07-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed07-p0-chunk_events_by_key                                       SHAPE
-seed07-p0-filter_period_intersect                                   CORE_166
-seed07-p0-filter_period_intersect_rev                               CORE_166
-seed07-p0-filter_period_intersect_unsorted                          CORE_166
 seed07-p0-merge_events_by_keys_app                                  SHAPE
 seed07-p0-merge_events_by_keys_app_title                            SHAPE
 seed07-p0-merge_events_by_keys_missing                              SHAPE
@@ -370,9 +334,6 @@ seed07-p1-aw-client:fullDesktopQuery                                SHAPE
 seed07-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed07-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed07-p1-chunk_events_by_key                                       SHAPE
-seed07-p1-filter_period_intersect                                   CORE_166
-seed07-p1-filter_period_intersect_rev                               CORE_166
-seed07-p1-filter_period_intersect_unsorted                          CORE_166
 seed07-p1-merge_events_by_keys_app                                  SHAPE
 seed07-p1-merge_events_by_keys_app_title                            SHAPE
 seed07-p1-merge_events_by_keys_missing                              SHAPE
@@ -387,8 +348,6 @@ seed08-p0-aw-client:fullDesktopQuery                                SHAPE
 seed08-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed08-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed08-p0-chunk_events_by_key                                       SHAPE
-seed08-p0-filter_period_intersect                                   CORE_166
-seed08-p0-filter_period_intersect_unsorted                          CORE_166
 seed08-p0-merge_events_by_keys_app                                  SHAPE
 seed08-p0-merge_events_by_keys_app_title                            SHAPE
 seed08-p0-merge_events_by_keys_missing                              SHAPE
@@ -416,9 +375,6 @@ seed09-p0-aw-client:fullDesktopQuery                                SHAPE
 seed09-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed09-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed09-p0-chunk_events_by_key                                       SHAPE
-seed09-p0-filter_period_intersect                                   CORE_166
-seed09-p0-filter_period_intersect_rev                               CORE_166
-seed09-p0-filter_period_intersect_unsorted                          CORE_166
 seed09-p0-merge_events_by_keys_app                                  SHAPE
 seed09-p0-merge_events_by_keys_app_title                            SHAPE
 seed09-p0-merge_events_by_keys_missing                              SHAPE
@@ -432,9 +388,6 @@ seed09-p1-aw-client:fullDesktopQuery                                SHAPE
 seed09-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed09-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed09-p1-chunk_events_by_key                                       SHAPE
-seed09-p1-filter_period_intersect                                   CORE_166
-seed09-p1-filter_period_intersect_rev                               CORE_166
-seed09-p1-filter_period_intersect_unsorted                          CORE_166
 seed09-p1-merge_events_by_keys_app                                  SHAPE
 seed09-p1-merge_events_by_keys_app_title                            SHAPE
 seed09-p1-merge_events_by_keys_missing                              SHAPE
@@ -448,9 +401,6 @@ seed10-p0-aw-client:fullDesktopQuery                                SHAPE
 seed10-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed10-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed10-p0-chunk_events_by_key                                       SHAPE
-seed10-p0-filter_period_intersect                                   CORE_166
-seed10-p0-filter_period_intersect_rev                               CORE_166
-seed10-p0-filter_period_intersect_unsorted                          CORE_166
 seed10-p0-merge_events_by_keys_app                                  SHAPE
 seed10-p0-merge_events_by_keys_app_title                            SHAPE
 seed10-p0-merge_events_by_keys_missing                              SHAPE
@@ -464,9 +414,6 @@ seed10-p1-aw-client:fullDesktopQuery                                SHAPE
 seed10-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed10-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed10-p1-chunk_events_by_key                                       SHAPE
-seed10-p1-filter_period_intersect                                   CORE_166
-seed10-p1-filter_period_intersect_rev                               CORE_166
-seed10-p1-filter_period_intersect_unsorted                          CORE_166
 seed10-p1-merge_events_by_keys_app                                  SHAPE
 seed10-p1-merge_events_by_keys_app_title                            SHAPE
 seed10-p1-merge_events_by_keys_missing                              SHAPE
@@ -481,9 +428,6 @@ seed11-p0-aw-client:fullDesktopQuery                                SHAPE
 seed11-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed11-p0-aw-client:fullDesktopQuery+browser                        SHAPE
 seed11-p0-chunk_events_by_key                                       SHAPE
-seed11-p0-filter_period_intersect                                   CORE_166
-seed11-p0-filter_period_intersect_rev                               CORE_166
-seed11-p0-filter_period_intersect_unsorted                          CORE_166
 seed11-p0-merge_events_by_keys_app                                  SHAPE
 seed11-p0-merge_events_by_keys_app_title                            SHAPE
 seed11-p0-merge_events_by_keys_missing                              SHAPE
@@ -498,9 +442,6 @@ seed11-p1-aw-client:fullDesktopQuery                                SHAPE
 seed11-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
 seed11-p1-aw-client:fullDesktopQuery+browser                        SHAPE
 seed11-p1-chunk_events_by_key                                       SHAPE
-seed11-p1-filter_period_intersect                                   CORE_166
-seed11-p1-filter_period_intersect_rev                               CORE_166
-seed11-p1-filter_period_intersect_unsorted                          CORE_166
 seed11-p1-merge_events_by_keys_app                                  SHAPE
 seed11-p1-merge_events_by_keys_app_title                            SHAPE
 seed11-p1-merge_events_by_keys_missing                              SHAPE
