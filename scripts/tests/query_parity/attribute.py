@@ -52,7 +52,8 @@ def failing(path: Path) -> Set[str]:
 
 def _combo_keys(stem: str) -> List[str]:
     parts = stem.split("+")
-    return parts if len(parts) > 1 and all(k in ISSUES for k in parts) else []
+    valid = len(parts) > 1 and len(set(parts)) == len(parts)
+    return parts if valid and all(k in ISSUES for k in parts) else []
 
 
 def attribute(
@@ -82,11 +83,12 @@ def attribute(
     all_ = failing(results / "all.txt")
     # Every fix needs its leave-one-out run, or combinations would be misattributed
     all_but = {k: failing(results / f"all-{k}.txt") for k in fixes}
-    combos = {
-        frozenset(_combo_keys(s)): failing(results / f"{s}.txt")
-        for s in stems
-        if _combo_keys(s)
-    }
+    combo_files = [(s, frozenset(_combo_keys(s))) for s in stems if _combo_keys(s)]
+    sets = [k for _, k in combo_files]
+    dupes = sorted(s for s, k in combo_files if sets.count(k) > 1)
+    if dupes:
+        sys.exit(f"several result files for the same combination: {dupes}")
+    combos = {k: failing(results / f"{s}.txt") for s, k in combo_files}
 
     new_failures = (
         set().union(all_, *single.values(), *all_but.values(), *combos.values()) - base

@@ -174,6 +174,25 @@ def test_residual_with_only_fixed_keys_is_a_problem(tmp_path):
             "all-CORE_163": ["c"],
         },
         {"base": ["c"], "CORE_999": [], "all": []},  # not an ISSUES key
+        {  # the same key twice in a combination
+            "base": ["c"],
+            "CORE_161": ["c"],
+            "all": [],
+            "all-CORE_161": ["c"],
+            "CORE_161+CORE_161": [],
+        },
+        {  # two files for the same combination
+            "base": ["c"],
+            "CORE_161": ["c"],
+            "CORE_162": ["c"],
+            "CORE_163": ["c"],
+            "all": [],
+            "all-CORE_161": ["c"],
+            "all-CORE_162": ["c"],
+            "all-CORE_163": [],
+            "CORE_161+CORE_162": [],
+            "CORE_162+CORE_161": ["c"],
+        },
     ],
     ids=[
         "missing",
@@ -183,6 +202,8 @@ def test_residual_with_only_fixed_keys_is_a_problem(tmp_path):
         "no-all",
         "orphan-loo",
         "bad-key",
+        "dup-key",
+        "dup-combo",
     ],
 )
 def test_refuses_incomplete_results(tmp_path, runs):
