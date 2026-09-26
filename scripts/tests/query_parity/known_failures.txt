@@ -1,10 +1,7 @@
 adjacent-p0-chunk_events_by_key                                     SHAPE
-adjacent-p0-flood                                                   CORE_165
-adjacent-p0-flood_pulsetime                                         CORE_165
 adjacent-p0-merge_events_by_keys_app                                SHAPE
 adjacent-p0-merge_events_by_keys_missing                            SHAPE
 adjacent-p0-tag_list_names                                          SHAPE
-adjacent-p0-union_no_overlap_flooded                                CORE_165
 containment-p0-chunk_events_by_key                                  SHAPE
 containment-p0-merge_events_by_keys_app                             SHAPE
 containment-p0-merge_events_by_keys_missing                         SHAPE
@@ -16,12 +13,9 @@ data-shapes-p0-merge_events_by_keys_missing                         SHAPE
 data-shapes-p0-split_url_events                                     SHAPE
 data-shapes-p0-tag_list_names                                       SHAPE
 dst-p0-chunk_events_by_key                                          SHAPE
-dst-p0-flood                                                        CORE_165
-dst-p0-flood_pulsetime                                              CORE_165
 dst-p0-merge_events_by_keys_app                                     SHAPE
 dst-p0-merge_events_by_keys_missing                                 SHAPE
 dst-p0-tag_list_names                                               SHAPE
-dst-p0-union_no_overlap_flooded                                     CORE_165
 dst-p1-chunk_events_by_key                                          SHAPE
 dst-p1-merge_events_by_keys_app                                     SHAPE
 dst-p1-merge_events_by_keys_missing                                 SHAPE
@@ -31,7 +25,6 @@ empty-b-p0-merge_events_by_keys_app                                 SHAPE
 empty-b-p0-merge_events_by_keys_missing                             SHAPE
 empty-b-p0-tag_list_names                                           SHAPE
 flood-gaps-p0-chunk_events_by_key                                   SHAPE
-flood-gaps-p0-flood_pulsetime                                       CORE_165
 flood-gaps-p0-merge_events_by_keys_app                              SHAPE
 flood-gaps-p0-merge_events_by_keys_missing                          SHAPE
 flood-gaps-p0-tag_list_names                                        SHAPE
@@ -48,12 +41,9 @@ fpi-zero-at-filter-end-p0-merge_events_by_keys_app                  SHAPE
 fpi-zero-at-filter-end-p0-merge_events_by_keys_missing              SHAPE
 fpi-zero-at-filter-end-p0-tag_list_names                            SHAPE
 fractional-ms-p0-chunk_events_by_key                                PRECISION,SHAPE
-fractional-ms-p0-flood                                              CORE_165
-fractional-ms-p0-flood_pulsetime                                    CORE_165
 fractional-ms-p0-merge_events_by_keys_app                           PRECISION,SHAPE
 fractional-ms-p0-merge_events_by_keys_missing                       PRECISION,SHAPE
 fractional-ms-p0-tag_list_names                                     PRECISION,SHAPE
-fractional-ms-p0-union_no_overlap_flooded                           CORE_165
 fractional-p0-categorize                                            PRECISION
 fractional-p0-chunk_events_by_key                                   PRECISION,SHAPE
 fractional-p0-concat                                                PRECISION
@@ -125,12 +115,10 @@ period-clip-us-p0-union_no_overlap_flooded                          PRECISION
 period-clip-us-p0-union_no_overlap_rev                              PRECISION
 period-clip-us-p0-union_no_overlap_unsorted                         PRECISION
 python:data-shapes-p0-merge_events_by_keys_app:merge_conserves_app  SHAPE
-python:fractional-p0-union_no_overlap_flooded:no_overlap            CORE_165
 same-start-p0-chunk_events_by_key                                   SHAPE
 same-start-p0-merge_events_by_keys_app                              SHAPE
 same-start-p0-merge_events_by_keys_missing                          SHAPE
 same-start-p0-tag_list_names                                        SHAPE
-seed00-p0-aw-client:canonicalEvents                                 CORE_165
 seed00-p0-aw-client:canonicalEvents-android                         SHAPE
 seed00-p0-aw-client:fullDesktopQuery                                SHAPE
 seed00-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -144,7 +132,6 @@ seed00-p0-multidevice-webui-android-merge                           SHAPE
 seed00-p0-split_url_events                                          SHAPE
 seed00-p0-tag                                                       SHAPE
 seed00-p0-tag_list_names                                            SHAPE
-seed00-p1-aw-client:canonicalEvents                                 CORE_165
 seed00-p1-aw-client:canonicalEvents-android                         SHAPE
 seed00-p1-aw-client:fullDesktopQuery                                SHAPE
 seed00-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -182,7 +169,6 @@ seed01-p1-multidevice                                               SHAPE
 seed01-p1-multidevice-webui-android-merge                           SHAPE
 seed01-p1-split_url_events                                          SHAPE
 seed01-p1-tag_list_names                                            SHAPE
-seed02-p0-aw-client:canonicalEvents                                 CORE_165
 seed02-p0-aw-client:canonicalEvents-android                         SHAPE
 seed02-p0-aw-client:fullDesktopQuery                                SHAPE
 seed02-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -196,7 +182,6 @@ seed02-p0-multidevice-webui-android-merge                           SHAPE
 seed02-p0-split_url_events                                          SHAPE
 seed02-p0-tag                                                       SHAPE
 seed02-p0-tag_list_names                                            SHAPE
-seed02-p1-aw-client:canonicalEvents                                 CORE_165
 seed02-p1-aw-client:canonicalEvents-android                         SHAPE
 seed02-p1-aw-client:fullDesktopQuery                                SHAPE
 seed02-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -210,7 +195,6 @@ seed02-p1-multidevice-webui-android-merge                           SHAPE
 seed02-p1-split_url_events                                          SHAPE
 seed02-p1-tag                                                       SHAPE
 seed02-p1-tag_list_names                                            SHAPE
-seed03-p0-aw-client:canonicalEvents                                 CORE_165
 seed03-p0-aw-client:canonicalEvents-android                         SHAPE
 seed03-p0-aw-client:fullDesktopQuery                                SHAPE
 seed03-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -224,7 +208,6 @@ seed03-p0-multidevice-webui-android-merge                           SHAPE
 seed03-p0-split_url_events                                          SHAPE
 seed03-p0-tag                                                       SHAPE
 seed03-p0-tag_list_names                                            SHAPE
-seed03-p1-aw-client:canonicalEvents                                 CORE_165
 seed03-p1-aw-client:canonicalEvents-android                         SHAPE
 seed03-p1-aw-client:fullDesktopQuery                                SHAPE
 seed03-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -342,7 +325,6 @@ seed07-p1-multidevice-webui-android-merge                           SHAPE
 seed07-p1-split_url_events                                          SHAPE
 seed07-p1-tag                                                       SHAPE
 seed07-p1-tag_list_names                                            SHAPE
-seed08-p0-aw-client:canonicalEvents                                 CORE_165
 seed08-p0-aw-client:canonicalEvents-android                         SHAPE
 seed08-p0-aw-client:fullDesktopQuery                                SHAPE
 seed08-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -356,7 +338,6 @@ seed08-p0-multidevice-webui-android-merge                           SHAPE
 seed08-p0-split_url_events                                          SHAPE
 seed08-p0-tag                                                       SHAPE
 seed08-p0-tag_list_names                                            SHAPE
-seed08-p1-aw-client:canonicalEvents                                 CORE_165
 seed08-p1-aw-client:canonicalEvents-android                         SHAPE
 seed08-p1-aw-client:fullDesktopQuery                                SHAPE
 seed08-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -422,7 +403,6 @@ seed10-p1-multidevice-webui-android-merge                           SHAPE
 seed10-p1-split_url_events                                          SHAPE
 seed10-p1-tag                                                       SHAPE
 seed10-p1-tag_list_names                                            SHAPE
-seed11-p0-aw-client:canonicalEvents                                 CORE_165
 seed11-p0-aw-client:canonicalEvents-android                         SHAPE
 seed11-p0-aw-client:fullDesktopQuery                                SHAPE
 seed11-p0-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -436,7 +416,6 @@ seed11-p0-multidevice-webui-android-merge                           SHAPE
 seed11-p0-split_url_events                                          SHAPE
 seed11-p0-tag                                                       SHAPE
 seed11-p0-tag_list_names                                            SHAPE
-seed11-p1-aw-client:canonicalEvents                                 CORE_165
 seed11-p1-aw-client:canonicalEvents-android                         SHAPE
 seed11-p1-aw-client:fullDesktopQuery                                SHAPE
 seed11-p1-aw-client:fullDesktopQuery+always_active                  SHAPE
@@ -459,7 +438,6 @@ straddle-p0-merge_events_by_keys_app                                SHAPE
 straddle-p0-merge_events_by_keys_missing                            SHAPE
 straddle-p0-tag_list_names                                          SHAPE
 unsorted-p0-chunk_events_by_key                                     SHAPE
-unsorted-p0-flood_pulsetime                                         CORE_165
 unsorted-p0-merge_events_by_keys_app                                SHAPE
 unsorted-p0-merge_events_by_keys_missing                            SHAPE
 unsorted-p0-tag_list_names                                          SHAPE
