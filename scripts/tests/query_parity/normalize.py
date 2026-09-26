@@ -47,7 +47,9 @@ def normalize(x: Any, ordered: bool) -> Any:
 
 
 def _close(a: float, b: float) -> bool:
-    return abs(a - b) <= TOL + 1e-9 * max(abs(a), abs(b))
+    # Absolute only: timestamps are epoch seconds (~1.8e9), where any relative
+    # term would dwarf TOL. f64 still resolves them to well under 1 µs.
+    return abs(a - b) <= TOL
 
 
 def fmt_event(e: Ev) -> str:

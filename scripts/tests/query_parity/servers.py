@@ -19,6 +19,7 @@ import requests
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RESERVED_PORTS = {5600, 5666}
+REQUEST_TIMEOUT = 60  # seconds, so a stuck server fails the run instead of hanging it
 
 
 def free_port() -> int:
@@ -97,7 +98,7 @@ class Server:
                 if self.session.get(f"{self.url}/api/0/info", timeout=1).ok:
                     return
             except requests.ConnectionError:
-                pass
+                pass  # not listening yet, retry until the deadline
             time.sleep(0.2)
         self.stop()
         raise RuntimeError(
@@ -125,6 +126,7 @@ class Server:
         r = self.session.post(
             f"{self.url}/api/0/buckets/{bucket_id}",
             json={"client": "aw-query-parity", "type": btype, "hostname": hostname},
+            timeout=REQUEST_TIMEOUT,
         )
         assert r.status_code in (200, 201, 304), (
             f"{self.name}: {r.status_code} {r.text}"
@@ -134,7 +136,9 @@ class Server:
         if not events:
             return
         r = self.session.post(
-            f"{self.url}/api/0/buckets/{bucket_id}/events", json=events
+            f"{self.url}/api/0/buckets/{bucket_id}/events",
+            json=events,
+            timeout=REQUEST_TIMEOUT,
         )
         assert r.ok, f"{self.name}: {r.status_code} {r.text}"
 
@@ -143,6 +147,7 @@ class Server:
         r = self.session.post(
             f"{self.url}/api/0/query/",
             json={"query": [query], "timeperiods": [period]},
+            timeout=REQUEST_TIMEOUT,
         )
         if not r.ok:
             return {"__error__": r.status_code, "__message__": r.text[:500]}

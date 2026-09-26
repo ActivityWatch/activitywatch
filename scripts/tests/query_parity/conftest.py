@@ -14,6 +14,7 @@ SCENARIOS = all_scenarios()
 
 KNOWN_FAILURES = Path(__file__).with_name("known_failures.txt")
 _failed_ids: List[str] = []
+_ran_ids: List[str] = []
 
 
 def pytest_addoption(parser):
@@ -53,14 +54,20 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_runtest_logreport(report):
-    if report.when == "call" and report.failed:
-        _failed_ids.append(report.nodeid.split("[", 1)[1].rstrip("]"))
+    if report.when == "call" and "[" in report.nodeid:
+        case_id = report.nodeid.split("[", 1)[1].rstrip("]")
+        _ran_ids.append(case_id)
+        if report.failed:
+            _failed_ids.append(case_id)
 
 
 def pytest_sessionfinish(session, exitstatus):
     if not session.config.getoption("--update-known-failures"):
         return
-    ids = sorted(set(_failed_ids))
+    # Only cases that actually ran are updated; entries for cases that were
+    # deselected, skipped or never reached (interrupted run) are kept.
+    old = set(KNOWN_FAILURES.read_text().split()) if KNOWN_FAILURES.exists() else set()
+    ids = sorted((old - set(_ran_ids)) | set(_failed_ids))
     KNOWN_FAILURES.write_text("".join(i + "\n" for i in ids))
     unclassified = [i for i in ids if known_reason(i) is None]
     print(f"\nwrote {len(ids)} known failures to {KNOWN_FAILURES}")
