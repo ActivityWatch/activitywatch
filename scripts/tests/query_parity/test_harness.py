@@ -40,7 +40,7 @@ def test_start_retries_on_read_timeout():
         server.stop()
 
 
-def _report(when, outcome, nodeid="test_x.py::test_parity[case-1]"):
+def _report(when, outcome, nodeid):
     return SimpleNamespace(
         when=when,
         nodeid=nodeid,
@@ -50,11 +50,15 @@ def _report(when, outcome, nodeid="test_x.py::test_parity[case-1]"):
 
 
 def test_record_report_ignores_skipped_calls():
+    t = "scripts/tests/query_parity/test_query_parity.py::test_parity"
     ran, failed = [], []
-    record_report(_report("call", "passed", "t.py::test_parity[a]"), ran, failed)
-    record_report(_report("call", "failed", "t.py::test_parity[b]"), ran, failed)
+    record_report(_report("call", "passed", f"{t}[a]"), ran, failed)
+    record_report(_report("call", "failed", f"{t}[b]"), ran, failed)
     # pytest.skip() inside the test body: a call-phase report with skipped=True
-    record_report(_report("call", "skipped", "t.py::test_parity[c]"), ran, failed)
-    record_report(_report("setup", "failed", "t.py::test_parity[d]"), ran, failed)
+    record_report(_report("call", "skipped", f"{t}[c]"), ran, failed)
+    record_report(_report("setup", "failed", f"{t}[d]"), ran, failed)
+    # A failing parametrized test elsewhere isn't a parity case
+    helper = "scripts/tests/query_parity/test_attribute.py::test_refuses[missing]"
+    record_report(_report("call", "failed", helper), ran, failed)
     assert ran == ["a", "b"]
     assert failed == ["b"]

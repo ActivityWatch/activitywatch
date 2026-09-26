@@ -56,10 +56,16 @@ def pytest_collection_modifyitems(config, items):
 def record_report(report, ran: List[str], failed: List[str]) -> None:
     """Track which cases ran and failed, for --update-known-failures.
 
-    Skipped cases (e.g. test_invariant skips when the server errored) don't
-    count as run, so their known_failures.txt entries are kept.
+    Only parity/invariant cases count, not parametrized helper tests in other
+    files. Skipped cases (e.g. test_invariant skips when the server errored)
+    don't count as run, so their known_failures.txt entries are kept.
     """
-    if report.when == "call" and "[" in report.nodeid and not report.skipped:
+    if (
+        report.when == "call"
+        and "test_query_parity.py::" in report.nodeid
+        and "[" in report.nodeid
+        and not report.skipped
+    ):
         case_id = report.nodeid.split("[", 1)[1].rstrip("]")
         ran.append(case_id)
         if report.failed:
