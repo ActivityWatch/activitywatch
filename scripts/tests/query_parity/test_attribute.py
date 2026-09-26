@@ -63,6 +63,26 @@ def test_underdetermined_single_needed_key(tmp_path):
     assert any(p.startswith("underdetermined: c") for p in problems)
 
 
+def test_underdetermined_resolved_by_combination_runs(tmp_path):
+    # c needs A plus either B or C, and the runs the diagnostic asks for exist
+    runs = {
+        "base": ["c"],
+        "CORE_161": ["c"],
+        "CORE_162": ["c"],
+        "CORE_163": ["c"],
+        "all": [],
+        "all-CORE_161": ["c"],
+        "all-CORE_162": [],
+        "all-CORE_163": [],
+        "CORE_161+CORE_162": [],
+        "CORE_161+CORE_163": [],
+        "CORE_161+CORE_162+CORE_163": [],
+    }
+    out, problems = attribute(_write(tmp_path, runs), {})
+    assert out["c"] == "CORE_161,CORE_162|CORE_161,CORE_163"
+    assert problems == []
+
+
 def test_residual_keeps_alternatives(tmp_path):
     runs = {
         "base": ["c"],

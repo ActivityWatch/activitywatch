@@ -139,6 +139,20 @@ def attribute(
         else:
             combo = combination(c, needed) if needed else None
             if combo is None:
+                # Fall back to the supplied combination runs that fix it and
+                # contain every needed key, keeping only the minimal ones.
+                passing = [
+                    keys
+                    for keys, run in combos.items()
+                    if c not in run and set(needed) <= keys
+                ]
+                minimal = sorted(
+                    ",".join(k for k in fixes if k in keys)
+                    for keys in passing
+                    if not any(other < keys for other in passing)
+                )
+                combo = "|".join(minimal) or None
+            if combo is None:
                 problems.append(
                     f"underdetermined: {c} is fixed by all fixes but not by "
                     f"{','.join(needed) or 'any single one'}; add KEY+KEY.txt runs"
