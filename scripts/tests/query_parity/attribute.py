@@ -37,12 +37,18 @@ KNOWN_FAILURES = Path(__file__).with_name("known_failures.txt")
 
 
 def failing(path: Path) -> Set[str]:
+    if not path.is_file():
+        sys.exit(f"missing result file: {path}")
     return set(read_known_failures(path))
 
 
 def attribute(results: Path, current: Dict[str, str]) -> Dict[str, str]:
     base = failing(results / "base.txt")
+    if not base:
+        sys.exit(f"{results / 'base.txt'} lists no failures, refusing to attribute")
     fixes = sorted(p.stem for p in results.glob("*.txt") if p.stem in ISSUES)
+    if not fixes:
+        sys.exit(f"no <KEY>.txt result files in {results}")
     unknown = [
         p.name
         for p in results.glob("*.txt")
@@ -54,11 +60,8 @@ def attribute(results: Path, current: Dict[str, str]) -> Dict[str, str]:
         sys.exit(f"unrecognised result files (not an ISSUES key): {unknown}")
     single = {k: failing(results / f"{k}.txt") for k in fixes}
     all_ = failing(results / "all.txt")
-    all_but = {
-        k: failing(results / f"all-{k}.txt")
-        for k in fixes
-        if (results / f"all-{k}.txt").exists()
-    }
+    # Every fix needs its leave-one-out run, or combinations would be misattributed
+    all_but = {k: failing(results / f"all-{k}.txt") for k in fixes}
 
     new_failures = set().union(all_, *single.values(), *all_but.values()) - base
     if new_failures:
@@ -69,7 +72,7 @@ def attribute(results: Path, current: Dict[str, str]) -> Dict[str, str]:
     out: Dict[str, str] = {}
     for c in sorted(base):
         alone = [k for k in fixes if c not in single[k]]
-        needed = [k for k in fixes if k in all_but and c in all_but[k]]
+        needed = [k for k in fixes if c in all_but[k]]
         if c in all_:
             old = current.get(c) or suggest_spec(c)
             remaining = [k for k in spec_keys(old) if k not in fixes]
