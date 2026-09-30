@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib.util
 import json
 import re
@@ -217,8 +219,17 @@ def test_default_preset_categories_match_the_published_toml():
 
 
 def test_stdlib_toml_reader_agrees_with_tomllib():
-    """The 3.9-compatible reader must not diverge from a real TOML parser."""
-    tomllib = pytest.importorskip("tomllib")
+    """The 3.9-compatible reader must not diverge from a real TOML parser.
+
+    The release job runs this module on Python 3.9, where `tomllib` does not
+    exist. A bare `importorskip("tomllib")` would skip the cross-check exactly
+    where the stdlib-only reader matters, so prefer the stdlib parser and fall
+    back to the `tomli` backport (installed by the workflow).
+    """
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python < 3.11
+        tomllib = pytest.importorskip("tomli")
 
     with emitter.DEFAULT_MAP_TOML.open("rb") as fh:
         parsed = tomllib.load(fh)

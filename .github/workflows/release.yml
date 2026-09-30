@@ -431,8 +431,10 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install pytest
-        run: pip install pytest
+      - name: Install research-edition check dependencies
+        # `tomli` is the Python 3.9 backport of `tomllib`, used by the preset
+        # test to cross-check the emitter's stdlib-only TOML reader.
+        run: pip install pytest tomli
 
       # Verify every patch target string exists exactly once in the real
       # submodule sources for both build flavours.  Fails immediately if a
