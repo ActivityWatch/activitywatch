@@ -21,11 +21,23 @@ Each category carries a `data.color` so the Activity view is not unstyled
 (ActivityWatch/activitywatch#1439). Explicitly excluded app aliases map to
 `Excluded`; unknown applications remain `Uncategorized` instead of overlapping
 every specific rule with a catch-all.
+
+The build ships two presets. aw-webui activates only the *first* preset on a
+fresh install and offers the rest for manual activation, so the second preset
+is optional by construction:
+
+  1. `research-study`  -- the approved Lund taxonomy (install default).
+  2. `research-default` -- the study-neutral, geography-free intersection of
+     the Ghent and Lund research configs, sourced from
+     `scripts/research_edition/geography-free-default.toml`. A study that wants
+     a taxonomy with no locale baked in activates it and layers its own
+     locale/coverage pack on top.
 """
 
 import importlib.util
 import json
 import pathlib
+import re
 import sys
 
 # Characters that are special to BOTH Python's `re` and JavaScript's RegExp
@@ -42,6 +54,15 @@ _REGEX_METACHARACTERS = set(r"\^$.|?*+()[]{}")
 
 PRESET_ID = "research-study"
 PRESET_NAME = "Research Edition study categories"
+
+# Optional, study-neutral preset (second in the emitted array, never the
+# install default). Source of truth is the published TOML next to this script,
+# so the web-UI preset and the study-facing config cannot drift.
+DEFAULT_PRESET_ID = "research-default"
+DEFAULT_PRESET_NAME = "Research Edition geography-free preset"
+DEFAULT_MAP_TOML = (
+    pathlib.Path(__file__).with_name("research_edition") / "geography-free-default.toml"
+)
 
 # Qualitative palette for the study taxonomy. aw-webui only colors a category
 # when `data.color` is set — there is no name-hash fallback for categories —
@@ -112,6 +133,32 @@ def color_for(category: str) -> str:
         ) from exc
 
 
+def _category_entries(categories: set[str], app_map: dict[str, str]) -> list[dict]:
+    """Build aw-webui category entries with stable, portable rules.
+
+    Sorted so the same taxonomy always produces a byte-identical preset.
+    """
+    return [
+        {
+            "name": [category],
+            "rule": {
+                "type": "regex",
+                "regex": exact_alternation(
+                    {category}
+                    | {
+                        app
+                        for app, app_category in app_map.items()
+                        if app_category == category
+                    }
+                ),
+                "ignore_case": True,
+            },
+            "data": {"color": color_for(category)},
+        }
+        for category in sorted(categories)
+    ]
+
+
 def build_preset() -> dict:
     source = _load_category_source()
 
@@ -130,34 +177,86 @@ def build_preset() -> dict:
     return {
         "id": PRESET_ID,
         "name": PRESET_NAME,
-        # Sorted so the same taxonomy always produces a byte-identical preset.
-        "categories": [
-            {
-                "name": [category],
-                "rule": {
-                    "type": "regex",
-                    "regex": exact_alternation(
-                        {category}
-                        | {
-                            app
-                            for app, app_category in source.APP_CATEGORY_MAP.items()
-                            if app_category == category
-                        }
-                    ),
-                    "ignore_case": True,
-                },
-                "data": {"color": color_for(category)},
-            }
-            for category in sorted(categories)
-        ],
+        "categories": _category_entries(categories, source.APP_CATEGORY_MAP),
     }
 
 
+# The `research_category_map` table of the published TOML contains only simple
+# `"pattern" = "Category"` assignments, so the default preset's labels can be
+# read with a stdlib-only reader. A full TOML parser is deliberately avoided:
+# the release job runs this script on Python 3.9 (where `tomllib` does not
+# exist) and before any third-party dependency is installed. The parser is
+# cross-checked against `tomllib` in the test suite.
+_DEFAULT_TABLE = "[aw-watcher-window.research_category_map]"
+_ASSIGNMENT = re.compile(r'^\s*"[^"]*"\s*=\s*"([^"]+)"')
+
+
+def _toml_table_string_values(text: str, table: str) -> list[str]:
+    """String values assigned directly under `table` (bare TOML, no imports)."""
+    values: list[str] = []
+    in_table = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("["):
+            in_table = stripped == table
+            continue
+        if not in_table:
+            continue
+        match = _ASSIGNMENT.match(line)
+        if match:
+            values.append(match.group(1))
+    return values
+
+
+def _load_default_categories() -> set[str]:
+    """The category set of the geography-free default preset.
+
+    Derived from the published TOML so the web-UI preset and the study-facing
+    config cannot drift. Only the distinct stored labels are needed: the watcher
+    substitutes a matched browser URL/title with the category label before
+    storage, and the default keeps application names, so the web-UI preset
+    matches labels only (no app aliases, no raw patterns).
+    """
+    text = DEFAULT_MAP_TOML.read_text(encoding="utf-8")
+    categories = set(_toml_table_string_values(text, _DEFAULT_TABLE))
+    if not categories:
+        raise RuntimeError(
+            f"no categories found under {_DEFAULT_TABLE} in {DEFAULT_MAP_TOML}"
+        )
+    return categories
+
+
+def build_default_preset() -> dict:
+    """The optional geography-free preset (intersection of two studies).
+
+    Emitted *after* the study preset, so aw-webui keeps the study taxonomy as
+    the install default and offers this one for manual activation.
+    """
+    categories = _load_default_categories()
+
+    missing_colors = categories - set(CATEGORY_COLORS)
+    if missing_colors:
+        raise RuntimeError(
+            "default preset categories have no color in CATEGORY_COLORS: "
+            + ", ".join(sorted(missing_colors))
+        )
+
+    return {
+        "id": DEFAULT_PRESET_ID,
+        "name": DEFAULT_PRESET_NAME,
+        "categories": _category_entries(categories, {}),
+    }
+
+
+def build_presets() -> list[dict]:
+    """Presets shipped in a Research Edition build, install default first."""
+    return [build_preset(), build_default_preset()]
+
+
 def main() -> None:
-    preset = build_preset()
     # Compact and newline-free: this is written straight into $GITHUB_ENV,
     # which treats a newline as the end of the value.
-    print(json.dumps([preset], separators=(",", ":")))
+    print(json.dumps(build_presets(), separators=(",", ":")))
 
 
 if __name__ == "__main__":

@@ -431,8 +431,10 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install pytest
-        run: pip install pytest
+      - name: Install research-edition check dependencies
+        # `tomli` is the Python 3.9 backport of `tomllib`, used by the preset
+        # test to cross-check the emitter's stdlib-only TOML reader.
+        run: pip install pytest tomli
 
       # Verify every patch target string exists exactly once in the real
       # submodule sources for both build flavours.  Fails immediately if a
@@ -451,6 +453,12 @@ jobs:
       # sources; this catches naming drift without Inno Setup or signing.
       - name: Run profile patcher and installer collection tests
         run: python3 -m pytest scripts/tests/test_patch_research_edition_profile.py -q
+
+      # The web-UI preset emitter is stdlib-only and must stay 3.9-compatible:
+      # the release job runs it before any dependency is installed. It also
+      # guards the study-facing geography-free TOML against drift.
+      - name: Test research edition category preset emitter
+        run: python3 -m pytest scripts/tests/test_emit_research_category_preset.py -q
 
       - name: Test updater channel isolation and release versions
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
