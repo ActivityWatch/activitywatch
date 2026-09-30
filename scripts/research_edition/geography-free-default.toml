@@ -1,0 +1,126 @@
+# Geography-free default research preset
+#
+# An optional, study-neutral category map for ActivityWatch Research Edition.
+# It is the *intersection* of two independent studies that both ran
+# ActivityWatch for research:
+#
+#   - Ghent / ERC: a v0.13-era classify-then-redact fork, title-substring
+#     allowlist, Belgian/Dutch sites.
+#   - Lund / IIIEE: Research Edition v0.14.0b5-research, 17-category time-use
+#     scheme, URL-then-title, Swedish + international sites.
+#
+# Where both studies classified the same pattern into the same family, that
+# agreement is a sensible default. Where they differ, the difference is either
+# folded in as an option below or left to the study as a locale/coverage pack.
+#
+# This is NOT a drop-in for either study, and NOT baked over the Lund taxonomy.
+# It ships as a *second, optional* web-UI preset (`research-default`); the
+# Research Edition build keeps the Lund `research-study` preset as its install
+# default. A study that wants the geography-free default activates this preset
+# (or layers a locale pack on top) and says so in its methods.
+#
+# Stored labels use the Lund time-use spelling.
+#
+# Layer on top per study:
+#   - locale pack (BE/NL, SE, …)
+#   - grain pack (site-level social/video)
+#   - coverage pack (TikTok, Reddit, AI, Education, Sensitive)
+#   - optional [aw-watcher-window.research_app_category_map]
+#
+# See the web-UI preset emitter: scripts/emit_research_category_preset.py
+
+[aw-watcher-window]
+research_enabled = true
+
+[aw-watcher-window.research_app_category_map]
+# Empty on purpose. Both shipped studies kept non-browser app names.
+# Opt in with an app→category map if the study wants app-level categories.
+
+[aw-watcher-window.research_category_map]
+# Email
+"mail.google.com" = "Email"
+"outlook.office365.com" = "Email"
+"mail.yahoo.com" = "Email"          # collision-safe; do not use bare yahoo.com
+"yahoo mail" = "Email"
+"gmail" = "Email"
+"outlook" = "Email"
+
+# Messaging (Discord is site-level in Ghent; folded here)
+"web.whatsapp.com" = "Messaging"
+"messenger.com" = "Messaging"
+"discord.com" = "Messaging"
+"whatsapp" = "Messaging"
+"messenger" = "Messaging"
+"discord" = "Messaging"
+
+# Social Networking (Ghent stored Facebook/Instagram/Twitter/BeReal/Snapchat)
+"facebook.com" = "Social Networking"
+"instagram.com" = "Social Networking"
+"twitter.com" = "Social Networking"
+"snapchat.com" = "Social Networking"
+"bere.al" = "Social Networking"
+"facebook" = "Social Networking"
+"instagram" = "Social Networking"
+"twitter" = "Social Networking"
+"snapchat" = "Social Networking"
+"bereal" = "Social Networking"
+# Not in the intersection: tiktok, reddit — the Lund baked map omits both.
+
+# News & Current Affairs (Ghent stored "News")
+"edition.cnn.com" = "News & Current Affairs"
+"theguardian.com" = "News & Current Affairs"
+"aljazeera.com" = "News & Current Affairs"
+"bbc.com" = "News & Current Affairs"
+"the guardian" = "News & Current Affairs"
+"al jazeera" = "News & Current Affairs"
+"bbc" = "News & Current Affairs"
+"cnn" = "News & Current Affairs"
+
+# Video Streaming (Ghent stored "Youtube" or "Video")
+"youtube.com" = "Video Streaming"
+"primevideo.com" = "Video Streaming"
+"hbomax.com" = "Video Streaming"
+"twitch.tv" = "Video Streaming"
+"vimeo.com" = "Video Streaming"
+"prime video" = "Video Streaming"
+"hbo max" = "Video Streaming"
+"youtube" = "Video Streaming"
+"netflix" = "Video Streaming"
+"twitch" = "Video Streaming"
+"vimeo" = "Video Streaming"
+
+# Music & Audio
+"music.apple.com" = "Music & Audio"
+"spotify.com" = "Music & Audio"
+"apple music" = "Music & Audio"
+"spotify" = "Music & Audio"
+
+# Work & Productivity
+"docs.google.com" = "Work & Productivity"
+"calendar.google.com" = "Work & Productivity"
+"meet.google.com" = "Work & Productivity"
+"teams.microsoft.com" = "Work & Productivity"
+"translate.google.com" = "Work & Productivity"
+"zoom.us" = "Work & Productivity"
+"deepl.com" = "Work & Productivity"
+"microsoft teams" = "Work & Productivity"
+"google meet" = "Work & Productivity"
+"google translate" = "Work & Productivity"
+"google drive" = "Work & Productivity"
+"deepl" = "Work & Productivity"
+"miro" = "Work & Productivity"
+"adobe" = "Work & Productivity"
+"zoom" = "Work & Productivity"
+
+# Shopping — the Lund split is kept where both studies mapped the same pattern
+"amazon.com" = "Shopping - Goods"
+"hellofresh" = "Shopping - Groceries & Food"
+
+# Games (Ghent stored "Entertainment & Games")
+"catanuniverse.com" = "Games"
+"forge of empires" = "Games"
+"agar.io" = "Games"
+
+# Search — only the collision-safe Yahoo half. Do not add bare "yahoo.com"
+# or a generic "google" keyword (collides with Workspace / Meet / Drive).
+"yahoo search" = "Search & Navigation"
