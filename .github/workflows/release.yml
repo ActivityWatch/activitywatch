@@ -471,6 +471,10 @@ jobs:
       AW_EXTRAS: true
       MACOSX_DEPLOYMENT_TARGET: "12.0"
       AW_RESEARCH_EDITION: ${{ matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      # All subprojects share one virtualenv. Poetry's parallel installer can
+      # race while replacing the same dependency from different lock files,
+      # leaving a dangling dist-info that makes the next pip uninstall crash.
+      POETRY_INSTALLER_PARALLEL: "false"
     defaults:
       run:
         shell: bash
@@ -831,6 +835,10 @@ jobs:
     env:
       AW_EXTRAS: true
       AW_RESEARCH_EDITION: ${{ (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research') }}
+      # All subprojects share one virtualenv. Poetry's parallel installer can
+      # race while replacing the same dependency from different lock files,
+      # leaving a dangling dist-info that makes the next pip uninstall crash.
+      POETRY_INSTALLER_PARALLEL: "false"
       # AppImage tools (linuxdeploy/appimagetool) are themselves AppImages;
       # FUSE is unavailable inside Docker containers, so use extract-and-run.
       APPIMAGE_EXTRACT_AND_RUN: 1
