@@ -1,0 +1,78 @@
+name: "🐞 Bug report"
+description: Report something that is not working as expected
+title: ""
+labels:
+  - "type: bug"
+body:
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I am on the [latest ActivityWatch release](https://github.com/ActivityWatch/activitywatch/releases/latest).
+          required: true
+        - label: I searched existing issues and believe this is not a duplicate.
+          required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      description: Operating system name and version
+      placeholder: "e.g. Windows 11, macOS 15.7, Ubuntu 26.04"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: ActivityWatch version
+      description: Found at the bottom of the Web UI
+      placeholder: "e.g. v0.14.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug
+    attributes:
+      label: Describe the bug
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Give the smallest reliable sequence that reproduces the problem.
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: documentation
+    attributes:
+      label: Logs, screenshots, or other documentation
+      description: |
+        Add anything that helps diagnose the problem. Please remove private or sensitive data.
+        Logs are typically under:
+        - Windows: C:\Users\<USER>\AppData\Local\ActivityWatch\Logs
+        - macOS: /Users/<USER>/Library/Logs/activitywatch
+        - Linux: /home/<USER>/.cache/activitywatch/log
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that may be relevant.
