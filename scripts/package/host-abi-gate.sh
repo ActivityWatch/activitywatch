@@ -52,15 +52,29 @@ scan_dir() {
     fi
     while IFS= read -r path; do
         [ -n "$path" ] || continue
-        local base
+        local base target_base
         base=$(basename "$path")
+        # Resolve symlink target so a differently-named link (e.g. libfoo.so ->
+        # libwayland-client.so.0) is caught by its target's name too.
+        target_base=""
+        if [ -L "$path" ]; then
+            local resolved
+            resolved=$(readlink -f "$path" 2>/dev/null || true)
+            [ -n "$resolved" ] && target_base=$(basename "$resolved")
+        fi
+        local matched=0
         for lib in "${HOST_ABI_LIBS[@]}"; do
             if [ "$base" = "$lib" ] || [[ "$base" == "$lib".so* ]]; then
-                printf '%s\n' "$path"
-                printf '%s\n' "$path" >> "$FOUND_LOG"
-                break
+                matched=1; break
+            fi
+            if [ -n "$target_base" ] && { [ "$target_base" = "$lib" ] || [[ "$target_base" == "$lib".so* ]]; }; then
+                matched=1; break
             fi
         done
+        if [ "$matched" -eq 1 ]; then
+            printf '%s\n' "$path"
+            printf '%s\n' "$path" >> "$FOUND_LOG"
+        fi
     done <<< "$listing"
 }
 
