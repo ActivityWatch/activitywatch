@@ -69,7 +69,11 @@ scan_dir() {
 # FUSE disabled. Returns non-zero when neither works, so the caller can abort
 # rather than silently skip the scan.
 extract_appimage() {
-    local ai="$1" dest="$2"
+    local ai dest
+    # Resolve to an absolute path so the self-extract below works from any cwd,
+    # whether the caller passed a relative or an absolute path.
+    ai=$(realpath "$1")
+    dest="$2"
     if command -v unsquashfs &>/dev/null; then
         local offset
         offset=$(python3 -c "
@@ -89,7 +93,7 @@ for magic in (b'sqsh', b'hsqs'):
         fi
     fi
     pushd "$WORKDIR" >/dev/null
-    APPIMAGE_EXTRACT_AND_RUN=1 "$OLDPWD/$ai" --appimage-extract &>/dev/null || true
+    APPIMAGE_EXTRACT_AND_RUN=1 "$ai" --appimage-extract &>/dev/null || true
     popd >/dev/null
     if [ -d "$WORKDIR/squashfs-root" ]; then
         mv "$WORKDIR/squashfs-root" "$dest"
