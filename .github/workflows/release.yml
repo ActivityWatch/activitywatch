@@ -749,6 +749,10 @@ jobs:
           poetry install
           make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      - name: Host-ABI gate — verify no host system libraries are bundled
+        if: startsWith(runner.os, 'linux')
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch
+
       - name: Package dmg
         if: runner.os == 'macOS'
         run: |
@@ -804,6 +808,10 @@ jobs:
       - name: Package AppImage
         if: startsWith(runner.os, 'linux')
         run: ./scripts/package/package-appimage.sh
+
+      - name: Host-ABI gate — verify the packaged AppImage
+        if: startsWith(runner.os, 'linux')
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch*-linux-x86_64.AppImage
 
       - name: Package deb
         if: startsWith(runner.os, 'linux')
@@ -1095,6 +1103,9 @@ jobs:
           poetry install
           make package
 
+      - name: Host-ABI gate — verify no host system libraries are bundled
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch
+
       - name: Package AppImage
         run: ./scripts/package/package-appimage.sh
 
@@ -1110,6 +1121,9 @@ jobs:
           AI_SRC="dist/activitywatch${EDITION}-linux-x86_64.AppImage"
           AI_DST="dist/activitywatch${EDITION}-linux-x86_64-manylinux_2_28.AppImage"
           [ -f "$AI_SRC" ] && mv -v "$AI_SRC" "$AI_DST"
+
+      - name: Host-ABI gate — verify the packaged AppImage
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch*-manylinux_2_28.AppImage
 
       - name: ABI gate — verify glibc 2.28 floor
         run: |
