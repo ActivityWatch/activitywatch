@@ -749,6 +749,10 @@ jobs:
           poetry install
           make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
 
+      - name: Host-ABI gate — verify no host system libraries are bundled
+        if: startsWith(runner.os, 'linux')
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch
+
       - name: Package dmg
         if: runner.os == 'macOS'
         run: |
@@ -1094,6 +1098,9 @@ jobs:
           source venv/bin/activate
           poetry install
           make package
+
+      - name: Host-ABI gate — verify no host system libraries are bundled
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch
 
       - name: Package AppImage
         run: ./scripts/package/package-appimage.sh
