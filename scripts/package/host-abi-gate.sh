@@ -13,7 +13,7 @@
 # Keep this list in sync with the "Remove problem-causing binaries" block in
 # the top-level Makefile.
 #
-# Usage: host-abi-gate.sh <bundle-dir|bundle.zip> [...]
+# Usage: host-abi-gate.sh <bundle-dir|bundle.zip|bundle.AppImage> [...]
 # Exit 0 = all clear; exit 1 = a host-ABI library is bundled; exit 2 = error.
 
 set -euo pipefail
@@ -28,7 +28,7 @@ HOST_ABI_LIBS=(
 )
 
 if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 <bundle-dir|bundle.zip> [...]" >&2
+    echo "Usage: $0 <bundle-dir|bundle.zip|bundle.AppImage> [...]" >&2
     exit 2
 fi
 
@@ -37,19 +37,66 @@ FOUND_LOG="$WORKDIR/found.txt"
 touch "$FOUND_LOG"
 trap 'rm -rf "$WORKDIR"' EXIT
 
-# Prints any path under $1 whose basename matches a host-ABI library.
+# Prints (and records) any path under $1 whose basename matches a host-ABI
+# library. Symlinks are included: a forbidden .so name present only as a link
+# to a differently named file is still bundled, and the loader resolves it by
+# that name. A failing `find` aborts the gate — an incomplete scan must not be
+# able to report PASS.
 scan_dir() {
     local dir="$1"
+    local listing
+    if ! listing=$(find "$dir" \( -type f -o -type l \) \
+        \( -name '*.so' -o -name '*.so.*' \) -print); then
+        echo "ERROR: find failed while scanning $dir — gate cannot verify the bundle" >&2
+        exit 2
+    fi
     while IFS= read -r path; do
+        [ -n "$path" ] || continue
         local base
         base=$(basename "$path")
         for lib in "${HOST_ABI_LIBS[@]}"; do
             if [ "$base" = "$lib" ] || [[ "$base" == "$lib".so* ]]; then
                 printf '%s\n' "$path"
+                printf '%s\n' "$path" >> "$FOUND_LOG"
                 break
             fi
         done
-    done < <(find "$dir" -type f \( -name '*.so' -o -name '*.so.*' \) 2>/dev/null)
+    done <<< "$listing"
+}
+
+# Extracts an AppImage into $2. Mirrors scripts/package/abi-gate.sh: prefer
+# unsquashfs (explicit SquashFS offset), else the AppImage self-extract with
+# FUSE disabled. Returns non-zero when neither works, so the caller can abort
+# rather than silently skip the scan.
+extract_appimage() {
+    local ai="$1" dest="$2"
+    if command -v unsquashfs &>/dev/null; then
+        local offset
+        offset=$(python3 -c "
+import sys
+data = open(sys.argv[1], 'rb').read()
+for magic in (b'sqsh', b'hsqs'):
+    idx = data.find(magic)
+    if idx >= 0:
+        print(idx)
+        break
+" "$ai" 2>/dev/null || true)
+        if [ -n "$offset" ]; then
+            if unsquashfs -dest "$dest" -offset "$offset" "$ai" &>/dev/null; then
+                echo "  Extracted AppImage via unsquashfs (offset $offset)"
+                return 0
+            fi
+        fi
+    fi
+    pushd "$WORKDIR" >/dev/null
+    APPIMAGE_EXTRACT_AND_RUN=1 "$OLDPWD/$ai" --appimage-extract &>/dev/null || true
+    popd >/dev/null
+    if [ -d "$WORKDIR/squashfs-root" ]; then
+        mv "$WORKDIR/squashfs-root" "$dest"
+        echo "  Extracted AppImage via --appimage-extract"
+        return 0
+    fi
+    return 1
 }
 
 scan_path() {
@@ -60,15 +107,23 @@ scan_path() {
             mkdir -p "$dest"
             unzip -q "$arg" -d "$dest"
             echo "=== Scanning zip: $arg ==="
-            scan_dir "$dest" | tee -a "$FOUND_LOG"
+            scan_dir "$dest"
             ;;
         *.AppImage)
-            echo "WARNING: AppImage scan not supported here; scanning the bundle directory it was built from instead" >&2
+            local dest="$WORKDIR/appimage"
+            mkdir -p "$dest"
+            if extract_appimage "$arg" "$dest"; then
+                echo "=== Scanning AppImage: $arg ==="
+                scan_dir "$dest"
+            else
+                echo "ERROR: could not extract $(basename "$arg") — host-ABI scan is required; aborting" >&2
+                exit 2
+            fi
             ;;
         *)
             if [ -d "$arg" ]; then
                 echo "=== Scanning dir: $arg ==="
-                scan_dir "$arg" | tee -a "$FOUND_LOG"
+                scan_dir "$arg"
             else
                 echo "ERROR: no such file or directory: $arg" >&2
                 exit 2

@@ -809,6 +809,10 @@ jobs:
         if: startsWith(runner.os, 'linux')
         run: ./scripts/package/package-appimage.sh
 
+      - name: Host-ABI gate — verify the packaged AppImage
+        if: startsWith(runner.os, 'linux')
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch*-linux-x86_64.AppImage
+
       - name: Package deb
         if: startsWith(runner.os, 'linux')
         run: ./scripts/package/package-deb.sh
@@ -1117,6 +1121,9 @@ jobs:
           AI_SRC="dist/activitywatch${EDITION}-linux-x86_64.AppImage"
           AI_DST="dist/activitywatch${EDITION}-linux-x86_64-manylinux_2_28.AppImage"
           [ -f "$AI_SRC" ] && mv -v "$AI_SRC" "$AI_DST"
+
+      - name: Host-ABI gate — verify the packaged AppImage
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch*-manylinux_2_28.AppImage
 
       - name: ABI gate — verify glibc 2.28 floor
         run: |
