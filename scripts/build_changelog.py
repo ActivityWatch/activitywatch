@@ -595,6 +595,13 @@ def summary_repos(
     return "\n".join(sections)
 
 
+SUPPORT_SECTION = """# Support ActivityWatch
+
+ActivityWatch is free and open source, with no feature gates. If it is useful to you, \
+[AW Pro](https://activitywatch.net/subscribe/) is an optional subscription that funds \
+ongoing development."""
+
+
 def build(
     org: str,
     repo: str,
@@ -678,6 +685,7 @@ See the [getting started guide in the documentation](https://docs.activitywatch.
  - **Linux**: [.AppImage]({base}/activitywatch-tauri-{tag_no_v}-linux-x86_64.AppImage) | [.zip]({base}/activitywatch-tauri-{tag}-linux-x86_64.zip)
      """.strip()
         output += "\n\n"
+        output += SUPPORT_SECTION + "\n\n"
 
     output += output_contributors.strip() + "\n\n"
     output += output_changelog.strip() + "\n\n"

@@ -372,3 +372,39 @@ def test_uninitialized_submodule_does_not_derail_pin_collection(tmp_path):
 
     assert "server" in repos
     assert "./" not in repos  # the superproject's own gitlink, read from inside
+
+
+def test_support_section_links_the_subscribe_page_without_claiming_gates():
+    section = changelog.SUPPORT_SECTION
+    assert section.startswith("# Support ActivityWatch")
+    assert "https://activitywatch.net/subscribe/" in section
+    assert "no feature gates" in section
+
+
+def test_support_section_reaches_the_assembled_bundle_notes(bundle, tmp_path, monkeypatch):
+    # Exercises build() end-to-end, not just the constant: if the insertion in build()
+    # is dropped, the wording test above still passes while published notes lose the link.
+    until = bundle["release"]()
+    output_path = tmp_path / "notes.md"
+    # Keep the test offline and out of the committed contributor caches.
+    monkeypatch.setattr(changelog, "get_all_contributors", set)
+    monkeypatch.setattr(changelog, "get_twitter_of_ghusers", dict)
+    monkeypatch.chdir(bundle["path"])
+
+    changelog.build(
+        "ActivityWatch",
+        "activitywatch",
+        "ActivityWatch",
+        (bundle["since"], until),
+        str(output_path),
+        REPO_ORDER,
+    )
+
+    notes = output_path.read_text()
+    assert changelog.SUPPORT_SECTION in notes
+    # It belongs between the downloads and the contributor list.
+    assert (
+        notes.index("# Downloads")
+        < notes.index("# Support ActivityWatch")
+        < notes.index("# Contributors")
+    )
