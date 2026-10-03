@@ -372,3 +372,10 @@ def test_uninitialized_submodule_does_not_derail_pin_collection(tmp_path):
 
     assert "server" in repos
     assert "./" not in repos  # the superproject's own gitlink, read from inside
+
+
+def test_support_section_links_the_subscribe_page_without_claiming_gates():
+    section = changelog.SUPPORT_SECTION
+    assert section.startswith("# Support ActivityWatch")
+    assert "https://activitywatch.net/subscribe/" in section
+    assert "no feature gates" in section
