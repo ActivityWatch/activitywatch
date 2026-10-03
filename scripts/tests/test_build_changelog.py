@@ -379,3 +379,32 @@ def test_support_section_links_the_subscribe_page_without_claiming_gates():
     assert section.startswith("# Support ActivityWatch")
     assert "https://activitywatch.net/subscribe/" in section
     assert "no feature gates" in section
+
+
+def test_support_section_reaches_the_assembled_bundle_notes(bundle, tmp_path, monkeypatch):
+    # Exercises build() end-to-end, not just the constant: if the insertion in build()
+    # is dropped, the wording test above still passes while published notes lose the link.
+    until = bundle["release"]()
+    output_path = tmp_path / "notes.md"
+    # Keep the test offline and out of the committed contributor caches.
+    monkeypatch.setattr(changelog, "get_all_contributors", lambda: set())
+    monkeypatch.setattr(changelog, "get_twitter_of_ghusers", lambda ghusers: {})
+    monkeypatch.chdir(bundle["path"])
+
+    changelog.build(
+        "ActivityWatch",
+        "activitywatch",
+        "ActivityWatch",
+        (bundle["since"], until),
+        str(output_path),
+        REPO_ORDER,
+    )
+
+    notes = output_path.read_text()
+    assert changelog.SUPPORT_SECTION in notes
+    # It belongs between the downloads and the contributor list.
+    assert (
+        notes.index("# Downloads")
+        < notes.index("# Support ActivityWatch")
+        < notes.index("# Contributors")
+    )
