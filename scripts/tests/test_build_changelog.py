@@ -387,8 +387,8 @@ def test_support_section_reaches_the_assembled_bundle_notes(bundle, tmp_path, mo
     until = bundle["release"]()
     output_path = tmp_path / "notes.md"
     # Keep the test offline and out of the committed contributor caches.
-    monkeypatch.setattr(changelog, "get_all_contributors", lambda: set())
-    monkeypatch.setattr(changelog, "get_twitter_of_ghusers", lambda ghusers: {})
+    monkeypatch.setattr(changelog, "get_all_contributors", set)
+    monkeypatch.setattr(changelog, "get_twitter_of_ghusers", dict)
     monkeypatch.chdir(bundle["path"])
 
     changelog.build(
