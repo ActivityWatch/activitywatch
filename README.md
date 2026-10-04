@@ -103,8 +103,8 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<span><img src="https://activitywatch.net/img/screenshots/realhyperchango/activity-productivity.png" alt="ActivityWatch activity summary" width="45%"></span>
-<span><img src="https://activitywatch.net/img/screenshots/maholli/month.png" alt="ActivityWatch monthly activity timeline" width="50%"></span>
+<span><img src="https://activitywatch.net/img/screenshots/realhyperchango/activity-productivity.png" alt="ActivityWatch activity summary" width="45%" align="top"></span>
+<span><img src="https://activitywatch.net/img/screenshots/maholli/month.png" alt="ActivityWatch monthly activity timeline" width="50%" align="top"></span>
 
 You can find more (and newer) screenshots on [the website](https://activitywatch.net/screenshots/).
 
