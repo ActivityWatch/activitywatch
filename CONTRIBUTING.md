@@ -17,11 +17,21 @@ How to Contribute
 
 ## Getting started
 
-To develop on ActivityWatch you'll first want to install from source. To do so, follow [the guide in the documentation](https://activitywatch.readthedocs.io/en/latest/installing-from-source.html).
+New to ActivityWatch? Start with the [getting started guide](https://docs.activitywatch.net/en/latest/getting-started.html) to try the app and see how it tracks and displays your activity. For background on the project, read the discussions about our [mission and vision](https://github.com/ActivityWatch/activitywatch/issues/236) and [funding](https://github.com/ActivityWatch/activitywatch/issues/259).
 
-You might then want to read about the [architecture](https://activitywatch.readthedocs.io/en/latest/architecture.html) and the [data model](https://activitywatch.readthedocs.io/en/latest/buckets-and-events.html).
+To develop on ActivityWatch, follow the [installing from source guide](https://docs.activitywatch.net/en/latest/installing-from-source.html). ActivityWatch is split into several component repositories, so use the [architecture guide](https://docs.activitywatch.net/en/latest/architecture.html) to find the component you want to work on. Read that repository's README and Makefile for its setup and test commands.
+
+The [data model](https://docs.activitywatch.net/en/latest/buckets-and-events.html) explains buckets and events, which are shared by the server, watchers, and clients.
 
 If you want some code examples for how to write watchers or other types of clients, see the [documentation for writing watchers](https://docs.activitywatch.net/en/latest/examples/writing-watchers.html).
+
+### Picking work and staying in touch
+
+See [How you can help](#how-you-can-help) for beginner-friendly issues, bugs, and feature requests. The [roadmap][roadmap] and [milestones][milestones] give context on planned work. Before starting, read the issue's comments and check its assignees and linked pull requests to avoid duplicating work. If the scope or priority is unclear, ask in the issue or on [Discord][discord].
+
+Use GitHub's **Watch** menu on the component repository you're working in to follow development. You can choose **Custom** notifications for issues and pull requests; see [GitHub's notification guide](https://docs.github.com/en/subscriptions-and-notifications/get-started/configuring-notifications#configuring-your-watch-settings-for-an-individual-repository). Use **Subscribe** on individual issues or pull requests if you only want updates on your contribution.
+
+For paid contributions, read [Getting paid](#getting-paid), including the linked forum discussion and time-reporting script, and contact the maintainers about the experiment.
 
 
 ## How you can help
@@ -45,7 +55,7 @@ Most of the above will get you up on our [contributor stats page][contributors] 
 [help wanted]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
 [bugs]: https://github.com/ActivityWatch/activitywatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3A+bug%22
 [milestones]: https://github.com/ActivityWatch/activitywatch/milestones
-[roadmap]: https://github.com/orgs/ActivityWatch/projects/2
+[roadmap]: https://github.com/orgs/ActivityWatch/projects/4
 [requested features]: https://forum.activitywatch.net/c/features
 [contributors]: http://activitywatch.net/contributors/
 
