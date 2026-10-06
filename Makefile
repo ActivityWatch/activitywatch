@@ -14,11 +14,13 @@ SHELL := /usr/bin/env bash
 OS := $(shell uname -s)
 
 ifeq ($(TAURI_BUILD),true)
-	SUBMODULES := aw-core aw-client aw-server aw-server-rust aw-watcher-afk aw-watcher-window aw-tauri
-	# Include awatcher on Linux (Wayland-compatible window watcher)
+	SUBMODULES := aw-core aw-client aw-server aw-server-rust aw-watcher-afk aw-watcher-window
 	ifeq ($(OS),Linux)
+		# awatcher must be built before aw-tauri so binaries can be staged into
+		# src-tauri/modules/ before the Tauri bundle step runs.
 		SUBMODULES := $(SUBMODULES) awatcher
 	endif
+	SUBMODULES := $(SUBMODULES) aw-tauri
 else
 	SUBMODULES := aw-core aw-client aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
 endif
@@ -68,6 +70,18 @@ build: aw-core/.git
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
 	for module in $(SUBMODULES); do \
+		if [ "$(TAURI_BUILD)" = "true" ] && [ "$(OS)" = "Linux" ] && [ "$$module" = "aw-tauri" ]; then \
+			echo "Staging bundled modules into aw-tauri/src-tauri/modules/"; \
+			mkdir -p aw-tauri/src-tauri/modules; \
+			if [ -f "aw-server-rust/target/$(targetdir)/aw-sync" ]; then \
+				cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync; \
+				chmod +x aw-tauri/src-tauri/modules/aw-sync; \
+			fi; \
+			if [ -f "awatcher/target/$(targetdir)/awatcher" ]; then \
+				cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher; \
+				chmod +x aw-tauri/src-tauri/modules/aw-awatcher; \
+			fi; \
+		fi; \
 		echo "Building $$module"; \
 		if [ "$$module" = "aw-server-rust" ] && [ "$(TAURI_BUILD)" = "true" ]; then \
 			make --directory=$$module aw-sync SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module aw-sync"; exit 2; }; \
