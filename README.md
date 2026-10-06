@@ -103,10 +103,10 @@ It is up to you as user to collect as much as you want, or as little as you want
 
 ### Screenshots
 
-<span><img src="https://activitywatch.net/img/screenshots/screenshot-v0.9.3-activity.png"   width="45%"></span>
-<span><img src="https://activitywatch.net/img/screenshots/screenshot-v0.8.0b9-timeline.png" width="50%"></span>
+<span><img src="https://activitywatch.net/img/screenshots/v0.14.0/activity-day-full.png" width="45%" alt="Activity view: a day across three devices"></span>
+<span><img src="https://activitywatch.net/img/screenshots/v0.14.0/timeline.png" width="50%" alt="Timeline view: window, browser and AFK events from three devices"></span>
 
-You can find more (and newer) screenshots on [the website](https://activitywatch.net/screenshots/).
+Screenshots of v0.14.0 with demo data (generated with `make screenshots`). Find more, including dark mode, Android, and how it has evolved over the versions, on [the website](https://activitywatch.net/screenshots/).
 
 ## How to cite ActivityWatch
 
