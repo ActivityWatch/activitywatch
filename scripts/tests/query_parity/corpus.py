@@ -41,7 +41,7 @@ class Query:
     roles: Tuple[str, ...] = ("a", "b")
     ordered: bool = True
     invariants: List[str] = field(default_factory=list)
-    # Both servers are expected to reject the query.
+    # Both servers are expected to reject the query (test_parity fails otherwise).
     expect_error: bool = False
 
 
