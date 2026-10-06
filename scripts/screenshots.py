@@ -33,6 +33,7 @@ override with --server-bin and --webpath.
 from __future__ import annotations
 
 import argparse
+import colorsys
 import contextlib
 import hashlib
 import json
@@ -83,7 +84,7 @@ CATEGORIES: List[dict] = [
             "type": "regex",
             "regex": "Google Docs|libreoffice|ReText|Notion|Linear",
         },
-        "data": {"color": "#0F0", "score": 10},
+        "data": {"score": 10},
     },
     {
         "name": ["Work", "Programming"],
@@ -102,16 +103,14 @@ CATEGORIES: List[dict] = [
     {"name": ["Work", "Video"], "rule": {"type": "regex", "regex": "Kdenlive"}},
     {"name": ["Work", "Audio"], "rule": {"type": "regex", "regex": "Audacity"}},
     {"name": ["Work", "3D"], "rule": {"type": "regex", "regex": "Blender"}},
-    {"name": ["Media"], "rule": {"type": "none"}, "data": {"color": "#F33"}},
+    {"name": ["Media"], "rule": {"type": "none"}},
     {
         "name": ["Media", "Games"],
         "rule": {"type": "regex", "regex": "Minecraft|RimWorld|Steam"},
-        "data": {"color": "#F80"},
     },
     {
         "name": ["Media", "Video"],
         "rule": {"type": "regex", "regex": "YouTube|Plex|VLC"},
-        "data": {"color": "#F33"},
     },
     {
         "name": ["Media", "Social Media"],
@@ -120,14 +119,12 @@ CATEGORIES: List[dict] = [
             "regex": "reddit|Facebook|Twitter|Instagram|devRant",
             "ignore_case": True,
         },
-        "data": {"color": "#FCC400"},
     },
     {
         "name": ["Media", "Music"],
         "rule": {"type": "regex", "regex": "Spotify|Deezer", "ignore_case": True},
-        "data": {"color": "#A8FC00"},
     },
-    {"name": ["Comms"], "rule": {"type": "none"}, "data": {"color": "#9FF"}},
+    {"name": ["Comms"], "rule": {"type": "none"}},
     {
         "name": ["Comms", "IM"],
         "rule": {
@@ -144,8 +141,65 @@ CATEGORIES: List[dict] = [
         "name": ["Comms", "Video Conferencing"],
         "rule": {"type": "regex", "regex": "zoom\\.us|Zoom Meeting|Google Meet"},
     },
+    # Keep #CCC: dark.css restyles exactly this grey in the summary bars
     {"name": ["Uncategorized"], "rule": {"type": "none"}, "data": {"color": "#CCC"}},
 ]
+
+# A calmer palette than the neon defaults. Base hues per category; the actual
+# colors are derived per theme (see themed_categories) so that bar labels stay
+# readable: #333 text on light, white text on dark (contrast >= ~4.9:1).
+PALETTE: Dict[Tuple[str, ...], str] = {
+    ("Work",): "#3FA27A",
+    ("Work", "Programming"): "#2E9E9A",
+    ("Work", "Programming", "ActivityWatch"): "#3BAE8C",
+    ("Work", "Design"): "#D4AA3A",
+    ("Work", "Image"): "#C58BD6",
+    ("Work", "Video"): "#7FA6D9",
+    ("Work", "Audio"): "#8FB8C9",
+    ("Work", "3D"): "#B0A57A",
+    ("Media",): "#E8915A",
+    ("Media", "Games"): "#E06666",
+    ("Media", "Video"): "#E8915A",
+    ("Media", "Social Media"): "#E07AA8",
+    ("Media", "Music"): "#8DB64A",
+    ("Comms",): "#5B8FD0",
+    ("Comms", "IM"): "#5E9BE0",
+    ("Comms", "Email"): "#7D8FE8",
+    ("Comms", "Video Conferencing"): "#9A7FE0",
+}
+
+
+def _luminance(rgb: Tuple[float, float, float]) -> float:
+    c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in rgb]
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+
+
+def _tone(hex_color: str, target_luminance: float, saturation: float) -> str:
+    """Same hue, lightness adjusted to a target relative luminance."""
+    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    h, _l, s = colorsys.rgb_to_hls(r, g, b)
+    lo, hi = 0.0, 1.0
+    for _ in range(30):
+        mid = (lo + hi) / 2
+        if _luminance(colorsys.hls_to_rgb(h, mid, s * saturation)) < target_luminance:
+            lo = mid
+        else:
+            hi = mid
+    rgb = colorsys.hls_to_rgb(h, (lo + hi) / 2, s * saturation)
+    return "#%02X%02X%02X" % tuple(round(v * 255) for v in rgb)
+
+
+def themed_categories(theme: str) -> List[dict]:
+    # light: luminance 0.36 vs #333 text ~4.9:1; dark: 0.15 vs white text ~5.2:1
+    target, sat = (0.15, 0.75) if theme == "dark" else (0.36, 0.85)
+    out = []
+    for cat in CATEGORIES:
+        cat = json.loads(json.dumps(cat))
+        base = PALETTE.get(tuple(cat["name"]))
+        if base:
+            cat.setdefault("data", {})["color"] = _tone(base, target, sat)
+        out.append(cat)
+    return out
 
 
 # =============================================================================
@@ -959,8 +1013,8 @@ def configure_settings(srv: Server, theme: str, end: datetime) -> None:
         },
         "userSatisfactionPollData": {"isEnabled": False, "nextPollTime": far, "timesPollIsShown": 3},
         "uncategorizedNotificationData": {"isEnabled": False, "minTotalSeconds": 3600, "minRatio": 0.3},
-        "classes": CATEGORIES,
-        "category_sets": [{"id": "default", "categories": CATEGORIES}],
+        "classes": themed_categories(theme),
+        "category_sets": [{"id": "default", "categories": themed_categories(theme)}],
         "active_set_ids": ["default"],
     }
     for key, value in settings.items():
@@ -1087,8 +1141,6 @@ def build_shots(day: date, today: date) -> List[Shot]:
         Shot("activity-year", f"/#/activity/@all/year/{y}/view/summary"),
         Shot("activity-browser", f"/#/activity/{LAPTOP}/day/{d}/view/browser"),
         Shot("timeline", "/#/timeline", setup=timeline_full_day(day)),
-        Shot("trends", f"/#/trends/{LAPTOP}", setup=trends_30d),
-        Shot("work-report", "/#/work-report", setup=work_report),
         Shot("search", "/#/search", setup=search("Pull Request")),
         Shot("query", f"/#/query?q={q}", setup=query_explorer(day)),
         Shot("stopwatch", "/#/stopwatch"),
@@ -1096,6 +1148,14 @@ def build_shots(day: date, today: date) -> List[Shot]:
         Shot("categorization", "/#/settings/categorization"),
         Shot("buckets", "/#/buckets"),
         # Not included: Home (it is mostly a "Support us" page, not a product shot)
+    ]
+
+
+# Views with known web UI bugs (see PR); only captured when asked for with --only.
+def extra_shots() -> List[Shot]:
+    return [
+        Shot("trends", f"/#/trends/{LAPTOP}", setup=trends_30d),
+        Shot("work-report", "/#/work-report", setup=work_report),
     ]
 
 
@@ -1271,7 +1331,7 @@ def main() -> int:
     parser.add_argument("--days", type=int, default=365, help="days of demo data, ending now")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--date", type=date.fromisoformat, default=None, help="day to show (default: last full workday)")
-    parser.add_argument("--only", action="append", default=[], help="only views whose name contains this (repeatable)")
+    parser.add_argument("--only", action="append", default=[], help="only views whose name contains this (repeatable or comma-separated; also enables trends, work-report)")
     parser.add_argument("--full-page", action="store_true", help="capture every view as a full-page (tall) screenshot")
     parser.add_argument("--keep-running", action="store_true", help="leave the seeded server up after capturing")
     parser.add_argument("--no-capture", action="store_true", help="only start and seed the server (implies --keep-running)")
@@ -1318,7 +1378,8 @@ def main() -> int:
                 day = args.date or pick_day(devices, end.date())
                 shots = build_shots(day, end.date())
                 if args.only:
-                    shots = [s for s in shots if any(o in s.name for o in args.only)]
+                    only = [o for arg in args.only for o in arg.split(",") if o]
+                    shots = [s for s in shots + extra_shots() if any(o in s.name for o in only)]
                 if args.full_page:
                     for s in shots:
                         s.full_page = True
