@@ -7,7 +7,7 @@
 #
 # We recommend creating and activating a Python virtualenv before building.
 # Instructions on how to do this can be found in the guide linked above.
-.PHONY: build install test test-query-parity clean clean_all update-submodules sync-tauri-server
+.PHONY: build install test test-query-parity clean clean_all update-submodules sync-tauri-server screenshots
 
 SHELL := /usr/bin/env bash
 
@@ -161,6 +161,11 @@ test-integration:
 # events. See scripts/tests/query_parity/README.md.
 test-query-parity:
 	python3 -m pytest scripts/tests/query_parity -q -rfX -p no:cacheprovider
+
+# Marketing screenshots of the web UI, from a throwaway aw-server-rust seeded with demo data.
+# Output in dist/screenshots/. Pass options with ARGS, e.g. `make screenshots ARGS="--theme dark"`.
+screenshots:
+	uv run scripts/screenshots.py --build $(ARGS)
 
 %/.git:
 	git submodule update --init --recursive
