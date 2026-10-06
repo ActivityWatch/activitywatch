@@ -1555,9 +1555,48 @@ jobs:
           EDITION=""
           if [[ "${AW_RESEARCH_EDITION:-}" == "true" ]]; then EDITION="-research"; fi
 
-          # Only the bundle formats Tauri's updater consumes — avoids picking up
-          # .sig files for .deb/.rpm/.dmg if those ever get signed too.
           found=0
+
+          # macOS: Tauri's own .app.tar.gz is the bare aw-tauri.app from
+          # target/ — ad-hoc signed, without the bundled server and watchers.
+          # Installing it as an update replaces ActivityWatch.app with an app
+          # that tracks nothing. Package the final app from "Package dmg"
+          # instead (modules bundled, Developer ID signed and notarized on
+          # tags) and sign the archive with the updater key. The updater
+          # strips the top-level directory, so the .app name inside is free.
+          if [ "$RUNNER_OS" = macOS ]; then
+            BUNDLE="ActivityWatch"
+            if [[ "${AW_RESEARCH_EDITION:-}" == "true" ]]; then BUNDLE="ActivityWatch-Research"; fi
+            # The bare Tauri build has no bundled watchers; this one must.
+            test -d "dist/${BUNDLE}.app/Contents/Resources/aw-watcher-afk"
+            test -d "dist/${BUNDLE}.app/Contents/Resources/aw-watcher-window"
+            out="dist/updater/activitywatch-tauri${EDITION}-${VERSION}-${PLATFORM_KEY}.app.tar.gz"
+            # No AppleDouble (._*) entries: they would land inside the bundle
+            # and break its code signature.
+            COPYFILE_DISABLE=1 tar --no-xattrs -czf "$out" -C dist "${BUNDLE}.app"
+            if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
+              aw-tauri/node_modules/.bin/tauri signer sign "$out"
+              found=1
+            else
+              rm "$out"
+            fi
+            echo "Found $found Tauri updater artifact(s) for $PLATFORM_KEY"
+            ls -la dist/updater/
+            exit 0
+          fi
+
+          # Windows: Tauri's NSIS .exe is likewise the bare aw-tauri.exe, and it
+          # installs under a different AppId and directory than the Inno Setup
+          # installer users have. No Windows updater artifact until the Inno
+          # installer is wired up (silent /UPDATE run, relaunch) and tested;
+          # the manifest then has no windows entry and Windows installs don't
+          # auto-update.
+          if [ "$RUNNER_OS" = Windows ]; then
+            echo "Skipping Windows updater artifact (see comment above)"
+            exit 0
+          fi
+
+          # Linux: the Tauri AppImage is the shipped AppImage (identical bytes).
           while IFS= read -r -d '' sig; do
             artifact="${sig%.sig}"
             if [ -f "$artifact" ]; then
@@ -1579,15 +1618,14 @@ jobs:
               cp "$sig" "$out.sig"
               found=$((found + 1))
             fi
-          done < <(find aw-tauri/src-tauri/target -type f \( \
-            -path "*/release/bundle/macos/*.sig" -o \
-            -path "*/release/bundle/appimage/*.sig" -o \
-            -path "*/release/bundle/nsis/*.sig" -o \
-            -path "*/release/bundle/msi/*.sig" \
-            \) -print0)
+          done < <(find aw-tauri/src-tauri/target -type f \
+            -path "*/release/bundle/appimage/*.sig" -print0)
 
           echo "Found $found Tauri updater artifact(s) for $PLATFORM_KEY"
           ls -la dist/updater/ || true
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY'] }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD'] }}
 
       - name: Upload packages
         uses: actions/upload-artifact@v7
