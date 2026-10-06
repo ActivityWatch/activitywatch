@@ -668,7 +668,7 @@ def gen_laptop(dev: Device, plan: DayPlan) -> None:
         afternoon_admin = rng.uniform(0.2, 0.6)
         for a_s, a_e in active:
             pieces = [(a_s, a_e, None)]
-            for m in meetings + lunch_browse:
+            for m in meetings:
                 nxt = []
                 for ps, pe, kind in pieces:
                     if kind is not None or m[1] <= ps or m[0] >= pe:
@@ -676,7 +676,7 @@ def gen_laptop(dev: Device, plan: DayPlan) -> None:
                         continue
                     if m[0] > ps:
                         nxt.append((ps, m[0], None))
-                    nxt.append((max(ps, m[0]), min(pe, m[1]), "meeting" if m not in lunch_browse else "lunch"))
+                    nxt.append((max(ps, m[0]), min(pe, m[1]), "meeting"))
                     if m[1] < pe:
                         nxt.append((m[1], pe, None))
                 pieces = nxt
@@ -685,8 +685,6 @@ def gen_laptop(dev: Device, plan: DayPlan) -> None:
                     continue
                 if kind == "meeting":
                     dev.window.append(ev(ps, pe, {"app": "zoom.us", "title": "Zoom Meeting"}))
-                elif kind == "lunch":
-                    fill_session(dev, rng, ps, pe, laptop_lunch())
                 else:
                     hour = ps.hour + ps.minute / 60
                     admin_share = 0.25 if hour < 12 else afternoon_admin
@@ -697,10 +695,13 @@ def gen_laptop(dev: Device, plan: DayPlan) -> None:
                         acts = laptop_admin() if rng.random() < admin_share else laptop_focus(project)
                         fill_session(dev, rng, t, blk, acts)
                         t = blk
+        # The lunch browse lies inside the lunch break (outside `active`), so
+        # fill it separately; it counts as not-afk below.
+        for lb_s, lb_e in lunch_browse:
+            fill_session(dev, rng, lb_s, lb_e, laptop_lunch())
         sessions.append((on, "work"))
         dev.active.extend(active)
         afk_events(dev, on, active + lunch_browse)
-        # Lunch browse happens during the lunch "afk" break but is active
         dev.active.extend(lunch_browse)
         # Occasional evening check-in
         if rng.random() < 0.18:
@@ -1066,6 +1067,7 @@ class Shot:
         self.path = path
         self.setup = setup
         self.full_page = full_page
+        self.number = 0  # file prefix, fixed by position in the full list (see all_shots)
 
 
 def timeline_full_day(day: date) -> Callable:
@@ -1220,7 +1222,7 @@ def capture(
                 page.on("pageerror", lambda exc: console_errors.append(str(exc)))
                 theme_dir = out_dir / theme
                 theme_dir.mkdir(parents=True, exist_ok=True)
-                for i, shot in enumerate(shots, start=1):
+                for shot in shots:
                     t0 = time.time()
                     page.goto(url + shot.path)
                     page.reload()  # fresh app state per view (route changes keep stores around)
@@ -1234,7 +1236,7 @@ def capture(
                     # Drop focus rings / hover states and park the mouse
                     page.evaluate("() => document.activeElement && document.activeElement.blur()")
                     page.mouse.move(size[0] - 2, size[1] - 2)
-                    path = theme_dir / f"{i:02d}-{shot.name}.png"
+                    path = theme_dir / f"{shot.number:02d}-{shot.name}.png"
                     page.screenshot(path=str(path), full_page=shot.full_page)
                     written.append(path)
                     print(f"  [{theme}] {path.relative_to(out_dir)}  ({time.time() - t0:.1f}s)")
@@ -1336,6 +1338,10 @@ def main() -> int:
     parser.add_argument("--keep-running", action="store_true", help="leave the seeded server up after capturing")
     parser.add_argument("--no-capture", action="store_true", help="only start and seed the server (implies --keep-running)")
     args = parser.parse_args()
+    # Resolve now: the server is started with a temp dir as cwd
+    args.server_bin = args.server_bin.expanduser().resolve()
+    args.webpath = args.webpath.expanduser().resolve()
+    args.out = args.out.expanduser().resolve()
     SEED = args.seed
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore[attr-defined]
 
@@ -1377,9 +1383,14 @@ def main() -> int:
                 ensure_chromium()
                 day = args.date or pick_day(devices, end.date())
                 shots = build_shots(day, end.date())
+                extras = extra_shots()
+                # Number every view by its place in the full list, so a filtered
+                # run overwrites the same files instead of renumbering them.
+                for n, s in enumerate(shots + extras, start=1):
+                    s.number = n
                 if args.only:
                     only = [o for arg in args.only for o in arg.split(",") if o]
-                    shots = [s for s in shots + extra_shots() if any(o in s.name for o in only)]
+                    shots = [s for s in shots + extras if any(o in s.name for o in only)]
                 if args.full_page:
                     for s in shots:
                         s.full_page = True
