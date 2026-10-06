@@ -231,13 +231,17 @@ ifeq ($(shell uname),Linux)
 # Stage watcher binaries + aw-sync into aw-tauri/src-tauri/modules/ so that
 # aw-tauri's conditional bundle.resources injection (commit 931e56d) includes
 # them in .AppImage/.deb/.rpm, making Linux standalone bundles self-contained.
+# Staging must happen before `make build` so that aw-tauri's Makefile detects
+# src-tauri/modules/aw-* and adds bundle.resources to TAURI_BUILD_ARGS.
 	rm -rf aw-tauri/src-tauri/modules
 	mkdir -p aw-tauri/src-tauri/modules
 	cp -r dist/activitywatch/aw-watcher-afk aw-tauri/src-tauri/modules/
 	cp -r dist/activitywatch/aw-watcher-window aw-tauri/src-tauri/modules/
 	cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync
-endif
+	make --directory=aw-tauri build package
+else
 	make --directory=aw-tauri package
+endif
 	cp -r aw-tauri/dist/aw-tauri dist/activitywatch
 else
 # Move aw-qt to the root of the dist folder
