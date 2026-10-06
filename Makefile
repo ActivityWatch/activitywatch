@@ -72,14 +72,14 @@ build: aw-core/.git
 	for module in $(SUBMODULES); do \
 		if [ "$(TAURI_BUILD)" = "true" ] && [ "$(OS)" = "Linux" ] && [ "$$module" = "aw-tauri" ]; then \
 			echo "Staging bundled modules into aw-tauri/src-tauri/modules/"; \
-			mkdir -p aw-tauri/src-tauri/modules; \
+			mkdir -p aw-tauri/src-tauri/modules || exit 1; \
 			if [ -f "aw-server-rust/target/$(targetdir)/aw-sync" ]; then \
-				cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync; \
-				chmod +x aw-tauri/src-tauri/modules/aw-sync; \
+				cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync || exit 1; \
+				chmod +x aw-tauri/src-tauri/modules/aw-sync || exit 1; \
 			fi; \
 			if [ -f "awatcher/target/$(targetdir)/awatcher" ]; then \
-				cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher; \
-				chmod +x aw-tauri/src-tauri/modules/aw-awatcher; \
+				cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
+				chmod +x aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
 			fi; \
 		fi; \
 		echo "Building $$module"; \
