@@ -128,6 +128,10 @@ cat > "dist/${APP_NAME}.app/Contents/Info.plist" << EOF
     <string>NSApplication</string>
     <key>LSMinimumSystemVersion</key>
     <string>${MACOSX_DEPLOYMENT_TARGET:-12.0}</string>
+    <!-- Tray app: no Dock icon at launch (mirrors aw-tauri/src-tauri/Info.plist; this
+         plist replaces the one Tauri generates, so the key must be set here) -->
+    <key>LSUIElement</key>
+    <true/>
 </dict>
 </plist>
 EOF
