@@ -358,6 +358,31 @@ def test_adoption_alone_does_not_replay_history(tmp_path):
     assert "pin different commits" in out  # server still ships the older one
 
 
+def test_new_submodule_hidden_commits_url_uses_commits_not_compare(tmp_path):
+    # When a submodule did not exist at `since` at all, the "excluded N commits" link
+    # must use /commits/<tip>, not /compare/...tip — the latter is a broken URL because
+    # there is no base ref to compare from (see ActivityWatch/activitywatch#1495).
+    child = init(tmp_path, "child")
+    # Two filterable commits so hidden > 1 triggers the footer URL
+    commit(child, "ci: add workflow")
+    commit(child, "build(deps): bump a dependency")
+    tip = short(child)
+
+    bundle = init(tmp_path, "bundle")
+    since = short(bundle)
+    # child is added during the release — it did not exist at `since`
+    add_submodule(bundle, "child")
+
+    repos = changelog.collect_repos("bundle", str(bundle), (since, short(bundle)))
+    changelog.collect_pins(str(bundle), repos, "bundle")
+    out = changelog.summary_repos("Test", "bundle", repos, REPO_ORDER, FILTER_TYPES)
+
+    # must not produce a broken /compare/...tip URL (empty base)
+    assert "/compare/..." not in out
+    # must link to the commit list instead
+    assert f"/commits/{tip}" in out
+
+
 def test_uninitialized_submodule_does_not_derail_pin_collection(tmp_path):
     # a deinitialized submodule leaves an empty directory whose git commands answer for
     # the superproject: `git ls-files --stage` there reports the gitlink itself as "./"

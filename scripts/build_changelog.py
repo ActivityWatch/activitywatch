@@ -553,9 +553,18 @@ def summary_repo(org: str, repo: Repo, filter_types: List[str]) -> str:
             path, [since for _, (since, _) in ranges], newest=False
         )
         tip = _pick_by_ancestry(path, [until for _, (_, until) in ranges], newest=True)
-        full_history_url = (
-            f"https://github.com/{org}/{repo.name}/compare/{base}...{tip}"
-        )
+        # fall back to pins when the range has no explicit tip (submodule newly added)
+        if not tip and repo.pins:
+            tip = _pick_by_ancestry(path, [p.commit for p in repo.pins], newest=True)
+        if base:
+            full_history_url = (
+                f"https://github.com/{org}/{repo.name}/compare/{base}...{tip}"
+            )
+        else:
+            # submodule was added during this release — no base to compare from
+            full_history_url = (
+                f"https://github.com/{org}/{repo.name}/commits/{tip}"
+            )
         out += f"\n\n*(excluded {hidden} less relevant [commits]({full_history_url}))*"
         has_content = True
 
