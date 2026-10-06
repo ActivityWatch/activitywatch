@@ -1477,10 +1477,22 @@ jobs:
           CERTIFICATE_MACOS_P12_PASSWORD: ${{ secrets.CERTIFICATE_MACOS_P12_PASSWORD }}
 
       - name: Package
-        run: |
-          source venv/bin/activate || source venv/Scripts/activate
-          poetry install
-          make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          shell: bash
+          command: |
+            set -e
+            source venv/bin/activate || source venv/Scripts/activate
+            poetry install
+            make package SKIP_SERVER_RUST=${{ matrix.skip_rust }}
+        env:
+          # Linux TAURI_BUILD now runs `tauri build` here (after staging
+          # watcher modules), not in the earlier Build step. Pass the same
+          # signing env so updater artifacts still generate on signed jobs.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY'] }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD'] }}
 
       - name: Package Linux (Tauri bundles)
         if: runner.os == 'Linux'

@@ -71,6 +71,8 @@ build: aw-core/.git
 		echo "Building $$module"; \
 		if [ "$$module" = "aw-server-rust" ] && [ "$(TAURI_BUILD)" = "true" ]; then \
 			make --directory=$$module aw-sync SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module aw-sync"; exit 2; }; \
+		elif [ "$$module" = "aw-tauri" ] && [ "$(TAURI_BUILD)" = "true" ] && [ "$(OS)" = "Linux" ]; then \
+			echo "Skipping aw-tauri build on Linux until package (watcher modules must be staged first)"; \
 		else \
 			make --directory=$$module build SKIP_WEBUI=$(SKIP_WEBUI) || { echo "Error in $$module build"; exit 2; }; \
 		fi; \
@@ -239,6 +241,11 @@ ifeq ($(shell uname),Linux)
 	cp -r dist/activitywatch/aw-watcher-window aw-tauri/src-tauri/modules/
 	cp -r dist/activitywatch/awatcher aw-tauri/src-tauri/modules/
 	cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync
+	# Drop leftover bundles from any earlier aw-tauri build. aw-tauri's
+	# `package` copies `bundle/deb/*.deb` onto a single dest file, so two
+	# .deb files make GNU cp treat the dest as a directory and fail with
+	# "target '...aw-tauri.deb': No such file or directory".
+	rm -rf aw-tauri/src-tauri/target/release/bundle aw-tauri/src-tauri/target/debug/bundle
 	make --directory=aw-tauri build package
 else
 	make --directory=aw-tauri package
