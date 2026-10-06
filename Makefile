@@ -237,6 +237,7 @@ ifeq ($(shell uname),Linux)
 	mkdir -p aw-tauri/src-tauri/modules
 	cp -r dist/activitywatch/aw-watcher-afk aw-tauri/src-tauri/modules/
 	cp -r dist/activitywatch/aw-watcher-window aw-tauri/src-tauri/modules/
+	cp -r dist/activitywatch/awatcher aw-tauri/src-tauri/modules/
 	cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync
 	make --directory=aw-tauri build package
 else
