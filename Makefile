@@ -219,7 +219,7 @@ dist/notarize:
 package:
 	rm -rf dist
 	mkdir -p dist/activitywatch
-	for dir in $(PACKAGEABLES); do \
+	for dir in $(filter-out aw-tauri,$(PACKAGEABLES)); do \
 		make --directory=$$dir package; \
 		cp -r $$dir/dist/$$dir dist/activitywatch; \
 	done
@@ -227,6 +227,18 @@ ifeq ($(TAURI_BUILD),true)
 # Copy aw-sync binary for Tauri builds
 	mkdir -p dist/activitywatch/aw-server-rust
 	cp aw-server-rust/target/$(targetdir)/aw-sync dist/activitywatch/aw-server-rust/aw-sync
+ifeq ($(shell uname),Linux)
+# Stage watcher binaries + aw-sync into aw-tauri/src-tauri/modules/ so that
+# aw-tauri's conditional bundle.resources injection (commit 931e56d) includes
+# them in .AppImage/.deb/.rpm, making Linux standalone bundles self-contained.
+	rm -rf aw-tauri/src-tauri/modules
+	mkdir -p aw-tauri/src-tauri/modules
+	cp -r dist/activitywatch/aw-watcher-afk aw-tauri/src-tauri/modules/
+	cp -r dist/activitywatch/aw-watcher-window aw-tauri/src-tauri/modules/
+	cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync
+endif
+	make --directory=aw-tauri package
+	cp -r aw-tauri/dist/aw-tauri dist/activitywatch
 else
 # Move aw-qt to the root of the dist folder
 # Rename first to avoid cp conflict: the aw-qt binary inside the dir has the
