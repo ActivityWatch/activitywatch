@@ -1710,7 +1710,17 @@ jobs:
 
   release:
     name: Publish draft release
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # The build jobs depend on nightly-submodules, which is skipped on tag
+    # pushes. Without a status function here, that skipped ancestor makes
+    # GitHub skip this job too (v0.14.0b9 built green but never published).
+    # So check the direct dependencies explicitly instead.
+    if: >-
+      !cancelled()
+      && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      && needs.build-qt.result == 'success'
+      && needs.build-qt-manylinux-2-28.result == 'success'
+      && needs.build-tauri.result == 'success'
+      && needs.release-notes.result == 'success'
     needs: [build-qt, build-qt-manylinux-2-28, build-tauri, release-notes]
     runs-on: ubuntu-latest
     steps:
