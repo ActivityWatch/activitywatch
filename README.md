@@ -33,7 +33,7 @@
 
 <p align="center">
   <a href="https://github.com/ActivityWatch/activitywatch/actions?query=branch%3Amaster">
-    <img title="Build Status GitHub" src="https://github.com/ActivityWatch/activitywatch/workflows/Build/badge.svg?branch=master" />
+    <img title="Build Status GitHub" src="https://github.com/ActivityWatch/activitywatch/actions/workflows/release.yml/badge.svg?branch=master" />
   </a>
   <a href="https://ci.appveyor.com/project/ErikBjare/activitywatch">
     <img title="Build Status Appveyor" src="https://ci.appveyor.com/api/projects/status/vm7g9sdfi2vgix6n?svg=true" />
