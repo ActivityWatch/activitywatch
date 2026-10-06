@@ -654,7 +654,8 @@ def gen_laptop(dev: Device, plan: DayPlan) -> None:
         lunch_browse: List[Interval] = []
         if rng.random() < 0.35:
             lb_s = lunch[0] + timedelta(minutes=rng.uniform(15, 25))
-            lunch_browse = [(lb_s, lb_s + timedelta(minutes=rng.uniform(6, 14)))]
+            lb_e = min(lunch[1], lb_s + timedelta(minutes=rng.uniform(6, 14)))
+            lunch_browse = [(lb_s, lb_e)]
         # Meetings: daily standup + a few others
         meetings = [(at(d, 9.5), at(d, 9.75))]
         n_meet = rng.choices([0, 1, 2, 3], weights=[3, 4, 2, 0.5])[0]
