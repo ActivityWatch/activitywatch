@@ -1258,6 +1258,12 @@ jobs:
         run: |
           echo "RELEASE=${{ startsWith(github.ref_name, 'v') || github.ref_name == 'master' }}" >> "$GITHUB_ENV"
           echo "TAURI_BUILD=true" >> "$GITHUB_ENV"
+          # Don't bundle libwayland into the Tauri AppImage: a copy from the
+          # Ubuntu build image clashes with the host's newer Mesa (crashes or a
+          # blank webview on e.g. Arch/KDE Wayland; tauri-apps/tauri#15665,
+          # tauri-apps/tauri#15976). Read by linuxdeploy, which Tauri's bundler
+          # runs; honored from @tauri-apps/cli 2.12 (tauri-apps/tauri#16062).
+          echo "LINUXDEPLOY_EXCLUDED_LIBRARIES=libwayland-*" >> "$GITHUB_ENV"
 
       - name: Set tag metadata
         if: startsWith(github.ref, 'refs/tags/v')
@@ -1549,6 +1555,14 @@ jobs:
               *) echo "ERROR: expected exactly 1 .${ext} bundle in dist/activitywatch/aw-tauri/, found ${#files[@]}" >&2; exit 1 ;;
             esac
           done
+
+      - name: Host-ABI gate — verify the Tauri AppImage
+        if: runner.os == 'Linux'
+        # Only libwayland for now: the AppImage's bundled GTK 3 / WebKitGTK
+        # (Ubuntu 24.04) needs its glib, so glib stays bundled here.
+        env:
+          HOST_ABI_LIBS_LIST: libwayland-client libwayland-cursor libwayland-egl libwayland-server
+        run: bash scripts/package/host-abi-gate.sh dist/activitywatch-tauri*-linux-*.AppImage
 
       - name: Package dmg
         if: runner.os == 'macOS'

@@ -26,6 +26,12 @@ HOST_ABI_LIBS=(
     libglib-2.0
     libgobject-2.0
 )
+# HOST_ABI_LIBS_LIST (space-separated) replaces the list, e.g. for a bundle that
+# must keep glib (the Tauri AppImage's GTK/WebKitGTK needs the glib it was built
+# against).
+if [ -n "${HOST_ABI_LIBS_LIST:-}" ]; then
+    read -r -a HOST_ABI_LIBS <<< "$HOST_ABI_LIBS_LIST"
+fi
 
 if [ "$#" -eq 0 ]; then
     echo "Usage: $0 <bundle-dir|bundle.zip|bundle.AppImage> [...]" >&2
