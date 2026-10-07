@@ -70,16 +70,27 @@ build: aw-core/.git
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
 	for module in $(SUBMODULES); do \
-		if [ "$(TAURI_BUILD)" = "true" ] && [ "$(OS)" = "Linux" ] && [ "$$module" = "aw-tauri" ]; then \
-			echo "Staging bundled modules into aw-tauri/src-tauri/modules/"; \
-			mkdir -p aw-tauri/src-tauri/modules || exit 1; \
-			if [ -f "aw-server-rust/target/$(targetdir)/aw-sync" ]; then \
-				cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync || exit 1; \
-				chmod +x aw-tauri/src-tauri/modules/aw-sync || exit 1; \
-			fi; \
-			if [ -f "awatcher/target/$(targetdir)/awatcher" ]; then \
-				cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
-				chmod +x aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
+		if [ "$(TAURI_BUILD)" = "true" ] && [ "$$module" = "aw-tauri" ]; then \
+			# remove any stale staged binaries from a previous build so they
+			# cannot leak into a non-Linux or SKIP_SERVER_RUST bundle
+			rm -rf aw-tauri/src-tauri/modules || exit 1; \
+			if [ "$(OS)" = "Linux" ]; then \
+				echo "Staging bundled modules into aw-tauri/src-tauri/modules/"; \
+				mkdir -p aw-tauri/src-tauri/modules || exit 1; \
+				if [ -f "aw-server-rust/target/$(targetdir)/aw-sync" ]; then \
+					cp aw-server-rust/target/$(targetdir)/aw-sync aw-tauri/src-tauri/modules/aw-sync || exit 1; \
+					chmod +x aw-tauri/src-tauri/modules/aw-sync || exit 1; \
+				elif [ "$(SKIP_SERVER_RUST)" != "true" ]; then \
+					echo "Error: aw-sync binary not found at aw-server-rust/target/$(targetdir)/aw-sync" >&2; \
+					exit 1; \
+				fi; \
+				if [ -f "awatcher/target/$(targetdir)/awatcher" ]; then \
+					cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
+					chmod +x aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
+				else \
+					echo "Error: awatcher binary not found at awatcher/target/$(targetdir)/awatcher" >&2; \
+					exit 1; \
+				fi; \
 			fi; \
 		fi; \
 		echo "Building $$module"; \
