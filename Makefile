@@ -20,7 +20,6 @@ ifeq ($(TAURI_BUILD),true)
 		# src-tauri/modules/ before the Tauri bundle step runs.
 		SUBMODULES := $(SUBMODULES) awatcher
 	endif
-	SUBMODULES := $(SUBMODULES) aw-tauri
 else
 	SUBMODULES := aw-core aw-client aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
 endif
@@ -32,6 +31,10 @@ endif
 # Include extras if AW_EXTRAS is true
 ifeq ($(AW_EXTRAS),true)
 	SUBMODULES := $(SUBMODULES) aw-notify aw-watcher-input
+endif
+# aw-tauri goes last, so every module it bundles (awatcher, aw-notify) is built first.
+ifeq ($(TAURI_BUILD),true)
+	SUBMODULES := $(SUBMODULES) aw-tauri
 endif
 
 # A function that checks if a target exists in a Makefile
@@ -69,9 +72,11 @@ build: aw-core/.git
 #	needed due to https://github.com/pypa/setuptools/issues/1963
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
-# Before building aw-tauri, stage aw-sync + awatcher into src-tauri/modules/ on
-# Linux (aw-tauri's Makefile bundles them when present). The dir is wiped first
-# so stale binaries can't leak into a non-Linux or SKIP_SERVER_RUST bundle.
+# Before building aw-tauri, stage aw-sync + awatcher (and aw-notify with
+# AW_EXTRAS) into src-tauri/modules/ on Linux; aw-tauri's Makefile bundles them
+# into the deb/rpm/AppImage when present, as the macOS and Windows Tauri builds
+# already ship them. The dir is wiped first so stale binaries can't leak into a
+# non-Linux or SKIP_SERVER_RUST bundle.
 # Old Tauri bundles are dropped too: a cache-restored target/ can hold a
 # previous version's .deb next to the new one, and aw-tauri's `package` then
 # fails copying `bundle/deb/*.deb` onto a single file.
@@ -95,6 +100,15 @@ build: aw-core/.git
 				else \
 					echo "Error: awatcher binary not found at awatcher/target/$(targetdir)/awatcher" >&2; \
 					exit 1; \
+				fi; \
+				if [ "$(AW_EXTRAS)" = "true" ]; then \
+					if [ -f "aw-notify/target/$(targetdir)/aw-notify" ]; then \
+						cp aw-notify/target/$(targetdir)/aw-notify aw-tauri/src-tauri/modules/aw-notify || exit 1; \
+						chmod +x aw-tauri/src-tauri/modules/aw-notify || exit 1; \
+					else \
+						echo "Error: aw-notify binary not found at aw-notify/target/$(targetdir)/aw-notify" >&2; \
+						exit 1; \
+					fi; \
 				fi; \
 			fi; \
 		fi; \
