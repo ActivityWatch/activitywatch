@@ -11,7 +11,6 @@ How to Contribute
  - [Code of Conduct](#code-of-conduct)
  - [Commit message guidelines](#commit-message-guidelines)
  - [Getting paid](#getting-paid)
- - [Claiming GitPOAP](#claiming-gitpoap)
  - [Questions?](#questions)
 
 
@@ -98,17 +97,6 @@ The idea is you track your work with ActivityWatch (and ensure it gets categoriz
 If you've contributed to ActivityWatch (for a minimum of 10h) and want to get paid for your time, contact us!
 
 You can read more about this experiment on [the forum](https://forum.activitywatch.net/t/getting-paid-with-activitywatch/986) and in [the issues](https://github.com/ActivityWatch/activitywatch/issues/458).
-
-
-## Claiming GitPOAP
-
-If you've contributed a commit to ActivityWatch, you are eligible to claim a GitPOAP on Ethereum. You can read about it here: https://twitter.com/ActivityWatchIt/status/1584454595467612160
-
-The one for 2022 looks like this:
-
-<a href="https://www.gitpoap.io/gh/ActivityWatch/activitywatch">
-  <img src="https://assets.poap.xyz/gitpoap-2022-activitywatch-contributor-2022-logo-1663695908409.png" width="256px">
-</a>
 
 
 ## Questions?
