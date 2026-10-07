@@ -245,10 +245,23 @@ endif
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161
 	rm -f dist/activitywatch/libharfbuzz.so.0  # see: https://github.com/ActivityWatch/activitywatch/issues/660#issuecomment-959889230
 ifeq ($(shell uname),Linux)
-# PyInstaller's Qt bundle may include an older Wayland client than Qt requires.
-# All portable Linux packages are built from this directory, so remove it here
-# and use the distro library instead. See: https://github.com/ActivityWatch/activitywatch/issues/939
-	find dist/activitywatch -name 'libwayland-client.so*' -delete
+# Libraries that must match the host ABI, never bundled. PyInstaller copies
+# whatever the build host has — glib 2.72 on the ubuntu-22.04 runner, glib 2.56
+# in the manylinux_2_28 image — and the bundled copies then shadow the user's
+# newer system libraries. All portable Linux packages are built from this
+# directory, so remove them here and use the distro library instead.
+#   - libwayland-client: libQt6WaylandClient needs wl_proxy_marshal_flags
+#     (libwayland >= 1.20) and otherwise crashes on startup with
+#     "undefined symbol: wl_proxy_marshal_flags". See:
+#     https://github.com/ActivityWatch/activitywatch/issues/939
+#     and https://github.com/ActivityWatch/activitywatch/issues/1105
+#   - libgio/libglib/libgobject: a bundled libgio cannot read the host's
+#     GSettings schemas. See:
+#     https://github.com/ActivityWatch/activitywatch/issues/710
+	find dist/activitywatch -maxdepth 1 \
+		\( -name 'libwayland-client.so*' -o -name 'libwayland-cursor.so*' \
+		-o -name 'libwayland-egl.so*' -o -name 'libgio-2.0.so*' \
+		-o -name 'libglib-2.0.so*' -o -name 'libgobject-2.0.so*' \) -delete
 endif
 # These should be provided by the distro itself
 # Had to be removed due to otherwise causing the error:
