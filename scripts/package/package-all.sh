@@ -72,9 +72,12 @@ echo "Tauri build:    ${TAURI_BUILD:-false}"
 echo "========================================"
 echo
 
-# For Tauri Linux builds, include helper scripts and README
+# For Tauri Linux builds, include the README. awatcher is bundled inside the
+# AppImage/deb/rpm (staged into aw-tauri's modules/ by the Makefile), so the
+# loose copy is left out of the zip.
 if [[ $platform == "linux" && $TAURI_BUILD == "true" ]]; then
-    cp scripts/package/README.txt scripts/package/move-to-aw-modules.sh dist/activitywatch/
+    cp scripts/package/README.txt dist/activitywatch/
+    rm -rf dist/activitywatch/awatcher
 fi
 
 function build_zip() {
