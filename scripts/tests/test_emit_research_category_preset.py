@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import importlib.util
 import json
 import re
 from pathlib import Path
+
+import pytest
 
 
 def _load(name: str):
@@ -160,3 +164,119 @@ def test_color_table_matches_the_study_taxonomy():
     names = {category["name"][0] for category in emitter.build_preset()["categories"]}
 
     assert set(emitter.CATEGORY_COLORS) == names
+
+
+# --- Optional geography-free preset -----------------------------------------
+#
+# The build ships a second, study-neutral preset. aw-webui activates only the
+# first preset on a fresh install and offers the rest for manual activation
+# (see aw-webui `loadCategories`), so emitting the default *after* the study
+# preset is what makes it optional rather than a replacement.
+
+EXPECTED_DEFAULT_CATEGORIES = {
+    "Email",
+    "Games",
+    "Messaging",
+    "Music & Audio",
+    "News & Current Affairs",
+    "Search & Navigation",
+    "Shopping - Goods",
+    "Shopping - Groceries & Food",
+    "Social Networking",
+    "Video Streaming",
+    "Work & Productivity",
+}
+
+
+def _classify_event_in(preset, data: dict[str, str]) -> str | None:
+    matches: list[str] = []
+    for category in preset["categories"]:
+        rule = category["rule"]
+        flags = re.IGNORECASE if rule["ignore_case"] else 0
+        if any(
+            key in data and re.search(rule["regex"], data[key], flags)
+            for key in ("app", "title")
+        ):
+            matches.append(category["name"][0])
+    assert len(matches) <= 1, f"ambiguous match within one preset: {matches}"
+    return matches[0] if matches else None
+
+
+def test_build_presets_ships_study_first_then_optional_default():
+    """Order is load-bearing: aw-webui's first preset is the install default."""
+    presets = emitter.build_presets()
+
+    assert [p["id"] for p in presets] == ["research-study", "research-default"]
+    assert presets[0] == emitter.build_preset()
+    assert presets[1] == emitter.build_default_preset()
+
+
+def test_default_preset_categories_match_the_published_toml():
+    """The TOML is the source of truth; a drift here is a silent taxonomy fork."""
+    names = {c["name"][0] for c in emitter.build_default_preset()["categories"]}
+
+    assert names == EXPECTED_DEFAULT_CATEGORIES
+
+
+def test_stdlib_toml_reader_agrees_with_tomllib():
+    """The 3.9-compatible reader must not diverge from a real TOML parser.
+
+    The release job runs this module on Python 3.9, where `tomllib` does not
+    exist. A bare `importorskip("tomllib")` would skip the cross-check exactly
+    where the stdlib-only reader matters, so prefer the stdlib parser and fall
+    back to the `tomli` backport (installed by the workflow).
+    """
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python < 3.11
+        tomllib = pytest.importorskip("tomli")
+
+    with emitter.DEFAULT_MAP_TOML.open("rb") as fh:
+        parsed = tomllib.load(fh)
+
+    values = parsed["aw-watcher-window"]["research_category_map"].values()
+    assert emitter._load_default_categories() == set(values)
+    assert set(values) == EXPECTED_DEFAULT_CATEGORIES
+
+
+def test_default_preset_reuses_the_shared_color_palette():
+    """Every default category must be colored by the same palette as the study set."""
+    names = {c["name"][0] for c in emitter.build_default_preset()["categories"]}
+
+    assert names <= set(emitter.CATEGORY_COLORS)
+    for category in emitter.build_default_preset()["categories"]:
+        assert re.fullmatch(r"#[0-9A-F]{6}", category["data"]["color"])
+
+
+def test_default_preset_keeps_app_names_and_has_no_app_aliases():
+    """The default keeps app names, so its rules match only stored category labels."""
+    preset = emitter.build_default_preset()
+    categories = {c["name"][0]: c for c in preset["categories"]}
+
+    work = categories["Work & Productivity"]["rule"]["regex"]
+    assert re.fullmatch(work, "Work & Productivity", re.IGNORECASE)
+    # No app aliases: a raw application name must not match the default preset.
+    assert _classify_event_in(preset, {"app": "Microsoft Word"}) is None
+    assert _classify_event_in(preset, {"app": "SPOTIFY"}) is None
+
+
+def test_default_preset_labels_are_mutually_exclusive():
+    """Equal-depth web-UI rules cannot be prioritized, so labels must not overlap."""
+    preset = emitter.build_default_preset()
+    for name in EXPECTED_DEFAULT_CATEGORIES:
+        assert _classify_event_in(preset, {"title": name}) == name
+
+
+def test_default_preset_avoids_the_bare_yahoo_collision():
+    """The one Ghent/Lund collision: bare yahoo.com must not appear as a rule."""
+    for category in emitter.build_default_preset()["categories"]:
+        assert "yahoo\\.com" not in category["rule"]["regex"]
+
+
+def test_full_payload_is_newline_free_for_github_env():
+    """Both presets are serialized into a single $GITHUB_ENV value."""
+    payload = json.dumps(emitter.build_presets(), separators=(",", ":"))
+
+    assert "\n" not in payload
+    assert json.loads(payload)[0]["id"] == "research-study"
+    assert json.loads(payload)[1]["id"] == "research-default"
