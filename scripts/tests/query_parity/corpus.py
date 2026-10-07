@@ -41,7 +41,7 @@ class Query:
     roles: Tuple[str, ...] = ("a", "b")
     ordered: bool = True
     invariants: List[str] = field(default_factory=list)
-    # Both servers are expected to reject the query.
+    # Both servers are expected to reject the query (test_parity fails otherwise).
     expect_error: bool = False
 
 
@@ -111,7 +111,13 @@ TRANSFORMS: List[Query] = [
         invariants=["same_durations"],
     ),
     q("tag", "RETURN = tag(a, " + TAGS_STR + ");", invariants=["same_durations"]),
-    q("tag_list_names", "RETURN = tag(a, " + CLASSES_STR + ");"),
+    # Tag names must be strings: both servers reject category-style list names
+    # (ActivityWatch/activitywatch#1466).
+    q(
+        "tag_list_names",
+        "RETURN = tag(a, " + CLASSES_STR + ");",
+        expect_error=True,
+    ),
     # Nested call followed by more arguments (no intermediate variable).
     Query(
         "nested_call_args",

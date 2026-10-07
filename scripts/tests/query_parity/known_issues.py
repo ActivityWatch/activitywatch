@@ -37,7 +37,7 @@ ISSUES: Dict[str, str] = {
     "RUST_745": "Rust truncates durations to ns and sum_durations to ms (ActivityWatch/aw-server-rust#745)",
     "RUST_746": "flood() diverges (ActivityWatch/aw-server-rust#746)",
     "RUST_747": "filter_period_intersect drops zero-duration events in Rust (ActivityWatch/aw-server-rust#747)",
-    "SHAPE": "output data shape differs (ActivityWatch/activitywatch#1466)",
+    "SHAPE": "output data shape differs (ActivityWatch/activitywatch#1466); fixed by ActivityWatch/aw-core#173 except chunk_events_by_key, deprecated in both servers",
     "PRECISION": "aw-core stores event timestamps at 1 ms resolution, Rust at 1 ns (by design)",
 }
 
@@ -70,7 +70,6 @@ KNOWN_ISSUES: List[Tuple[str, str, str]] = [
     ("parity", "*-chunk_events_by_key", "SHAPE"),
     ("parity", "*-split_url_events", "SHAPE"),
     ("parity", "*-tag", "SHAPE"),
-    ("parity", "*-tag_list_names", "SHAPE"),
     ("parity", "*-nested_call_args", "CORE_164"),
     ("parity", "*-aw-client:*", "RUST_746"),
     ("parity", "*-aw-client:*", "SHAPE"),

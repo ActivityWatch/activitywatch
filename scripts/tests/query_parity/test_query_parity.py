@@ -73,6 +73,8 @@ def test_parity(case_id, scenario, query, period):
     problems = diff(py, rs)
     if not problems and not q.expect_error and py == ("ERROR",):
         problems = ["both servers returned an error"]
+    if not problems and q.expect_error and py != ("ERROR",):
+        problems = ["both servers accepted a query they are expected to reject"]
     if problems:
         errors = [
             f"{name} error {r['__error__']}: {r['__message__']}"
