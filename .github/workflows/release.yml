@@ -463,6 +463,9 @@ jobs:
       - name: Test updater channel isolation and release versions
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
 
+      - name: Test host-ABI gate
+        run: python3 -m pytest scripts/tests/test_host_abi_gate.py -q
+
   build-qt:
     name: Build Qt artifacts (${{ matrix.os }}${{ (matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
