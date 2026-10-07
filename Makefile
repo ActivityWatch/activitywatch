@@ -72,9 +72,13 @@ build: aw-core/.git
 # Before building aw-tauri, stage aw-sync + awatcher into src-tauri/modules/ on
 # Linux (aw-tauri's Makefile bundles them when present). The dir is wiped first
 # so stale binaries can't leak into a non-Linux or SKIP_SERVER_RUST bundle.
+# Old Tauri bundles are dropped too: a cache-restored target/ can hold a
+# previous version's .deb next to the new one, and aw-tauri's `package` then
+# fails copying `bundle/deb/*.deb` onto a single file.
 	for module in $(SUBMODULES); do \
 		if [ "$(TAURI_BUILD)" = "true" ] && [ "$$module" = "aw-tauri" ]; then \
 			rm -rf aw-tauri/src-tauri/modules || exit 1; \
+			rm -rf aw-tauri/src-tauri/target/release/bundle aw-tauri/src-tauri/target/debug/bundle || exit 1; \
 			if [ "$(OS)" = "Linux" ]; then \
 				echo "Staging bundled modules into aw-tauri/src-tauri/modules/"; \
 				mkdir -p aw-tauri/src-tauri/modules || exit 1; \
@@ -251,8 +255,8 @@ package:
 	rm -rf dist
 	mkdir -p dist/activitywatch
 	for dir in $(PACKAGEABLES); do \
-		make --directory=$$dir package; \
-		cp -r $$dir/dist/$$dir dist/activitywatch; \
+		make --directory=$$dir package || { echo "Error in $$dir package"; exit 2; }; \
+		cp -r $$dir/dist/$$dir dist/activitywatch || exit 2; \
 	done
 ifeq ($(TAURI_BUILD),true)
 # Copy aw-sync binary for Tauri builds

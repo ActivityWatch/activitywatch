@@ -1526,9 +1526,10 @@ jobs:
           for ext in AppImage deb rpm; do
             files=( dist/activitywatch/aw-tauri/*.${ext} )
             case ${#files[@]} in
-              0) continue ;;
               1) cp -v "${files[0]}" "dist/activitywatch-tauri${EDITION}-${VERSION_WITH_V}-linux-${ARCH}.${ext}" ;;
-              *) echo "ERROR: expected at most 1 .${ext} bundle, found ${#files[@]}" >&2; exit 1 ;;
+              # A Linux Tauri build must produce all three; a missing one used
+              # to be skipped silently, so the run went green without bundles.
+              *) echo "ERROR: expected exactly 1 .${ext} bundle in dist/activitywatch/aw-tauri/, found ${#files[@]}" >&2; exit 1 ;;
             esac
           done
 
