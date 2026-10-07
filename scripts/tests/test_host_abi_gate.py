@@ -56,6 +56,8 @@ def test_empty_override_keeps_default(tmp_path: Path):
 
 
 def test_symlinked_name_is_flagged(tmp_path: Path):
-    bundle = make_bundle(tmp_path, "libwayland-client.so.0.22.0")
-    (bundle / "usr" / "lib" / "libwayland-client.so.0").symlink_to("libwayland-client.so.0.22.0")
+    # The forbidden name exists only as a link to a harmless file, so this
+    # fails if the gate stops checking symlinks.
+    bundle = make_bundle(tmp_path)
+    (bundle / "usr" / "lib" / "libwayland-client.so.0").symlink_to("libgtk-3.so.0")
     assert run_gate(bundle, WAYLAND_ONLY) == 1
