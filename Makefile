@@ -69,10 +69,11 @@ build: aw-core/.git
 #	needed due to https://github.com/pypa/setuptools/issues/1963
 #	would ordinarily be specified in pyproject.toml, but is not respected due to https://github.com/pypa/setuptools/issues/1963
 	pip install 'setuptools>49.1.1'
+# Before building aw-tauri, stage aw-sync + awatcher into src-tauri/modules/ on
+# Linux (aw-tauri's Makefile bundles them when present). The dir is wiped first
+# so stale binaries can't leak into a non-Linux or SKIP_SERVER_RUST bundle.
 	for module in $(SUBMODULES); do \
 		if [ "$(TAURI_BUILD)" = "true" ] && [ "$$module" = "aw-tauri" ]; then \
-			# remove any stale staged binaries from a previous build so they
-			# cannot leak into a non-Linux or SKIP_SERVER_RUST bundle
 			rm -rf aw-tauri/src-tauri/modules || exit 1; \
 			if [ "$(OS)" = "Linux" ]; then \
 				echo "Staging bundled modules into aw-tauri/src-tauri/modules/"; \
