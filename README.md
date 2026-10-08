@@ -122,9 +122,9 @@ Ready-to-paste BibTeX for your methods section:
 @software{activitywatch,
   author       = {Bjäreholt, Erik and Bjäreholt, Johan},
   title        = {ActivityWatch},
-  year         = {2024},
+  year         = {2026},
   publisher    = {Zenodo},
-  version      = {0.13.2},
+  version      = {0.14.0},
   doi          = {10.5281/zenodo.4957165},
   url          = {https://github.com/ActivityWatch/activitywatch}
 }
