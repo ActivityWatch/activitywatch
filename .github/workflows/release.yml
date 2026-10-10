@@ -48,6 +48,9 @@ on:
       - v*
   pull_request:
     branches: [master]
+    # `labeled` lets adding the `ci:full` label re-run the PR with the full
+    # matrix (incl. the Intel macOS legs); the rest are the defaults.
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: write
@@ -494,7 +497,11 @@ jobs:
       matrix:
         # Build Linux Qt/AppImage artifacts on the oldest supported runner to
         # keep the bundled glibc baseline compatible with older distributions.
-        os: [ubuntu-22.04, windows-latest, macos-latest, macos-15-intel]
+        # macOS runners are the org-wide CI bottleneck, so PRs skip the Intel
+        # macOS leg (macos-latest still covers macOS packaging/signing).
+        # Push to master, tags, dispatch and cron keep the full matrix. Add the
+        # `ci:full` label to a PR to run the Intel leg too.
+        os: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:full')) && fromJSON('["ubuntu-22.04","windows-latest","macos-latest"]') || fromJSON('["ubuntu-22.04","windows-latest","macos-latest","macos-15-intel"]') }}
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
@@ -1183,14 +1190,11 @@ jobs:
       fail-fast: false
       max-parallel: 5
       matrix:
-        os:
-          [
-            ubuntu-24.04,
-            ubuntu-24.04-arm,
-            windows-latest,
-            macos-latest,
-            macos-15-intel,
-          ]
+        # macOS runners are the org-wide CI bottleneck, so PRs skip the Intel
+        # macOS leg (macos-latest still covers macOS packaging/signing).
+        # Push to master, tags, dispatch and cron keep the full matrix. Add the
+        # `ci:full` label to a PR to run the Intel leg too.
+        os: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:full')) && fromJSON('["ubuntu-24.04","ubuntu-24.04-arm","windows-latest","macos-latest"]') || fromJSON('["ubuntu-24.04","ubuntu-24.04-arm","windows-latest","macos-latest","macos-15-intel"]') }}
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
