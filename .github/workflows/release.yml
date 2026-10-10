@@ -494,7 +494,14 @@ jobs:
       matrix:
         # Build Linux Qt/AppImage artifacts on the oldest supported runner to
         # keep the bundled glibc baseline compatible with older distributions.
-        os: [ubuntu-22.04, windows-latest, macos-latest, macos-15-intel]
+        # macOS runners are the org-wide CI bottleneck, so PRs skip the Intel
+        # macOS leg (macos-latest still covers macOS packaging/signing).
+        # Push to master, tags, dispatch and cron keep the full matrix. For the
+        # full matrix on a PR, add the `ci:full` label and push (labelling alone
+        # doesn't re-run: a `labeled` trigger would re-run this whole workflow on
+        # every label; and don't use workflow_dispatch for this, since preflight
+        # can then cut a dev prerelease tag).
+        os: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:full')) && fromJSON('["ubuntu-22.04","windows-latest","macos-latest"]') || fromJSON('["ubuntu-22.04","windows-latest","macos-latest","macos-15-intel"]') }}
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
@@ -517,7 +524,7 @@ jobs:
             skip_rust: false
             skip_webui: false
             experimental: false
-            research: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
+            research: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:full')) || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
 
     steps:
       - uses: actions/checkout@v7
@@ -846,6 +853,7 @@ jobs:
     if: >-
       !cancelled()
       && contains(fromJSON('["success", "skipped"]'), needs.nightly-submodules.result)
+      && !(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:full'))
       && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
       || (needs.nightly-submodules.outputs.latest == 'true' && needs.nightly-submodules.outputs.moved == 'true'))
     runs-on: ubuntu-22.04
@@ -1183,14 +1191,14 @@ jobs:
       fail-fast: false
       max-parallel: 5
       matrix:
-        os:
-          [
-            ubuntu-24.04,
-            ubuntu-24.04-arm,
-            windows-latest,
-            macos-latest,
-            macos-15-intel,
-          ]
+        # macOS runners are the org-wide CI bottleneck, so PRs skip the Intel
+        # macOS leg (macos-latest still covers macOS packaging/signing).
+        # Push to master, tags, dispatch and cron keep the full matrix. For the
+        # full matrix on a PR, add the `ci:full` label and push (labelling alone
+        # doesn't re-run: a `labeled` trigger would re-run this whole workflow on
+        # every label; and don't use workflow_dispatch for this, since preflight
+        # can then cut a dev prerelease tag).
+        os: ${{ (github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:full')) && fromJSON('["ubuntu-24.04","windows-latest","macos-latest"]') || fromJSON('["ubuntu-24.04","ubuntu-24.04-arm","windows-latest","macos-latest","macos-15-intel"]') }}
         python_version: [3.9]
         node_version: [22]
         skip_rust: [false]
@@ -1206,22 +1214,12 @@ jobs:
         # research edition in every row, and standard tags must not upload
         # research artifacts to the standard release.
         research: [false]
-        include:
-          - os: ubuntu-24.04
-            python_version: 3.9
-            node_version: 22
-            skip_rust: false
-            skip_webui: false
-            experimental: false
-            research: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
-          - os: windows-11-arm
-            # Python 3.9 has no Windows ARM64 build; setup-python would fail at "Set up Python"
-            python_version: 3.12
-            node_version: 22
-            skip_rust: false
-            skip_webui: false
-            experimental: true
-            research: false
+        # PRs build one leg per OS family; the variant rows (research edition,
+        # windows-11-arm) run on master, tags, dispatch and cron, like the
+        # ubuntu-24.04-arm and Intel macOS legs above. Same rows as before
+        # otherwise, with `research` true on branch pushes and ci:full PRs.
+        # windows-11-arm uses Python 3.12: 3.9 has no Windows ARM64 build.
+        include: ${{ fromJSON((github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:full')) && '[]' || format('[{{"os":"ubuntu-24.04","python_version":3.9,"node_version":22,"skip_rust":false,"skip_webui":false,"experimental":false,"research":{0}}},{{"os":"windows-11-arm","python_version":3.12,"node_version":22,"skip_rust":false,"skip_webui":false,"experimental":true,"research":false}}]', ((github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:full')) || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/'))) && 'true' || 'false')) }}
 
     steps:
       - uses: actions/checkout@v7
