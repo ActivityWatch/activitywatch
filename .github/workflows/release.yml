@@ -1438,6 +1438,23 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY'] }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets[env.AW_RESEARCH_EDITION == 'true' && 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD_RESEARCH' || 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD'] }}
 
+      # Regression gate: the Makefile stages aw-awatcher and aw-sync into
+      # aw-tauri/src-tauri/modules/ on Linux before the Tauri bundle step.
+      # If either binary is missing, the AppImage/deb would ship without watchers.
+      - name: Verify Linux Tauri bundle includes awatcher and aw-sync
+        if: runner.os == 'Linux'
+        run: |
+          fail=0
+          for binary in aw-awatcher aw-sync; do
+            path="aw-tauri/src-tauri/modules/${binary}"
+            if [ ! -x "$path" ]; then
+              echo "ERROR: ${path} not found or not executable — Linux bundle will be missing ${binary}" >&2
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "✓ aw-awatcher and aw-sync staged for Linux Tauri bundle"
+          exit "$fail"
+
       - name: Run tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
