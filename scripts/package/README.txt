@@ -1,10 +1,18 @@
-Run move-to-aw-modules.sh to copy all modules except aw-tauri to ~/aw-modules/.
-aw-tauri (replaces aw-qt) will use this directory to discover new modules.
-You can add your own modules and scripts to this directory. The modules should
-start with the aw- prefix and should not have an extension (e.g. no .sh).
+ActivityWatch (Tauri edition) for Linux
 
-In the aw-tauri folder there are AppImage, RPM, and DEB binaries. Choose the
-appropriate one for your Linux distribution. If in doubt, use the AppImage as
-it works on most Linux systems. If you use the AppImage, copy it to a permanent
-folder like ~/bin or /usr/local/bin, since autostart relies on the AppImage
-being in the same location each time.
+aw-tauri/aw-tauri.AppImage is self-contained: the window and AFK watcher
+(aw-awatcher, works on Wayland and X11), aw-sync and aw-notify (notifications,
+enable them from the tray menu) are bundled inside it.
+Put it wherever you like (e.g. ~/bin) and run it from there. Once autostart
+is on, keep it in that place: autostart starts the AppImage from where it
+was.
+
+To install system-wide instead, use aw-tauri/aw-tauri.deb or
+aw-tauri/aw-tauri.rpm. They contain the same bundled modules.
+
+The other folders here are optional extra modules: aw-watcher-input, and the
+classic aw-watcher-window / aw-watcher-afk for X11. To use one, copy its
+folder into ~/.local/share/activitywatch/aw-tauri/modules/ (or
+$XDG_DATA_HOME/activitywatch/aw-tauri/modules/ if you set XDG_DATA_HOME) and
+restart ActivityWatch. Your own modules can go there too: the executable must
+start with aw- and have no extension (e.g. no .sh).
