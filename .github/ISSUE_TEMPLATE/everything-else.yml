@@ -18,6 +18,6 @@ body:
       label: Issue
       description: |
         Describe the question or issue in detail.
-        For help or support, please use the forum linked from the issue chooser.
+        For help or support, please use the forum: https://forum.activitywatch.net/
     validations:
       required: true
