@@ -40,8 +40,9 @@ function get_version_no_prefix() {
 }
 
 function get_arch() {
-    _arch="$(uname -m)"
-    echo $_arch;
+    # Do not use `uname -m` on Windows: Git Bash on windows-11-arm reports
+    # x86_64 under x64 emulation (ActivityWatch/activitywatch#1519).
+    "$SCRIPT_DIR/get-arch.sh"
 }
 
 platform=$(get_platform)
@@ -116,6 +117,7 @@ function build_setup() {
 
 build_zip
 if [[ $platform == "windows"* ]]; then
+    python3 "$SCRIPT_DIR/assert-windows-pe-arch.py" "dist/$filename" "$arch"
     build_setup
 fi
 
