@@ -466,6 +466,9 @@ jobs:
       - name: Test host-ABI gate
         run: python3 -m pytest scripts/tests/test_host_abi_gate.py -q
 
+      - name: Test Windows arch detection and PE zip assertion
+        run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py -q
+
   build-qt:
     name: Build Qt artifacts (${{ matrix.os }}${{ (matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules
@@ -1611,10 +1614,13 @@ jobs:
             Linux) OS_NAME="linux" ;;
             Windows) OS_NAME="windows" ;;
           esac
-          case "$(uname -m)" in
+          # Same helper as package-all.sh: uname -m lies on windows-11-arm
+          # (ActivityWatch/activitywatch#1519).
+          RAW_ARCH="$(bash scripts/package/get-arch.sh)"
+          case "$RAW_ARCH" in
             arm64|aarch64) ARCH_NAME="aarch64" ;;
             x86_64|amd64) ARCH_NAME="x86_64" ;;
-            *) ARCH_NAME="$(uname -m)" ;;
+            *) ARCH_NAME="$RAW_ARCH" ;;
           esac
           PLATFORM_KEY="${OS_NAME}-${ARCH_NAME}"
           EDITION=""

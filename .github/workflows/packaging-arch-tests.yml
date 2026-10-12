@@ -1,0 +1,33 @@
+name: Packaging arch tests
+on:
+  pull_request:
+    paths:
+      - 'scripts/package/get-arch.sh'
+      - 'scripts/package/assert-windows-pe-arch.py'
+      - 'scripts/package/package-all.sh'
+      - 'scripts/tests/test_get_arch.py'
+      - 'scripts/tests/test_assert_windows_pe_arch.py'
+      - '.github/workflows/packaging-arch-tests.yml'
+      - '.github/workflows/release.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/package/get-arch.sh'
+      - 'scripts/package/assert-windows-pe-arch.py'
+      - 'scripts/package/package-all.sh'
+      - 'scripts/tests/test_get_arch.py'
+      - 'scripts/tests/test_assert_windows_pe_arch.py'
+      - '.github/workflows/packaging-arch-tests.yml'
+      - '.github/workflows/release.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+      - run: pip install pytest
+      - run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py -q
