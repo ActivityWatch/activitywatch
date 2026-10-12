@@ -7,10 +7,14 @@ named windows-x86_64 and overwrote the genuine Intel/AMD asset.
 
 from __future__ import annotations
 
+import json
 import os
+import shutil
 import stat
 import subprocess
 from pathlib import Path
+
+import pytest
 
 GET_ARCH = Path(__file__).parents[1] / "package" / "get-arch.sh"
 
@@ -37,11 +41,16 @@ def run_get_arch(
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     _fake_uname(bin_dir, kernel, machine)
-    env = {k: v for k, v in os.environ.items() if k not in {
-        "RUNNER_ARCH",
-        "PROCESSOR_ARCHITECTURE",
-        "PROCESSOR_ARCHITEW6432",
-    }}
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k
+        not in {
+            "RUNNER_ARCH",
+            "PROCESSOR_ARCHITECTURE",
+            "PROCESSOR_ARCHITEW6432",
+        }
+    }
     env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
     if extra_env:
         env.update(extra_env)
@@ -132,7 +141,68 @@ def test_linux_runner_arch_does_not_override_uname(tmp_path: Path):
     )
 
 
-def test_package_all_calls_get_arch_helper():
-    package = (Path(__file__).parents[1] / "package" / "package-all.sh").read_text()
-    assert "get-arch.sh" in package
-    assert 'function get_arch() {\n    _arch="$(uname -m)"' not in package
+@pytest.mark.parametrize(
+    "kernel,expected_arch,expected_status",
+    [("MINGW64_NT-10.0", "aarch64", 37), ("Linux", "x86_64", 0)],
+)
+def test_package_all_arch_and_pe_check(
+    tmp_path: Path, kernel, expected_arch, expected_status
+):
+    """Execute packaging with cheap archive/PE stubs, not source-text assertions."""
+    package_dir = tmp_path / "scripts" / "package"
+    package_dir.mkdir(parents=True)
+    for name in ("package-all.sh", "get-arch.sh"):
+        shutil.copy2(GET_ARCH.parent / name, package_dir / name)
+    version = package_dir / "getversion.sh"
+    version.write_text(
+        '#!/bin/bash\nif [[ "$1" == "--strip-v" ]]; then echo 1.2.3; else echo v1.2.3; fi\n'
+    )
+    version.chmod(0o755)
+    # This checker records its exact arguments and fails deliberately. Its zip
+    # existence assertion also pins invocation AFTER the archive command.
+    (package_dir / "assert-windows-pe-arch.py").write_text(
+        "import json, pathlib, sys\n"
+        "assert pathlib.Path(sys.argv[1]).is_file()\n"
+        "pathlib.Path('pe-args.json').write_text(json.dumps(sys.argv[1:]))\n"
+        "sys.exit(37)\n"
+    )
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _fake_uname(bin_dir, kernel, "x86_64")
+    for name in ("7z", "zip"):
+        stub = bin_dir / name
+        stub.write_text(
+            "#!/bin/bash\n"
+            'if [[ "$1" == "a" || "$1" == "-r" ]]; then shift; fi\n'
+            'touch "$1"\n'
+        )
+        stub.chmod(0o755)
+    (tmp_path / "dist" / "activitywatch").mkdir(parents=True)
+    env = dict(os.environ)
+    env.update(
+        PATH=str(bin_dir) + os.pathsep + env.get("PATH", ""),
+        RUNNER_ARCH="ARM64",
+        TAURI_BUILD="false",
+        AW_RESEARCH_EDITION="false",
+    )
+    result = subprocess.run(
+        ["bash", str(package_dir / "package-all.sh")],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == expected_status, result.stdout + result.stderr
+    platform = "windows" if kernel.startswith("MINGW") else "linux"
+    archive = f"activitywatch-v1.2.3-{platform}-{expected_arch}.zip"
+    assert sorted(p.name for p in (tmp_path / "dist").glob("*.zip")) == [archive]
+    args_file = tmp_path / "pe-args.json"
+    if platform == "windows":
+        assert json.loads(args_file.read_text()) == [f"dist/{archive}", expected_arch]
+        assert "Couldn't find innosetup" not in result.stdout
+        assert "Setup built!" not in result.stdout
+        assert "Contents of ./dist" not in result.stdout
+    else:
+        assert not args_file.exists()
+        assert "Contents of ./dist" in result.stdout
