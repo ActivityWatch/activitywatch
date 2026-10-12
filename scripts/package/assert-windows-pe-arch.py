@@ -12,6 +12,7 @@ import struct
 import sys
 import zipfile
 from pathlib import Path
+from typing import BinaryIO
 
 # IMAGE_FILE_MACHINE_* from winnt.h
 MACHINE_I386 = 0x14C
@@ -33,14 +34,17 @@ MACHINE_NAME = {
 }
 
 
-def pe_machine(data: bytes) -> int | None:
-    """Return the COFF Machine field, or None if this is not a PE image."""
-    if len(data) < 64 or data[:2] != b"MZ":
+def pe_machine(fh: BinaryIO) -> int | None:
+    """Read the COFF Machine field at the DOS header's declared PE offset."""
+    dos = fh.read(64)
+    if len(dos) < 64 or dos[:2] != b"MZ":
         return None
-    (pe_off,) = struct.unpack_from("<I", data, 0x3C)
-    if pe_off + 6 > len(data) or data[pe_off : pe_off + 4] != b"PE\x00\x00":
+    (pe_off,) = struct.unpack_from("<I", dos, 0x3C)
+    fh.seek(pe_off)
+    header = fh.read(6)
+    if len(header) < 6 or header[:4] != b"PE\x00\x00":
         return None
-    (machine,) = struct.unpack_from("<H", data, pe_off + 4)
+    (machine,) = struct.unpack_from("<H", header, 4)
     return machine
 
 
@@ -68,9 +72,7 @@ def check_zip(zip_path: Path, expected_arch: str) -> int:
             if not (name.endswith(".exe") or name.endswith(".dll")):
                 continue
             with zf.open(info) as fh:
-                # PE header is at the start; 4 KiB covers a typical DOS stub.
-                data = fh.read(4096)
-            machine = pe_machine(data)
+                machine = pe_machine(fh)
             if machine is None:
                 print(
                     f"WARNING: {info.filename} is named like a PE file but has no PE header",
