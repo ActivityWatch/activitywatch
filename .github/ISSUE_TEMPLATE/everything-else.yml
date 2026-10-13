@@ -1,6 +1,5 @@
 name: "🗃 Everything else"
 description: Questions and issues that do not fit another category
-title: ""
 body:
   - type: checkboxes
     id: preflight
