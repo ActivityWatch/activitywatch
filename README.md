@@ -208,9 +208,9 @@ For a complete list of the things ActivityWatch can track, [see the page on *wat
 
 ```mermaid
 graph TD;
-  aw-qt[<a href='https://github.com/ActivityWatch/aw-qt'>aw-qt</a>];
+  aw-qt[<a href='https://github.com/ActivityWatch/aw-qt'>aw-qt</a><br/>or<br/><a href='https://github.com/ActivityWatch/aw-tauri'>aw-tauri</a>];
   aw-notify[<a href='https://github.com/ActivityWatch/aw-notify-rs'>aw-notify</a>];
-  aw-server[<a href='https://github.com/ActivityWatch/aw-server'>aw-server</a>];
+  aw-server[<a href='https://github.com/ActivityWatch/aw-server'>aw-server</a><br/>or<br/><a href='https://github.com/ActivityWatch/aw-server-rust'>aw-server-rust</a>];
   aw-webui[<a href='https://github.com/ActivityWatch/aw-webui'>aw-webui</a>];
   aw-watcher-window[<a href='https://github.com/ActivityWatch/aw-watcher-window'>aw-watcher-window</a>];
   aw-watcher-afk[<a href='https://github.com/ActivityWatch/aw-watcher-afk'>aw-watcher-afk</a>];
