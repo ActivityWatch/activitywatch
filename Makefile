@@ -22,11 +22,21 @@ ifeq ($(TAURI_BUILD),true)
 	endif
 else
 	SUBMODULES := aw-core aw-client aw-qt aw-server aw-server-rust aw-watcher-afk aw-watcher-window
+	ifeq ($(OS),Linux)
+		# awatcher is the Wayland-capable window/AFK watcher. The PyInstaller
+		# (non-Tauri) Linux bundle ships it as `aw-awatcher`; aw-qt's bundled
+		# module discovery then finds it and can substitute it for
+		# aw-watcher-window on Wayland (aw-qt#142).
+		SUBMODULES := $(SUBMODULES) awatcher
+	endif
 endif
 
 # Exclude aw-server-rust if SKIP_SERVER_RUST is true
 ifeq ($(SKIP_SERVER_RUST),true)
 	SUBMODULES := $(filter-out aw-server-rust,$(SUBMODULES))
+	# awatcher is Rust too, so the legs that skip the Rust toolchain cannot
+	# build it either.
+	SUBMODULES := $(filter-out awatcher,$(SUBMODULES))
 endif
 # Include extras if AW_EXTRAS is true
 ifeq ($(AW_EXTRAS),true)
@@ -54,6 +64,10 @@ TYPECHECKABLES := $(foreach dir,$(SUBMODULES),$(call has_target,$(dir),typecheck
 ifeq ($(TAURI_BUILD),true)
 	PACKAGEABLES := $(filter-out aw-server-rust aw-server, $(PACKAGEABLES))
 endif
+# awatcher is copied into dist/activitywatch as a top-level `aw-awatcher` binary
+# below (or staged into aw-tauri's modules/ for Tauri builds), so keep it out of
+# the generic package loop.
+PACKAGEABLES := $(filter-out awatcher,$(PACKAGEABLES))
 
 # Build mode: release vs debug
 ifeq ($(RELEASE), false)
@@ -97,7 +111,7 @@ build: aw-core/.git
 				if [ -f "awatcher/target/$(targetdir)/awatcher" ]; then \
 					cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
 					chmod +x aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
-				else \
+				elif [ "$(SKIP_SERVER_RUST)" != "true" ]; then \
 					echo "Error: awatcher binary not found at awatcher/target/$(targetdir)/awatcher" >&2; \
 					exit 1; \
 				fi; \
@@ -284,6 +298,20 @@ else
 	mv dist/activitywatch/aw-qt dist/aw-qt-tmp
 	cp -a dist/aw-qt-tmp/. dist/activitywatch/
 	rm -rf dist/aw-qt-tmp
+ifeq ($(OS),Linux)
+ifneq ($(SKIP_SERVER_RUST),true)
+# Ship the Wayland-capable watcher in the bundle. aw-qt discovers bundled
+# modules by scanning its own directory for executables named aw-*, so the
+# binary has to sit at the top level as `aw-awatcher`. Fail closed: a Linux
+# bundle without it silently records nothing on Wayland.
+	@test -x awatcher/target/$(targetdir)/awatcher || { \
+		echo "Error: awatcher binary not found at awatcher/target/$(targetdir)/awatcher (required for Wayland support in the Linux bundle)" >&2; \
+		exit 1; \
+	}
+	cp awatcher/target/$(targetdir)/awatcher dist/activitywatch/aw-awatcher
+	chmod +x dist/activitywatch/aw-awatcher
+endif
+endif
 endif
 # Remove problem-causing binaries
 	rm -f dist/activitywatch/libdrm.so.2       # see: https://github.com/ActivityWatch/activitywatch/issues/161

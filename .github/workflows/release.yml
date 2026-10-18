@@ -662,7 +662,9 @@ jobs:
         env:
           cache-name: cargo-build-target
         with:
-          path: aw-server-rust/target
+          path: |
+            aw-server-rust/target
+            awatcher/target
           key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
@@ -688,7 +690,8 @@ jobs:
             libxft-dev \
             libxi-dev \
             libxrandr-dev \
-            libxrender-dev
+            libxrender-dev \
+            libxkbcommon-dev
 
       - name: Install dependencies
         run: |
@@ -1021,7 +1024,9 @@ jobs:
         env:
           cache-name: cargo-build-target
         with:
-          path: aw-server-rust/target
+          path: |
+            aw-server-rust/target
+            awatcher/target
           key: manylinux_2_28-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             manylinux_2_28-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
@@ -1044,6 +1049,7 @@ jobs:
             libXrandr-devel \
             libXrender-devel \
             libxcb-devel \
+            libxkbcommon-devel \
             openssl-devel \
             kernel-headers \
             gcc \
