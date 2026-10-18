@@ -662,7 +662,9 @@ jobs:
         env:
           cache-name: cargo-build-target
         with:
-          path: aw-server-rust/target
+          path: |
+            aw-server-rust/target
+            awatcher/target
           key: ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ matrix.os }}-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
@@ -1021,7 +1023,9 @@ jobs:
         env:
           cache-name: cargo-build-target
         with:
-          path: aw-server-rust/target
+          path: |
+            aw-server-rust/target
+            awatcher/target
           key: manylinux_2_28-${{ env.cache-name }}-${{ steps.toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             manylinux_2_28-${{ env.cache-name }}-${{ steps.toolchain.outputs.rustc_hash }}-
