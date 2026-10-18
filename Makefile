@@ -111,7 +111,7 @@ build: aw-core/.git
 				if [ -f "awatcher/target/$(targetdir)/awatcher" ]; then \
 					cp awatcher/target/$(targetdir)/awatcher aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
 					chmod +x aw-tauri/src-tauri/modules/aw-awatcher || exit 1; \
-				else \
+				elif [ "$(SKIP_SERVER_RUST)" != "true" ]; then \
 					echo "Error: awatcher binary not found at awatcher/target/$(targetdir)/awatcher" >&2; \
 					exit 1; \
 				fi; \
