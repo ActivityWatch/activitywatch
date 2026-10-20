@@ -434,7 +434,7 @@ jobs:
       - name: Install research-edition check dependencies
         # `tomli` is the Python 3.9 backport of `tomllib`, used by the preset
         # test to cross-check the emitter's stdlib-only TOML reader.
-        run: pip install pytest tomli
+        run: pip install pytest tomli pyyaml
 
       # Verify every patch target string exists exactly once in the real
       # submodule sources for both build flavours.  Fails immediately if a
@@ -461,7 +461,7 @@ jobs:
         run: python3 -m pytest scripts/tests/test_emit_research_category_preset.py -q
 
       - name: Test updater channel isolation and release versions
-        run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py -q
+        run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py scripts/tests/test_tauri_bundle_version.py -q
 
       - name: Test host-ABI gate
         run: python3 -m pytest scripts/tests/test_host_abi_gate.py -q
@@ -1283,6 +1283,9 @@ jobs:
       - name: Determine and output version
         run: |
           VERSION_WITH_V=$(bash scripts/package/getversion.sh)
+          # Compile the original bundle identity into the embedded server.
+          # Preserve the edition suffix before normalizing filenames below.
+          echo "AW_VERSION=${VERSION_WITH_V}" >> "$GITHUB_ENV"
           # Strip the research tag suffix for filenames: the edition gets its
           # own token (activitywatch[-tauri][-research]-<version>-...), so the
           # version part stays a plain version.
