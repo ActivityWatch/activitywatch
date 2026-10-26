@@ -23,11 +23,18 @@ REPOSITORY = "ActivityWatch/activitywatch"
 REF = "refs/heads/research-updates"
 MANIFEST = "latest-research.json"
 # Keep in step with build-tauri's release matrix. A reduced rollout needs review.
+# Linux installer-specific keys match tauri-plugin-updater's
+# {os}-{arch}-{installer} lookup (deb/rpm). AppImage stays on the unsuffixed
+# linux-<arch> key already in the field.
 TARGETS = {
     "darwin-aarch64": ("app.tar.gz",),
     "darwin-x86_64": ("app.tar.gz",),
     "linux-aarch64": ("AppImage", "AppImage.tar.gz"),
+    "linux-aarch64-deb": ("deb",),
+    "linux-aarch64-rpm": ("rpm",),
     "linux-x86_64": ("AppImage", "AppImage.tar.gz"),
+    "linux-x86_64-deb": ("deb",),
+    "linux-x86_64-rpm": ("rpm",),
     "windows-x86_64": ("exe", "nsis.zip", "msi", "msi.zip"),
 }
 
