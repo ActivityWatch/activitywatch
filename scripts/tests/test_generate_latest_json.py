@@ -124,6 +124,99 @@ def test_research_collect_ignores_standard_artifacts(tmp_path):
     )
 
 
+def test_linux_bundle_types_get_distinct_platform_keys(tmp_path):
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-0.14.1-linux-x86_64.AppImage.sig",
+        "appimage-sig",
+    )
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-0.14.1-linux-x86_64-deb.deb.sig",
+        "deb-sig",
+    )
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-0.14.1-linux-x86_64-rpm.rpm.sig",
+        "rpm-sig",
+    )
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-research-0.14.1-linux-x86_64-deb.deb.sig",
+        "research-deb-sig",
+    )
+
+    platforms = gen.collect_platforms(
+        str(tmp_path),
+        "0.14.1",
+        "ActivityWatch/activitywatch",
+        "v0.14.1",
+        "standard",
+    )
+
+    assert set(platforms) == {
+        "linux-x86_64",
+        "linux-x86_64-deb",
+        "linux-x86_64-rpm",
+    }
+    assert platforms["linux-x86_64"]["signature"] == "appimage-sig"
+    assert platforms["linux-x86_64-deb"]["signature"] == "deb-sig"
+    assert platforms["linux-x86_64-rpm"]["signature"] == "rpm-sig"
+    assert platforms["linux-x86_64"]["url"].endswith(
+        "/v0.14.1/activitywatch-tauri-0.14.1-linux-x86_64.AppImage"
+    )
+    assert platforms["linux-x86_64-deb"]["url"].endswith(
+        "/v0.14.1/activitywatch-tauri-0.14.1-linux-x86_64-deb.deb"
+    )
+    assert platforms["linux-x86_64-rpm"]["url"].endswith(
+        "/v0.14.1/activitywatch-tauri-0.14.1-linux-x86_64-rpm.rpm"
+    )
+
+
+def test_research_linux_bundle_types_stay_on_research_prefix(tmp_path):
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-0.14.1-linux-x86_64-deb.deb.sig",
+        "std-deb-sig",
+    )
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-research-0.14.1-linux-x86_64.AppImage.sig",
+        "research-appimage-sig",
+    )
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-research-0.14.1-linux-x86_64-deb.deb.sig",
+        "research-deb-sig",
+    )
+    _write_sig(
+        tmp_path,
+        "activitywatch-tauri-research-0.14.1-linux-x86_64-rpm.rpm.sig",
+        "research-rpm-sig",
+    )
+
+    platforms = gen.collect_platforms(
+        str(tmp_path),
+        "0.14.1",
+        "ActivityWatch/activitywatch",
+        "v0.14.1-research",
+        "research",
+    )
+
+    assert set(platforms) == {
+        "linux-x86_64",
+        "linux-x86_64-deb",
+        "linux-x86_64-rpm",
+    }
+    assert platforms["linux-x86_64"]["signature"] == "research-appimage-sig"
+    assert platforms["linux-x86_64-deb"]["signature"] == "research-deb-sig"
+    assert platforms["linux-x86_64-rpm"]["signature"] == "research-rpm-sig"
+    assert platforms["linux-x86_64-deb"]["url"].endswith(
+        "/v0.14.1-research/"
+        "activitywatch-tauri-research-0.14.1-linux-x86_64-deb.deb"
+    )
+
+
 def test_windows_prefers_nsis_over_msi_regardless_of_walk_order(tmp_path):
     _write_sig(tmp_path, "activitywatch-tauri-0.14.0-windows-x86_64.msi.zip.sig", "msi-sig")
     _write_sig(tmp_path, "activitywatch-tauri-0.14.0-windows-x86_64.nsis.zip.sig", "nsis-sig")

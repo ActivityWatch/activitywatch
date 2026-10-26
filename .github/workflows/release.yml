@@ -1674,30 +1674,40 @@ jobs:
             exit 0
           fi
 
-          # Linux: the Tauri AppImage is the shipped AppImage (identical bytes).
+          # Linux: harvest each signed bundle type. The updater looks up
+          # {os}-{arch}-{installer} first (deb/rpm) then {os}-{arch}
+          # (AppImage). Filename platform keys must match that lookup, so
+          # deb/rpm copies get a -deb/-rpm suffix and AppImage keeps the
+          # unsuffixed key already in the field.
           while IFS= read -r -d '' sig; do
             artifact="${sig%.sig}"
             if [ -f "$artifact" ]; then
               base="${artifact##*/}"
               # Bundle names embed the crate version (e.g. aw-tauri_0.1.0_amd64.AppImage),
               # so "everything after the first dot" would yield "1.0_amd64.AppImage".
+              key="$PLATFORM_KEY"
               case "$base" in
                 *.app.tar.gz)      ext="app.tar.gz" ;;
                 *.AppImage.tar.gz) ext="AppImage.tar.gz" ;;
                 *.AppImage)        ext="AppImage" ;;
+                *.deb)             ext="deb"; key="${PLATFORM_KEY}-deb" ;;
+                *.rpm)             ext="rpm"; key="${PLATFORM_KEY}-rpm" ;;
                 *.nsis.zip)        ext="nsis.zip" ;;
                 *.msi.zip)         ext="msi.zip" ;;
                 *.msi)             ext="msi" ;;
                 *.exe)             ext="exe" ;;
                 *) echo "unknown updater bundle: $base" >&2; exit 1 ;;
               esac
-              out="dist/updater/activitywatch-tauri${EDITION}-${VERSION}-${PLATFORM_KEY}.${ext}"
+              out="dist/updater/activitywatch-tauri${EDITION}-${VERSION}-${key}.${ext}"
               cp "$artifact" "$out"
               cp "$sig" "$out.sig"
               found=$((found + 1))
             fi
-          done < <(find aw-tauri/src-tauri/target -type f \
-            -path "*/release/bundle/appimage/*.sig" -print0)
+          done < <(find aw-tauri/src-tauri/target -type f \( \
+            -path "*/release/bundle/appimage/*.sig" -o \
+            -path "*/release/bundle/deb/*.sig" -o \
+            -path "*/release/bundle/rpm/*.sig" \
+          \) -print0)
 
           echo "Found $found Tauri updater artifact(s) for $PLATFORM_KEY"
           ls -la dist/updater/ || true

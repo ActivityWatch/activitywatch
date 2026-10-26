@@ -55,6 +55,27 @@ def test_valid_research_release():
     validate(*fixture())
 
 
+def test_linux_installer_keys_are_required_with_matching_bundles():
+    manifest, release, tag = fixture()
+    assert set(manifest["platforms"]) >= {
+        "linux-x86_64",
+        "linux-x86_64-deb",
+        "linux-x86_64-rpm",
+        "linux-aarch64-deb",
+        "linux-aarch64-rpm",
+    }
+    assert manifest["platforms"]["linux-x86_64-deb"]["url"].endswith(
+        "-linux-x86_64-deb.deb"
+    )
+    assert manifest["platforms"]["linux-x86_64-rpm"]["url"].endswith(
+        "-linux-x86_64-rpm.rpm"
+    )
+    validate(manifest, release, tag)
+    manifest["platforms"].pop("linux-x86_64-deb")
+    with pytest.raises(ValueError, match="complete required target matrix"):
+        validate(manifest, release, tag)
+
+
 @pytest.mark.parametrize(
     "mutation",
     [
@@ -365,7 +386,7 @@ def test_cli_public_checks_and_explicit_publish_flag(
     publisher.main(args)
     result = capsys.readouterr().out
     assert result.startswith("Published" if do_publish else "Prepared")
-    assert len(urls) == 6  # public release metadata and all five public signatures
+    assert len(urls) == 1 + len(publisher.TARGETS)  # release metadata + one public signature per target
     assert (publisher.remote_parent(work, remote) != "absent") == do_publish
 
 

@@ -47,7 +47,8 @@ Validation requires:
 
 - An unauthenticated GitHub API read of the exact published, immutable,
   non-draft research release.
-- All five release targets: macOS arm64/x86_64, Linux arm64/x86_64, and Windows
+- All required release targets: macOS arm64/x86_64, Linux arm64/x86_64
+  AppImage plus `linux-<arch>-deb` and `linux-<arch>-rpm`, and Windows
   x86_64. A reduced platform rollout requires an explicit code review.
 - A supported updater bundle and nonempty uploaded `.sig` asset for each
   platform, under the exact selected release and research filename prefix.

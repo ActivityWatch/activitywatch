@@ -5,7 +5,8 @@ Expects updater artifacts named
 `activitywatch-tauri[-research]-<version>-<platform-key>.<ext>` with a
 matching `<...>.sig` file alongside it (as produced by the "Package Tauri
 updater artifacts" step in release.yml), where <platform-key> is a Tauri
-updater platform identifier such as "darwin-aarch64" or "linux-x86_64".
+updater platform identifier such as "darwin-aarch64", "linux-x86_64",
+"linux-x86_64-deb", or "linux-x86_64-rpm".
 
 Standard and Research Edition releases are partitioned by filename:
 
