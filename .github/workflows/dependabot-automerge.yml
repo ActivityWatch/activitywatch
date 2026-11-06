@@ -22,6 +22,6 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' && github.actor == 'dependabot[bot]'
 
     steps:
-      - uses: ridedott/merge-me-action@e45e8ab1dd3d3dc1d27b8c0a3f465e40e8c9fb8e # v2
+      - uses: ridedott/merge-me-action@e586c33ceb8c6f00e1ee2584c7ee6916adaabf64 # v2
         with:
           GITHUB_TOKEN: ${{ secrets.AWBOT_GH_TOKEN }}
