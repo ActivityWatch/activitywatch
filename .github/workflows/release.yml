@@ -734,6 +734,14 @@ jobs:
           make build SKIP_WEBUI=${{ matrix.skip_webui }} SKIP_SERVER_RUST=${{ matrix.skip_rust }}
           pip freeze
 
+      - name: Install Windows test timezone data
+        # Windows has no system IANA database for zoneinfo; aw-client's
+        # explicit-timezone CLI tests need tzdata (mirrors aw-client CI).
+        if: runner.os == 'Windows'
+        run: |
+          source venv/Scripts/activate
+          python -m pip install tzdata
+
       - name: Run tests
         run: |
           source venv/bin/activate || source venv/Scripts/activate
@@ -1473,6 +1481,14 @@ jobs:
           done
           [ "$fail" -eq 0 ] && echo "✓ aw-awatcher and aw-sync staged for Linux Tauri bundle"
           exit "$fail"
+
+      - name: Install Windows test timezone data
+        # Windows has no system IANA database for zoneinfo; aw-client's
+        # explicit-timezone CLI tests need tzdata (mirrors aw-client CI).
+        if: runner.os == 'Windows'
+        run: |
+          source venv/Scripts/activate
+          python -m pip install tzdata
 
       - name: Run tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
