@@ -643,7 +643,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         id: toolchain
         with:
           toolchain: stable
@@ -1014,7 +1014,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         id: toolchain
         with:
           toolchain: stable
@@ -1323,7 +1323,7 @@ jobs:
       # toolchain that is already present is a no-op.
       - name: Set up Rust for the nightly relock
         if: needs.nightly-submodules.outputs.latest == 'true'
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
           toolchain: stable
 
@@ -1349,7 +1349,7 @@ jobs:
 
       - name: Set up Rust
         if: ${{ !matrix.skip_rust }}
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         id: toolchain
         with:
           toolchain: stable
