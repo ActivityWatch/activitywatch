@@ -61,7 +61,7 @@ def test_windows_matches_getversion_without_v() -> None:
             if not k.startswith(("GITHUB_REF", "TRAVIS", "APPVEYOR"))
         },
     ).stdout.strip()
-    assert _probe("MINGW64_NT-10.0") == f"[{expected}]"
+    assert _probe("MINGW64_NT-10.0") == f"[{expected.removesuffix('-research')}]"
 
 
 def test_explicit_aw_version_is_kept() -> None:
