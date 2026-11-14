@@ -3,6 +3,7 @@
 
 import os
 import platform
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -51,6 +52,7 @@ def build_collect(analysis, name, console=True, entitlements=None):
         contents_directory=".",
         entitlements_file=entitlements or entitlements_file,
         codesign_identity=codesign_identity,
+        version=windows_version_info(name),
     )
     return COLLECT(
         exe,
@@ -71,6 +73,54 @@ current_release = subprocess.run(
     encoding="utf8",
 ).stdout.strip()
 print("bundling activitywatch version " + current_release)
+
+
+def windows_version_info(name):
+    """PE version resource for Windows executables (ignored by PyInstaller elsewhere).
+
+    Code-signing services require consistent product name/version metadata.
+    PyInstaller's versioninfo module only imports on Windows.
+    """
+    if platform.system() != "Windows":
+        return None
+    from PyInstaller.utils.win32.versioninfo import (
+        FixedFileInfo,
+        StringFileInfo,
+        StringStruct,
+        StringTable,
+        VarFileInfo,
+        VarStruct,
+        VSVersionInfo,
+    )
+
+    version_str = current_release.lstrip("v")
+    # Leading numeric part only: "0.14.0b5" -> (0, 14, 0, 0)
+    m = re.match(r"\d+(?:\.\d+){0,3}", version_str)
+    nums = [int(n) for n in m.group(0).split(".")] if m else []
+    nums = tuple(nums + [0] * (4 - len(nums)))
+    return VSVersionInfo(
+        ffi=FixedFileInfo(filevers=nums, prodvers=nums),
+        kids=[
+            StringFileInfo(
+                [
+                    StringTable(
+                        "040904B0",
+                        [
+                            StringStruct("CompanyName", "ActivityWatch Contributors"),
+                            StringStruct("FileDescription", name),
+                            StringStruct("FileVersion", version_str),
+                            StringStruct("InternalName", name),
+                            StringStruct("OriginalFilename", f"{name}.exe"),
+                            StringStruct("ProductName", "ActivityWatch"),
+                            StringStruct("ProductVersion", version_str),
+                        ],
+                    )
+                ]
+            ),
+            VarFileInfo([VarStruct("Translation", [1033, 1200])]),
+        ],
+    )
+
 
 # Get entitlements and codesign identity
 entitlements_file = Path(".") / "scripts" / "package" / "entitlements.plist"
