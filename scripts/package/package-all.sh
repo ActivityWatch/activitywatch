@@ -115,6 +115,12 @@ function build_setup() {
     echo "Setup built!"
 }
 
+# make package uses subproject specs, not the root macOS aw.spec. Apply the
+# product version to their assembled executables before either archive is made.
+if [[ $platform == "windows"* ]]; then
+    python3 "$SCRIPT_DIR/windows-version-info.py" dist/activitywatch "$version_no_prefix"
+fi
+
 build_zip
 if [[ $platform == "windows"* ]]; then
     python3 "$SCRIPT_DIR/assert-windows-pe-arch.py" "dist/$filename" "$arch"

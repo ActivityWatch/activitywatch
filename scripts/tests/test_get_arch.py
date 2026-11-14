@@ -158,6 +158,13 @@ def test_package_all_arch_and_pe_check(
         '#!/bin/bash\nif [[ "$1" == "--strip-v" ]]; then echo 1.2.3; else echo v1.2.3; fi\n'
     )
     version.chmod(0o755)
+    # Record metadata stamping before archiving; its real Windows resource API
+    # is exercised separately by test_windows_version_info.py on Windows CI.
+    (package_dir / "windows-version-info.py").write_text(
+        "import json, pathlib, sys\n"
+        "assert not list(pathlib.Path('dist').glob('*.zip'))\n"
+        "pathlib.Path('version-args.json').write_text(json.dumps(sys.argv[1:]))\n"
+    )
     # This checker records its exact arguments and fails deliberately. Its zip
     # existence assertion also pins invocation AFTER the archive command.
     (package_dir / "assert-windows-pe-arch.py").write_text(
@@ -199,10 +206,15 @@ def test_package_all_arch_and_pe_check(
     assert sorted(p.name for p in (tmp_path / "dist").glob("*.zip")) == [archive]
     args_file = tmp_path / "pe-args.json"
     if platform == "windows":
+        assert json.loads((tmp_path / "version-args.json").read_text()) == [
+            "dist/activitywatch",
+            "1.2.3",
+        ]
         assert json.loads(args_file.read_text()) == [f"dist/{archive}", expected_arch]
         assert "Couldn't find innosetup" not in result.stdout
         assert "Setup built!" not in result.stdout
         assert "Contents of ./dist" not in result.stdout
     else:
+        assert not (tmp_path / "version-args.json").exists()
         assert not args_file.exists()
         assert "Contents of ./dist" in result.stdout
