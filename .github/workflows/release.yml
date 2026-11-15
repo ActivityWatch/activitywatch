@@ -469,6 +469,9 @@ jobs:
       - name: Test Windows arch detection and PE zip assertion
         run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py -q
 
+      - name: Test Windows AW_VERSION export for Rust PE resources
+        run: python3 -m pytest scripts/tests/test_makefile_aw_version.py -q
+
   build-qt:
     name: Build Qt artifacts (${{ matrix.os }}${{ (matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules

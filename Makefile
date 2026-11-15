@@ -76,6 +76,17 @@ else
 	targetdir := release
 endif
 
+# Windows: the Rust build scripts (aw-server-rust, aw-notify) embed AW_VERSION
+# as the PE ProductVersion, so every bundled executable reports the same release
+# version as the Python ones (scripts/package/windows-version-info.py) and the
+# installer. Same value as package-all.sh: no "v", no "-research" suffix.
+ifneq (,$(findstring MINGW,$(OS))$(findstring MSYS,$(OS)))
+ifeq ($(AW_VERSION),)
+	AW_VERSION := $(patsubst %-research,%,$(shell scripts/package/getversion.sh --strip-v))
+endif
+	export AW_VERSION
+endif
+
 # The `build` target
 # ------------------
 #
