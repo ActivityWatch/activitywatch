@@ -177,16 +177,14 @@ def test_package_all_arch_and_pe_check(
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     _fake_uname(bin_dir, kernel, "x86_64")
-    # Windows venvs provide python.exe, not python3.exe. Simulate the latter
-    # resolving to a base interpreter without the venv's PyInstaller install.
+    # Windows venvs provide python.exe, not python3.exe. Neither Windows
+    # packaging step should require a python3 command to be available.
     for name in ("python", "python3"):
         interpreter = bin_dir / name
         interpreter.write_text(
             "#!/bin/bash\n"
             + (
-                'if [[ "$1" == *windows-version-info.py ]]; then\n'
-                '  echo "base python3 has no PyInstaller" >&2; exit 42\n'
-                "fi\n"
+                'echo "python3 is unavailable" >&2; exit 127\n'
                 if name == "python3"
                 else ""
             )

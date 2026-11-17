@@ -124,7 +124,7 @@ fi
 
 build_zip
 if [[ $platform == "windows"* ]]; then
-    python3 "$SCRIPT_DIR/assert-windows-pe-arch.py" "dist/$filename" "$arch"
+    python "$SCRIPT_DIR/assert-windows-pe-arch.py" "dist/$filename" "$arch"
     build_setup
 fi
 
