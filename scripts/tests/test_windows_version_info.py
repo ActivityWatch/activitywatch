@@ -15,7 +15,7 @@ SCRIPT = ROOT / "scripts/package/windows-version-info.py"
 def test_windows_packaging_stamps_before_archiving():
     packaging = (ROOT / "scripts/package/package-all.sh").read_text()
     # Check the invocation, not a function definition or a macOS-only spec.
-    stamp = 'python3 "$SCRIPT_DIR/windows-version-info.py" dist/activitywatch "$version_no_prefix"'
+    stamp = 'python "$SCRIPT_DIR/windows-version-info.py" dist/activitywatch "$version_no_prefix"'
     assert stamp in packaging
     assert packaging.index(stamp) < packaging.index("\nbuild_zip\n")
     assert packaging.index(stamp) < packaging.index("\n    build_setup\n")

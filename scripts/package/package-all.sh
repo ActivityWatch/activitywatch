@@ -118,7 +118,8 @@ function build_setup() {
 # make package uses subproject specs, not the root macOS aw.spec. Apply the
 # product version to their assembled executables before either archive is made.
 if [[ $platform == "windows"* ]]; then
-    python3 "$SCRIPT_DIR/windows-version-info.py" dist/activitywatch "$version_no_prefix"
+    # Windows venvs provide python.exe, not python3.exe.
+    python "$SCRIPT_DIR/windows-version-info.py" dist/activitywatch "$version_no_prefix"
 fi
 
 build_zip

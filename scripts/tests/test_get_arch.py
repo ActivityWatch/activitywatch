@@ -12,6 +12,7 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -176,6 +177,22 @@ def test_package_all_arch_and_pe_check(
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     _fake_uname(bin_dir, kernel, "x86_64")
+    # Windows venvs provide python.exe, not python3.exe. Simulate the latter
+    # resolving to a base interpreter without the venv's PyInstaller install.
+    for name in ("python", "python3"):
+        interpreter = bin_dir / name
+        interpreter.write_text(
+            "#!/bin/bash\n"
+            + (
+                'if [[ "$1" == *windows-version-info.py ]]; then\n'
+                '  echo "base python3 has no PyInstaller" >&2; exit 42\n'
+                "fi\n"
+                if name == "python3"
+                else ""
+            )
+            + f'exec "{sys.executable}" "$@"\n'
+        )
+        interpreter.chmod(0o755)
     for name in ("7z", "zip"):
         stub = bin_dir / name
         stub.write_text(

@@ -38,8 +38,11 @@ jobs:
           python-version: '3.9'
       - run: pip install pytest
       - if: runner.os == 'Windows'
-        run: pip install pyinstaller
+        # Match release packaging: PyInstaller belongs to a venv, not base Python.
+        run: |
+          python -m venv venv
+          .\venv\Scripts\python.exe -m pip install pytest pyinstaller
       - if: runner.os != 'Windows'
         run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py scripts/tests/test_windows_version_info.py -q
       - if: runner.os == 'Windows'
-        run: python -m pytest scripts/tests/test_windows_version_info.py -q
+        run: .\venv\Scripts\python.exe -m pytest scripts/tests/test_windows_version_info.py -q
