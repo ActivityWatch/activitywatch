@@ -14,6 +14,12 @@ no overlap after `union_no_overlap`/`period_union`/`flood`, duration conservatio
 - `normalize.py`: drops event ids, parses timestamps to UTC, compares times with a
   2 µs tolerance, and compares unordered results as multisets.
 - `known_issues.py` / `known_failures.txt`: current divergences, each linked to an issue.
+- `test_heartbeat_parity.py`: identical sequential heartbeat requests in fresh buckets,
+  comparing stored events before running the existing `flood` and
+  `merge_events_by_keys` queries. Covers steady pulses, gaps, data changes, the
+  pulsetime boundary, equal timestamps with unequal durations, containment and
+  negative gaps. Reuses the startup and normalization helpers; no concurrent
+  requests or production heartbeat changes (ActivityWatch/activitywatch#1568).
 
 ## Running
 
