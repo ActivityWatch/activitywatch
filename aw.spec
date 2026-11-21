@@ -177,6 +177,19 @@ skip_aw_notify = not any(p.exists() for p in _notify_candidates)
 if skip_aw_notify:
     print("Skipping aw-notify Python packaging (Rust-based implementation detected)")
 
+# aw-notify is the Rust implementation (aw-notify/Makefile, `cargo build --release`),
+# so there is no Analysis to package. The macOS bundle still has to ship the built
+# binary: without it the .app contains no aw-notify and aw-qt never lists the module
+# (ActivityWatch/activitywatch#1564). Non-PyInstaller packages (Windows/Linux zips)
+# already pick it up through `make package`.
+_aw_notify_rust_candidates = [
+    aw_notify_location / "target/release/aw-notify",
+    aw_notify_location / "target/debug/aw-notify",
+]
+aw_notify_rust_bin = next(
+    (p for p in _aw_notify_rust_candidates if p.exists()), None
+)
+
 aw_notify_a = None if skip_aw_notify else build_analysis(
     "aw_notify", aw_notify_location, hiddenimports=["desktop_notifier.resources"]
 )
@@ -230,6 +243,15 @@ if platform.system() == "Darwin":
     ]
     if aw_notify_coll is not None:
         bundle_args.append(aw_notify_coll)
+    elif aw_notify_rust_bin is not None:
+        # TOC-like iterable: BUNDLE places EXECUTABLE entries in Contents/MacOS,
+        # alongside aw-qt and the watchers, which is where module discovery looks.
+        bundle_args.append([("aw-notify", str(aw_notify_rust_bin), "EXECUTABLE")])
+    else:
+        print(
+            "WARNING: no aw-notify binary found (build aw-notify first); "
+            "the macOS bundle will not include it"
+        )
     
     app = BUNDLE(
         *bundle_args,
