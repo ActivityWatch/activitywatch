@@ -72,3 +72,33 @@ def test_record_report_ignores_skipped_calls():
     record_report(_report("call", "failed", helper), ran, failed)
     assert ran == ["a", "b"]
     assert failed == ["b"]
+
+
+def test_heartbeat_and_event_helpers_use_the_collection_endpoints():
+    """The differential suite must exercise heartbeat ingestion, not insert_events."""
+    calls = []
+
+    class Session:
+        def post(self, url, **kwargs):
+            calls.append(("post", url, kwargs))
+            return SimpleNamespace(ok=True, status_code=200, text="ok")
+
+        def get(self, url, **kwargs):
+            calls.append(("get", url, kwargs))
+            return SimpleNamespace(ok=True, status_code=200, text="ok", json=lambda: [])
+
+    server = Server("helper", [], [])
+    server.session = Session()
+    event = {"timestamp": "2026-01-05T09:00:00+00:00", "duration": 0, "data": {}}
+    try:
+        server.heartbeat("bucket", event, 10)
+        assert server.events("bucket") == []
+        method, url, kwargs = calls[0]
+        assert method == "post"
+        assert url == f"{server.url}/api/0/buckets/bucket/heartbeat"
+        assert kwargs["params"] == {"pulsetime": 10}
+        assert kwargs["json"] == event
+        assert calls[1][0:2] == ("get", f"{server.url}/api/0/buckets/bucket/events")
+        assert calls[1][2]["params"] == {"limit": -1}
+    finally:
+        server.stop()
