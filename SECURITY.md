@@ -1,25 +1,23 @@
 # Security Policy
 
-<!--
-## Supported Versions
-
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
-| Version    | Supported          |
-| ---------- | ------------------ |
-| 0.11.0     | :white_check_mark: |
-| <= 0.10.0  | :x:                |
--->
-
 ## Reporting a Vulnerability
 
-<!--
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
--->
-
 If you discover a vulnerability, please send a PGP encrypted email with details to [erik@bjareho.lt](mailto:erik@bjareho.lt) (preferably PGP encrypted using [this key](https://erik.bjareholt.com/erikbjare.asc)).
+
+You can also open a [GitHub private security advisory](https://github.com/ActivityWatch/activitywatch/security/advisories/new) if you prefer not to send email.
+
+### What to include
+
+A good report helps us respond faster. Please include:
+
+1. **A working reproduction** — concrete steps that trigger the issue (a URL, a command, a script, or a proof-of-concept)
+2. **The affected version** — the ActivityWatch release or commit you tested against
+3. **A minimal trigger** — the simplest possible reproducer (not a full attack chain, just the essential step)
+
+A report with all three typically gets a response within a few days. A report without a reproduction will be lower priority until we can reproduce it ourselves.
+
+### What to expect
+
+- **Acknowledgement** within a few days of receipt
+- **Fix or mitigation** in the next release, with credit to the reporter
+- Past security advisories are listed at [github.com/ActivityWatch/activitywatch/security/advisories](https://github.com/ActivityWatch/activitywatch/security/advisories)
