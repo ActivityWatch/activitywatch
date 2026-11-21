@@ -4,9 +4,11 @@ on:
     paths:
       - 'scripts/package/get-arch.sh'
       - 'scripts/package/assert-windows-pe-arch.py'
+      - 'scripts/package/windows-version-info.py'
       - 'scripts/package/package-all.sh'
       - 'scripts/tests/test_get_arch.py'
       - 'scripts/tests/test_assert_windows_pe_arch.py'
+      - 'scripts/tests/test_windows_version_info.py'
       - '.github/workflows/packaging-arch-tests.yml'
       - '.github/workflows/release.yml'
   push:
@@ -14,20 +16,33 @@ on:
     paths:
       - 'scripts/package/get-arch.sh'
       - 'scripts/package/assert-windows-pe-arch.py'
+      - 'scripts/package/windows-version-info.py'
       - 'scripts/package/package-all.sh'
       - 'scripts/tests/test_get_arch.py'
       - 'scripts/tests/test_assert_windows_pe_arch.py'
+      - 'scripts/tests/test_windows_version_info.py'
       - '.github/workflows/packaging-arch-tests.yml'
       - '.github/workflows/release.yml'
 permissions:
   contents: read
 jobs:
   test:
-    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: '3.9'
       - run: pip install pytest
-      - run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py -q
+      - if: runner.os == 'Windows'
+        # Match release packaging: PyInstaller belongs to a venv, not base Python.
+        run: |
+          python -m venv venv
+          .\venv\Scripts\python.exe -m pip install pytest pyinstaller
+      - if: runner.os != 'Windows'
+        run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py scripts/tests/test_windows_version_info.py -q
+      - if: runner.os == 'Windows'
+        run: .\venv\Scripts\python.exe -m pytest scripts/tests/test_windows_version_info.py -q
