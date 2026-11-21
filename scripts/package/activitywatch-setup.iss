@@ -61,3 +61,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 ; NOTE: Doesn't work? And also discouraged by the docs
 ;[InstallDelete]
 ;Type: filesandordirs; Name: "{app}\"
+
+; Removes the previously installed version before installing the new one
+[InstallDelete]
+Type: files; Name: "{userstartup}\{#MyAppName}"
