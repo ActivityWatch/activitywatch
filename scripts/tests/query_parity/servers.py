@@ -145,6 +145,24 @@ class Server:
         )
         assert r.ok, f"{self.name}: {r.status_code} {r.text}"
 
+    def heartbeat(self, bucket_id: str, event: dict, pulsetime: float) -> None:
+        r = self.session.post(
+            f"{self.url}/api/0/buckets/{bucket_id}/heartbeat",
+            params={"pulsetime": pulsetime},
+            json=event,
+            timeout=REQUEST_TIMEOUT,
+        )
+        assert r.ok, f"{self.name}: {r.status_code} {r.text}"
+
+    def events(self, bucket_id: str) -> List[dict]:
+        r = self.session.get(
+            f"{self.url}/api/0/buckets/{bucket_id}/events",
+            params={"limit": -1},
+            timeout=REQUEST_TIMEOUT,
+        )
+        assert r.ok, f"{self.name}: {r.status_code} {r.text}"
+        return r.json()
+
     def query(self, query: str, period: str):
         """Run a query. Returns the result, or {"__error__": status} on failure."""
         r = self.session.post(
