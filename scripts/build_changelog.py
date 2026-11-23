@@ -124,19 +124,25 @@ class Commit:
     def msg_processed(self) -> str:
         """Generates links from commit and issue references (like 0c14d77, #123) to correct repo and such"""
         s = self.msg
+        # Full URLs first. The lookbehind tests the preceding character instead of
+        # consuming it, so the link is not glued onto the word before it.
         s = re.sub(
-            rf"[^(-]https://github.com/{self.org}/([\-\w\d]+)/(issues|pulls)/(\d+)",
+            rf"(?<![(-])https://github.com/{self.org}/([\-\w\d]+)/(issues|pulls)/(\d+)",
             rf"[#\3](https://github.com/{self.org}/\1/issues/\3)",
             s,
         )
+        # Shorthand issue refs. The guard skips the `#N` of a link made above (and any
+        # ref already bracketed in the message) instead of nesting a second link.
         s = re.sub(
-            r"#(\d+)",
+            r"(?<!\[)#(\d+)",
             rf"[#\1](https://github.com/{self.org}/{self.repo}/issues/\1)",
             s,
         )
+        # Short commit hashes. The lookarounds leave the surrounding whitespace in
+        # place, and the link points at the commit: a hash is not an issue number.
         s = re.sub(
-            r"[\s\(][0-9a-f]{7}[\s\)]",
-            rf"[`\0`](https://github.com/{self.org}/{self.repo}/issues/\0)",
+            r"(?<=[\s(])[0-9a-f]{7}(?=[\s)])",
+            lambda match: commit_linkify(match.group(0), self.org, self.repo),
             s,
         )
         # wrap html elements in backticks, if not already wrapped

@@ -433,3 +433,95 @@ def test_support_section_reaches_the_assembled_bundle_notes(bundle, tmp_path, mo
         < notes.index("# Support ActivityWatch")
         < notes.index("# Contributors")
     )
+
+
+def process(msg: str, repo: str = "activitywatch") -> str:
+    return changelog.Commit(id="0000000", msg=msg, org="ActivityWatch", repo=repo).msg_processed
+
+
+@pytest.mark.parametrize(
+    "msg,expected",
+    [
+        # A linked issue URL must not be re-linked into a nested [#n](...)(...) pair,
+        # and must keep the repo it points at. Both shapes shipped broken in the
+        # published v0.13.0 notes.
+        (
+            "fix: set rocket_cors log level to Warn "
+            "(fixes https://github.com/ActivityWatch/aw-server-rust/issues/975)",
+            "fix: set rocket_cors log level to Warn "
+            "(fixes [#975](https://github.com/ActivityWatch/aw-server-rust/issues/975))",
+        ),
+        (
+            "ci: disabled cargo cache on macOS, see "
+            "https://github.com/ActivityWatch/aw-server-rust/issues/180",
+            "ci: disabled cargo cache on macOS, see "
+            "[#180](https://github.com/ActivityWatch/aw-server-rust/issues/180)",
+        ),
+        # An anchor on the URL survives, rather than becoming a second link.
+        (
+            "fixed issue with Makefile: "
+            "https://github.com/ActivityWatch/activitywatch/issues/99#issuecomment-362558255",
+            "fixed issue with Makefile: "
+            "[#99](https://github.com/ActivityWatch/activitywatch/issues/99)"
+            "#issuecomment-362558255",
+        ),
+        # The link must not swallow the space before it.
+        (
+            "fix: handle empty buckets, see "
+            "https://github.com/ActivityWatch/activitywatch/pulls/1234",
+            "fix: handle empty buckets, see "
+            "[#1234](https://github.com/ActivityWatch/activitywatch/issues/1234)",
+        ),
+        # Shorthand refs are still linked.
+        ("fix: incorrect week number (#407)", "fix: incorrect week number ([#407](https://github.com/ActivityWatch/activitywatch/issues/407))"),
+    ],
+)
+def test_links_are_not_nested_or_glued_to_the_preceding_word(msg, expected):
+    out = process(msg)
+
+    assert out == expected
+    assert "[[" not in out
+    assert "\x00" not in out
+
+
+@pytest.mark.parametrize(
+    "msg,expected",
+    [
+        # A short hash is a commit, not an issue: both the link target and the
+        # surrounding spaces were wrong before.
+        (
+            "fix: revert the change made in 0c14d77 by mistake",
+            "fix: revert the change made in "
+            "[`0c14d77`](https://github.com/ActivityWatch/activitywatch/commit/0c14d77) "
+            "by mistake",
+        ),
+        (
+            "fix: restore behaviour (abc1234)",
+            "fix: restore behaviour "
+            "([`abc1234`](https://github.com/ActivityWatch/activitywatch/commit/abc1234))",
+        ),
+    ],
+)
+def test_short_commit_hashes_link_to_the_commit_without_eating_spaces(msg, expected):
+    out = process(msg)
+
+    assert out == expected
+    assert "\x00" not in out
+    assert "/issues/0c14d77" not in out
+    assert "/issues/abc1234" not in out
+
+
+def test_issue_refs_still_use_the_repo_of_the_commit_being_rendered():
+    # A submodule's commits link to the submodule, not to the bundle repo.
+    out = process("fix: crash (#12)", repo="aw-server-rust")
+
+    assert out == "fix: crash ([#12](https://github.com/ActivityWatch/aw-server-rust/issues/12))"
+
+
+def test_messages_without_references_are_returned_unchanged():
+    # Nothing in the linking should alter ordinary commit text.
+    msg = "fix(ci): resolve macOS codesign identity from imported cert [skip ci]"
+
+    assert process(msg) == msg
+
+
