@@ -72,6 +72,7 @@ def test_end_of_input_is_not_yes(stdin: str | None) -> None:
         ("n\n", False, 0, ""),
         ("\n", True, 1, ""),
         ("\n\n", True, 0, ""),
+        ("\n", False, 1, "commit-failure"),
         ("q\n", False, 1, "worktree"),
         ("q\n", False, 1, "index"),
         ("n\n", False, 0, "worktree"),
@@ -83,6 +84,7 @@ def test_end_of_input_is_not_yes(stdin: str | None) -> None:
         "decline",
         "push-eof",
         "accept",
+        "commit-failure",
         "quit-edited",
         "quit-staged",
         "decline-edited",
@@ -127,12 +129,16 @@ def test_relock_prompt_leaves_clean_tree(
     )[0]
     relock = relock.rsplit("\nfi", 1)[0]
     edit_prompt = ""
-    if edit:
+    if edit in ("worktree", "index"):
         edit_prompt = (
             _confirm_source().replace("confirm()", "prompt_confirm()")
             + "confirm() { echo 'user edit' > \"$LOCK\"; "
             + ("git -C aw-tauri add src-tauri/Cargo.lock; " if edit == "index" else "")
             + 'prompt_confirm "$@"; }\n'
+        )
+    if edit == "commit-failure":
+        edit_prompt = (
+            'git() { if [ "${3:-}" = commit ]; then return 1; fi; command git "$@"; }\n'
         )
     result = subprocess.run(
         [
@@ -155,7 +161,7 @@ def test_relock_prompt_leaves_clean_tree(
         timeout=10,
     )
     assert result.returncode == exit_code, result.stderr
-    if edit:
+    if edit in ("worktree", "index"):
         assert lock.read_text() == "user edit\n"
         assert "changed" in result.stderr
         assert git("show", ":src-tauri/Cargo.lock") == (

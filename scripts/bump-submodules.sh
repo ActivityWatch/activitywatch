@@ -477,6 +477,7 @@ else
     git -C aw-tauri diff --stat -- src-tauri/Cargo.lock | sed 's/^/    /'
     if confirm "commit in aw-tauri: \"build(deps): updated cargo locks\" (aw-server-rust -> ${SERVER_SHA:0:7})?"; then
         run aw-tauri add -- src-tauri/Cargo.lock
+        relock_index=$relock_worktree
         run aw-tauri commit -q -m "build(deps): updated cargo locks
 
 aw-server-rust -> $SERVER_SHA"
