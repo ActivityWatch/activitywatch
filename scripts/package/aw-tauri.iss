@@ -9,6 +9,7 @@
 #define MyAppPublisher "ActivityWatch Contributors"
 #define MyAppURL "https://activitywatch.net/"
 #define MyAppExeName "aw-tauri.exe"
+#define MyAutostartName "aw-tauri"
 #define RootDir "..\.."
 #define DistDir "..\..\dist"
 
@@ -54,12 +55,15 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: StartMenuEntry;
 
 [Registry]
-; aw-tauri registers its own login item at runtime (tauri-plugin-autostart, named after
-; productName "aw-tauri"), so the installer never created these values and would leave
-; them behind. ValueType: none creates nothing on install; uninsdeletevalue removes the
-; value on uninstall. StartupApproved holds Task Manager's enabled/disabled flag.
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "aw-tauri"; Flags: uninsdeletevalue
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"; ValueType: none; ValueName: "aw-tauri"; Flags: uninsdeletevalue
+; aw-tauri registers its own login item at runtime (tauri-plugin-autostart), so the
+; installer never created these values and would leave them behind. MyAutostartName
+; matches the runtime name; the Research Edition build patches it to its own identity.
+; ValueType: none creates nothing on install; uninsdeletevalue removes the value on
+; uninstall. StartupApproved holds Task Manager's enabled/disabled flag.
+; HKCU cleanup covers only the account running the uninstaller, not other users of an
+; all-users install. Named-profile login items are also outside this cleanup.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "{#MyAutostartName}"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"; ValueType: none; ValueName: "{#MyAutostartName}"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

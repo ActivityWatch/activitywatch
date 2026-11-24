@@ -439,6 +439,12 @@ WINDOWS_PATCHES_TAURI: List[Patch] = [
     ),
     Patch(
         "scripts/package/aw-tauri.iss",
+        '#define MyAutostartName "aw-tauri"\n',
+        f'#define MyAutostartName "aw-tauri-{RESEARCH_PROFILE}-edition"\n',
+        "Inno Tauri uninstall login values (match the research runtime app_name)",
+    ),
+    Patch(
+        "scripts/package/aw-tauri.iss",
         "AppId={{983D0855-08C8-46BD-AEFB-3924581C6703}\n",
         f"AppId={{{{{WINDOWS_APPID_TAURI}}}\n",
         "Inno Tauri AppId (separate product, not an upgrade of standard Tauri)",
