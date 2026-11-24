@@ -136,7 +136,8 @@ def test_real_binary_is_scanned(tmp_path: Path) -> None:
     versions = subprocess.run(
         ["readelf", "--version-info", str(binary)], capture_output=True, text=True
     )
-    if versions.returncode != 0 or "GLIBC_" not in versions.stdout:
+    assert versions.returncode == 0, versions
+    if "GLIBC_" not in versions.stdout:
         pytest.skip("host ls has no GLIBC version references")
     archive = _zip(tmp_path, {"aw-qt": binary})
     result = run_gate(tmp_path, archive)
