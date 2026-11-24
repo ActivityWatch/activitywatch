@@ -19,7 +19,10 @@ CONTROL = SCRIPTS / "package" / "deb" / "control"
 
 STUBS = {
     # chown to root needs real root; everything else runs as the test user.
-    "sudo": '#!/bin/bash\n[[ "$1" == chown ]] && exit 0\nexec "$@"\n',
+    "sudo": (
+        '#!/bin/bash\nprintf "%s\\n" "$*" >> "$HOME/sudo-calls"\n'
+        '[[ "$1" == chown ]] && exit 0\nexec "$@"\n'
+    ),
     "apt-get": "#!/bin/bash\nexit 0\n",
     "jdupes": "#!/bin/bash\nexit 0\n",
     # Record the staged control file and tree, then emit the .deb dpkg-deb
@@ -146,6 +149,7 @@ def test_unsafe_version_rejected_before_cleanup(tmp_path: Path, tag: str) -> Non
     result = run_package_deb(tmp_path, root)
     assert result.returncode != 0
     assert "Unsafe or unsupported version" in result.stderr
+    assert not (tmp_path / "sudo-calls").exists()
     assert marker.read_text() == "must survive"
     assert not list(root.glob("*.control"))
 
