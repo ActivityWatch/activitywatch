@@ -65,12 +65,32 @@ def test_end_of_input_is_not_yes(stdin: str | None) -> None:
 
 
 @pytest.mark.parametrize(
-    ("answer", "committed"),
-    [("", False), ("q\n", False), ("n\n", False), ("\n", True)],
-    ids=["eof", "quit", "decline", "accept"],
+    ("answer", "committed", "exit_code", "edit"),
+    [
+        ("", False, 1, ""),
+        ("q\n", False, 1, ""),
+        ("n\n", False, 0, ""),
+        ("\n", True, 1, ""),
+        ("\n\n", True, 0, ""),
+        ("q\n", False, 1, "worktree"),
+        ("q\n", False, 1, "index"),
+        ("n\n", False, 0, "worktree"),
+        ("", False, 1, "index"),
+    ],
+    ids=[
+        "eof",
+        "quit",
+        "decline",
+        "push-eof",
+        "accept",
+        "quit-edited",
+        "quit-staged",
+        "decline-edited",
+        "eof-staged",
+    ],
 )
 def test_relock_prompt_leaves_clean_tree(
-    tmp_path: Path, answer: str, committed: bool
+    tmp_path: Path, answer: str, committed: bool, exit_code: int, edit: str
 ) -> None:
     """Exercise the real relock branch, including confirm's process-level exit."""
     tauri = tmp_path / "aw-tauri"
@@ -91,12 +111,28 @@ def test_relock_prompt_leaves_clean_tree(
     git("commit", "-qm", "initial lock")
     before = git("rev-parse", "HEAD")
     text = SCRIPT.read_text()
-    helpers = text.split("# ---------------------------------------------------------------- helpers\n")[1]
-    helpers = helpers.split("# ---------------------------------------------------------------- preflight")[0]
-    relock = text.split("# ---------------------------------------------------------------- 3. Tauri Cargo pin")[1]
+    helpers = text.split(
+        "# ---------------------------------------------------------------- helpers\n"
+    )[1]
+    helpers = helpers.split(
+        "# ---------------------------------------------------------------- preflight"
+    )[0]
+    relock = text.split(
+        "# ---------------------------------------------------------------- 3. Tauri Cargo pin"
+    )[1]
     relock = relock.split("\nelse\n", 1)[1]
-    relock = relock.split("# ---------------------------------------------------------------- 4. bundle")[0]
+    relock = relock.split(
+        "# ---------------------------------------------------------------- 4. bundle"
+    )[0]
     relock = relock.rsplit("\nfi", 1)[0]
+    edit_prompt = ""
+    if edit:
+        edit_prompt = (
+            _confirm_source().replace("confirm()", "prompt_confirm()")
+            + "confirm() { echo 'user edit' > \"$LOCK\"; "
+            + ("git -C aw-tauri add src-tauri/Cargo.lock; " if edit == "index" else "")
+            + 'prompt_confirm "$@"; }\n'
+        )
     result = subprocess.run(
         [
             "bash",
@@ -108,6 +144,7 @@ def test_relock_prompt_leaves_clean_tree(
             + "cargo() { echo 'aw-server-rust.git?branch=master#new' > Cargo.lock; }\n"
             # Do not push; the relock branch must clear cleanup before this prompt.
             + 'push_master() { confirm "push?"; }\n'
+            + edit_prompt
             + relock,
         ],
         cwd=tmp_path,
@@ -116,7 +153,15 @@ def test_relock_prompt_leaves_clean_tree(
         text=True,
         timeout=10,
     )
-    assert result.returncode == (0 if answer == "n\n" else 1), result.stderr
+    assert result.returncode == exit_code, result.stderr
+    if edit:
+        assert lock.read_text() == "user edit\n"
+        assert "changed" in result.stderr
+        assert git("show", ":src-tauri/Cargo.lock") == (
+            "user edit" if edit == "index" else "old lock"
+        )
+        assert git("rev-parse", "HEAD") == before
+        return
     assert git("status", "--porcelain") == ""
     assert (git("rev-parse", "HEAD") != before) is committed
     assert lock.read_text() == (

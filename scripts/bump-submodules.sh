@@ -453,9 +453,21 @@ elif [ "$DRY" = 1 ]; then
 else
     # This pair was clean at preflight. Undo only our uncommitted relock on
     # abort (including EOF/q in confirm), so a retry is not blocked as dirty.
-    trap 'git -C aw-tauri checkout -q HEAD -- src-tauri/Cargo.lock' EXIT
-    # One --precise moves every package that shares the git source.
-    (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA")
+    restore_relock() {
+        if [ "$(git hash-object "$LOCK" 2>/dev/null)" = "$relock_worktree" ] &&
+            [ "$(git -C aw-tauri rev-parse :src-tauri/Cargo.lock 2>/dev/null)" = "$relock_index" ]; then
+            git -C aw-tauri checkout -q HEAD -- src-tauri/Cargo.lock
+        else
+            warn "Cargo.lock changed after relocking; preserving working and staged edits"
+        fi
+    }
+    # Capture even a failed cargo update so its partial changes can be undone.
+    relock_status=0
+    (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA") || relock_status=$?
+    relock_worktree=$(git hash-object "$LOCK")
+    relock_index=$(git -C aw-tauri rev-parse :src-tauri/Cargo.lock)
+    trap restore_relock EXIT
+    [ "$relock_status" = 0 ] || exit "$relock_status"
     stale=$(grep "aw-server-rust.git?branch=master#" "$LOCK" | grep -vc "#$SERVER_SHA" || true)
     if [ "$stale" != 0 ]; then
         echo "some aw-server-rust crates did not relock to ${SERVER_SHA:0:7}:" >&2
@@ -474,9 +486,9 @@ aw-server-rust -> $SERVER_SHA"
     else
         # A dirty, uncommitted lock would pass the checker here and vanish in
         # CI. Restore it so the tree matches what will actually be built.
-        git -C aw-tauri checkout -q -- src-tauri/Cargo.lock
+        restore_relock
         trap - EXIT
-        warn "aw-tauri lock commit declined; lock restored to the committed (old) revision"
+        warn "aw-tauri lock commit declined"
     fi
 fi
 
