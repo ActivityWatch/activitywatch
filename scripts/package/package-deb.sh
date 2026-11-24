@@ -10,20 +10,33 @@ VERSION="$("$SCRIPT_DIR/getversion.sh")"
 # Strip the research tag suffix: the edition gets its own filename token, and
 # a bare "-research" in the Debian version field would parse as a revision.
 VERSION="${VERSION%-research}"
-VERSION_NUM="$(echo "$VERSION" | sed -e 's/^v//')"
+VERSION_NUM="${VERSION#v}"
+# Validate before using the tag in paths, sed replacements or privileged cleanup.
+if [[ ! $VERSION_NUM =~ ^[0-9]+(\.[0-9]+)*((a|b|rc)[0-9]+)?(\.dev-[0-9a-z]+)?$ ]]; then
+    echo "Unsafe or unsupported version: $VERSION" >&2
+    exit 1
+fi
 EDITION=""
 if [[ $AW_RESEARCH_EDITION == "true" ]]; then
     EDITION="-research"
 fi
+# Debian sorts "0.14.0b5" above "0.14.0"; a tilde before the pre-release
+# marker sorts it below, so a beta/rc .deb upgrades to the final release.
+# Dev builds after a final tag (0.14.0.dev-<hash>) are newer and keep no tilde.
+# Keep epoch 1 on ALL future builds: it migrates users from the old, incorrectly
+# ordered epoch-0 beta versions (e.g. 0.14.4b1) to both the next beta and final.
+# The epoch is control metadata only; staging and download names stay unchanged.
+DEB_VERSION="1:$(echo "$VERSION_NUM" | sed -E 's/^([0-9]+(\.[0-9]+)*)(a|b|rc)([0-9])/\1~\3\4/')"
 echo "Version (with v): $VERSION"
 echo "Version (without v): $VERSION_NUM"
+echo "Debian version: $DEB_VERSION"
 PKGDIR="activitywatch_$VERSION_NUM"
 
 # Package tools
 sudo apt-get install sed jdupes wget
 
-if [ -d "PKGDIR" ]; then
-    sudo rm -rf $PKGDIR
+if [ -d "$PKGDIR" ]; then
+    sudo rm -rf -- "$PKGDIR"
 fi
 
 # .deb meta files
@@ -38,7 +51,7 @@ mkdir -p $PKGDIR/usr/share/applications
 # While storing the control file in a variable here, dumping it in a file is so unnecessarily
 # complicated that it's easier to just dump move and sed.
 cp ./scripts/package/deb/control $PKGDIR/DEBIAN/control
-sed -i "s/SCRIPT_VERSION_HERE/${VERSION_NUM}/" $PKGDIR/DEBIAN/control
+sed -i "s/SCRIPT_VERSION_HERE/${DEB_VERSION}/" $PKGDIR/DEBIAN/control
 
 # Verify the file content
 cat $PKGDIR/DEBIAN/control
