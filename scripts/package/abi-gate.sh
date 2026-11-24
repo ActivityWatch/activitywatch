@@ -38,8 +38,12 @@ scan_elfs() {
     local total=0 scanned=0
     while IFS= read -r elf; do
         total=$((total + 1))
-        local versions
-        versions=$(readelf --version-info "$elf" 2>/dev/null \
+        local versions version_info
+        if ! version_info=$(readelf --version-info "$elf" 2>/dev/null); then
+            echo "ERROR: could not inspect ELF version information: $elf" >&2
+            exit 2
+        fi
+        versions=$(printf '%s\n' "$version_info" \
             | grep -oP 'GLIBC_[0-9]+\.[0-9]+(\.[0-9]+)?' \
             | sort -Vu) || true
         [ -z "$versions" ] && continue
@@ -55,7 +59,7 @@ scan_elfs() {
         | grep -E ': ELF ' | cut -d: -f1)
     echo "  ELFs with GLIBC refs: $scanned / $total files scanned"
     # Fail closed: a scan that inspected nothing (no ELFs found, or file(1) /
-    # readelf missing or broken; their errors are swallowed above) proves
+    # readelf output with no version references) proves
     # nothing about the floor and must not report PASS.
     if [ "$scanned" -eq 0 ]; then
         echo "ERROR: no ELF with GLIBC version references found in $label — is file(1)/readelf installed and the archive complete?" >&2

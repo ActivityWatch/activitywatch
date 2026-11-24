@@ -79,7 +79,21 @@ def test_broken_readelf_fails(tmp_path: Path) -> None:
     _stub(bindir, "readelf", "exit 127\n")
     result = run_gate(tmp_path, archive, bindir)
     assert result.returncode == 2, result
-    assert "no ELF with GLIBC version references found" in result.stderr
+    assert "could not inspect ELF version information" in result.stderr
+    assert "PASS" not in result.stdout
+
+
+def test_partial_readelf_failure_fails_closed(tmp_path: Path) -> None:
+    binary = Path(shutil.which("ls") or "/bin/ls")
+    archive = _zip(tmp_path, {"aw-qt": binary, "aw-server": binary})
+    bindir = tmp_path / "bin"
+    _stub(
+        bindir, "readelf", 'case "$2" in */aw-qt) exit 1;; *) echo GLIBC_2.28;; esac\n'
+    )
+    result = run_gate(tmp_path, archive, bindir)
+    assert result.returncode == 2, result
+    assert "could not inspect ELF version information" in result.stderr
+    assert "aw-qt" in result.stderr
     assert "PASS" not in result.stdout
 
 
@@ -103,7 +117,7 @@ def test_mixed_length_paths_are_all_scanned(
         bindir,
         "readelf",
         f'case "$2" in */aw-qt) echo GLIBC_{short_version};; '
-        '*) echo GLIBC_2.28;; esac\n',
+        "*) echo GLIBC_2.28;; esac\n",
     )
     result = run_gate(tmp_path, archive, bindir)
     assert "ELFs with GLIBC refs: 2 / 2" in result.stdout, result
@@ -118,7 +132,13 @@ def test_mixed_length_paths_are_all_scanned(
 def test_real_binary_is_scanned(tmp_path: Path) -> None:
     # Host binaries may legitimately exceed the floor; either verdict is fine
     # as long as the binary was actually inspected.
-    archive = _zip(tmp_path, {"aw-qt": Path(shutil.which("ls") or "/bin/ls")})
+    binary = Path(shutil.which("ls") or "/bin/ls")
+    versions = subprocess.run(
+        ["readelf", "--version-info", str(binary)], capture_output=True, text=True
+    )
+    if versions.returncode != 0 or "GLIBC_" not in versions.stdout:
+        pytest.skip("host ls has no GLIBC version references")
+    archive = _zip(tmp_path, {"aw-qt": binary})
     result = run_gate(tmp_path, archive)
     assert "ELFs with GLIBC refs: 1 / 1" in result.stdout, result.stdout
     assert result.returncode in (0, 1)
