@@ -15,14 +15,19 @@ EDITION=""
 if [[ $AW_RESEARCH_EDITION == "true" ]]; then
     EDITION="-research"
 fi
+# Debian sorts "0.14.0b5" above "0.14.0"; a tilde before the pre-release
+# marker sorts it below, so a beta/rc .deb upgrades to the final release.
+# Dev builds after a final tag (0.14.0.dev-<hash>) are newer and keep no tilde.
+DEB_VERSION="$(echo "$VERSION_NUM" | sed -E 's/^([0-9]+(\.[0-9]+)*)(a|b|rc)([0-9])/\1~\3\4/')"
 echo "Version (with v): $VERSION"
 echo "Version (without v): $VERSION_NUM"
+echo "Debian version: $DEB_VERSION"
 PKGDIR="activitywatch_$VERSION_NUM"
 
 # Package tools
 sudo apt-get install sed jdupes wget
 
-if [ -d "PKGDIR" ]; then
+if [ -d "$PKGDIR" ]; then
     sudo rm -rf $PKGDIR
 fi
 
@@ -38,7 +43,7 @@ mkdir -p $PKGDIR/usr/share/applications
 # While storing the control file in a variable here, dumping it in a file is so unnecessarily
 # complicated that it's easier to just dump move and sed.
 cp ./scripts/package/deb/control $PKGDIR/DEBIAN/control
-sed -i "s/SCRIPT_VERSION_HERE/${VERSION_NUM}/" $PKGDIR/DEBIAN/control
+sed -i "s/SCRIPT_VERSION_HERE/${DEB_VERSION}/" $PKGDIR/DEBIAN/control
 
 # Verify the file content
 cat $PKGDIR/DEBIAN/control
