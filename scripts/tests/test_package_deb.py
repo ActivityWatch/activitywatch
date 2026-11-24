@@ -94,7 +94,7 @@ def test_control_version(tmp_path: Path, tag: str, expected: str) -> None:
     assert result.returncode == 0, result.stderr
     # The staging dir and published filename keep the plain version.
     plain = tag.removeprefix("v").removesuffix("-research")
-    assert control_version(root, f"activitywatch_{plain}") == expected
+    assert control_version(root, f"activitywatch_{plain}") == f"1:{expected}"
     name = tag.removesuffix("-research")
     assert (root / "dist" / f"activitywatch-{name}-linux-x86_64.deb").exists()
 
@@ -119,6 +119,35 @@ def test_upgrade_ordering(tmp_path: Path, older: str, newer: str) -> None:
         versions.append(control_version(root, f"activitywatch_{plain}"))
     cmp = subprocess.run(["dpkg", "--compare-versions", versions[0], "lt", versions[1]])
     assert cmp.returncode == 0, f"{versions[0]} should sort below {versions[1]}"
+
+
+@pytest.mark.skipif(shutil.which("dpkg") is None, reason="needs dpkg")
+@pytest.mark.parametrize("tag", ["v0.14.4b2", "v0.14.4rc1", "v0.14.4"])
+def test_upgrade_from_legacy_beta(tmp_path: Path, tag: str) -> None:
+    root = make_tree(tmp_path, tag)
+    result = run_package_deb(tmp_path, root)
+    assert result.returncode == 0, result.stderr
+    version = control_version(root, f"activitywatch_{tag.removeprefix('v')}")
+    cmp = subprocess.run(["dpkg", "--compare-versions", "0.14.4b1", "lt", version])
+    assert cmp.returncode == 0, f"legacy 0.14.4b1 should upgrade to {version}"
+
+
+@pytest.mark.parametrize(
+    "tag",
+    ["v0.14.0 *", "v0.14.0/../../victim", "v0.14.0\nother", "v0.14.0;other", "v"],
+)
+def test_unsafe_version_rejected_before_cleanup(tmp_path: Path, tag: str) -> None:
+    root = make_tree(tmp_path, tag)
+    # Even an existing tag-derived staging path must not be removed.
+    staging = root / f"activitywatch_{tag.removeprefix('v')}"
+    staging.mkdir(parents=True)
+    marker = staging / "keep"
+    marker.write_text("must survive")
+    result = run_package_deb(tmp_path, root)
+    assert result.returncode != 0
+    assert "Unsafe or unsupported version" in result.stderr
+    assert marker.read_text() == "must survive"
+    assert not list(root.glob("*.control"))
 
 
 def test_rebuild_drops_stale_files(tmp_path: Path) -> None:
