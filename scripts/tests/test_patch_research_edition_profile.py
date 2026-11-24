@@ -306,6 +306,29 @@ def test_windows_installer_is_a_separate_product(tmp_path: Path, target: str):
     assert "UninstallDisplayName={#MyAppName}\n" in text
 
 
+@pytest.mark.parametrize("research", [False, True])
+def test_tauri_uninstall_cleans_only_its_edition_login_values(tmp_path: Path, research: bool):
+    text = _patch_real_file(
+        tmp_path,
+        WINDOWS_REAL_FILES["tauri"],
+        patcher.WINDOWS_PATCHES_TAURI if research else [],
+    )
+    # Resolve the Inno macro used by both deletion entries, like the compiler.
+    defines = dict(re.findall(r'^#define (\w+) "([^"\n]+)"$', text, re.MULTILINE))
+    registry = text.split("[Registry]\n", 1)[1].split("\n[", 1)[0]
+    entries = [line for line in registry.splitlines() if line.startswith("Root:")]
+    assert len(entries) == 2
+    expected = "aw-tauri-research-edition" if research else "aw-tauri"
+    for entry in entries:
+        expanded = re.sub(r"\{#(\w+)\}", lambda m: defines[m[1]], entry)
+        assert f'ValueName: "{expected}";' in expanded
+        assert "Root: HKCU;" in expanded
+        assert "ValueType: none;" in expanded
+        assert "Flags: uninsdeletevalue" in expanded
+    assert 'Subkey: "Software\\Microsoft\\Windows\\CurrentVersion\\Run";' in registry
+    assert 'Subkey: "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run";' in registry
+
+
 def test_windows_research_installers_do_not_collide_with_each_other(tmp_path: Path):
     """Qt-research and Tauri-research are also distinct products from each other."""
     qt = _patch_real_file(
