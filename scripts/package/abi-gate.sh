@@ -51,7 +51,7 @@ scan_elfs() {
                     | tee -a "$VIOLATION_LOG"
             fi
         done <<< "$versions"
-    done < <(find "$dir" -type f -exec file {} + 2>/dev/null \
+    done < <(find "$dir" -type f -exec file -N {} + 2>/dev/null \
         | grep -E ': ELF ' | cut -d: -f1)
     echo "  ELFs with GLIBC refs: $scanned / $total files scanned"
     # Fail closed: a scan that inspected nothing (no ELFs found, or file(1) /

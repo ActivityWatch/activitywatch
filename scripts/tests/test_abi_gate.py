@@ -58,7 +58,8 @@ def run_gate(tmp_path: Path, archive: Path, bindir: Path | None = None):
 def test_archive_without_elfs_fails(tmp_path: Path) -> None:
     archive = _zip(tmp_path, {"README.txt": "no binaries here\n"})
     result = run_gate(tmp_path, archive)
-    assert result.returncode != 0
+    assert result.returncode == 2, result
+    assert "no ELF with GLIBC version references found" in result.stderr
     assert "PASS" not in result.stdout
 
 
@@ -67,7 +68,8 @@ def test_broken_file_tool_fails(tmp_path: Path) -> None:
     bindir = tmp_path / "bin"
     _stub(bindir, "file", "exit 127\n")
     result = run_gate(tmp_path, archive, bindir)
-    assert result.returncode != 0
+    assert result.returncode == 2, result
+    assert "no ELF with GLIBC version references found" in result.stderr
     assert "PASS" not in result.stdout
 
 
@@ -76,8 +78,41 @@ def test_broken_readelf_fails(tmp_path: Path) -> None:
     bindir = tmp_path / "bin"
     _stub(bindir, "readelf", "exit 127\n")
     result = run_gate(tmp_path, archive, bindir)
-    assert result.returncode != 0
+    assert result.returncode == 2, result
+    assert "no ELF with GLIBC version references found" in result.stderr
     assert "PASS" not in result.stdout
+
+
+@pytest.mark.parametrize("short_version, expected_code", [("2.28", 0), ("2.29", 1)])
+def test_mixed_length_paths_are_all_scanned(
+    tmp_path: Path, short_version: str, expected_code: int
+) -> None:
+    binary = Path(shutil.which("ls") or "/bin/ls")
+    archive = _zip(
+        tmp_path,
+        {
+            "aw-qt": binary,
+            "longer-binary-name": binary,
+            "a-much-longer-readme-name.txt": "not an ELF\n",
+        },
+    )
+    # Keep file(1) real so its padding is exercised; make symbol versions
+    # deterministic, with any violation confined to the shorter binary.
+    bindir = tmp_path / "bin"
+    _stub(
+        bindir,
+        "readelf",
+        f'case "$2" in */aw-qt) echo GLIBC_{short_version};; '
+        '*) echo GLIBC_2.28;; esac\n',
+    )
+    result = run_gate(tmp_path, archive, bindir)
+    assert "ELFs with GLIBC refs: 2 / 2" in result.stdout, result
+    assert result.returncode == expected_code, result
+    if expected_code == 0:
+        assert "PASS" in result.stdout
+    else:
+        assert "VIOLATION in aw-qt: GLIBC_2.29" in result.stdout
+        assert "PASS" not in result.stdout
 
 
 def test_real_binary_is_scanned(tmp_path: Path) -> None:
