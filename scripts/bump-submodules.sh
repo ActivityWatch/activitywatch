@@ -451,6 +451,9 @@ elif [ "$DRY" = 1 ]; then
     LOCK_ALIGNED=1
     DRY_BUMPED="$DRY_BUMPED aw-tauri"    # the lock commit moves the aw-tauri pointer too
 else
+    # This pair was clean at preflight. Undo only our uncommitted relock on
+    # abort (including EOF/q in confirm), so a retry is not blocked as dirty.
+    trap 'git -C aw-tauri checkout -q HEAD -- src-tauri/Cargo.lock' EXIT
     # One --precise moves every package that shares the git source.
     (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA")
     stale=$(grep "aw-server-rust.git?branch=master#" "$LOCK" | grep -vc "#$SERVER_SHA" || true)
@@ -465,12 +468,14 @@ else
         run aw-tauri commit -q -m "build(deps): updated cargo locks
 
 aw-server-rust -> $SERVER_SHA"
+        trap - EXIT
         push_master aw-tauri
         LOCK_ALIGNED=1
     else
         # A dirty, uncommitted lock would pass the checker here and vanish in
         # CI. Restore it so the tree matches what will actually be built.
         git -C aw-tauri checkout -q -- src-tauri/Cargo.lock
+        trap - EXIT
         warn "aw-tauri lock commit declined; lock restored to the committed (old) revision"
     fi
 fi

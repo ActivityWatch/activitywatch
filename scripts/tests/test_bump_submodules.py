@@ -62,3 +62,63 @@ def test_end_of_input_is_not_yes(stdin: str | None) -> None:
     result = run_confirm(stdin)
     assert "ACCEPTED" not in result.stdout
     assert result.returncode != 0
+
+
+@pytest.mark.parametrize(
+    ("answer", "committed"),
+    [("", False), ("q\n", False), ("n\n", False), ("\n", True)],
+    ids=["eof", "quit", "decline", "accept"],
+)
+def test_relock_prompt_leaves_clean_tree(
+    tmp_path: Path, answer: str, committed: bool
+) -> None:
+    """Exercise the real relock branch, including confirm's process-level exit."""
+    tauri = tmp_path / "aw-tauri"
+    lock = tauri / "src-tauri" / "Cargo.lock"
+    lock.parent.mkdir(parents=True)
+    lock.write_text("old lock\n")
+
+    def git(*args: str) -> str:
+        return subprocess.check_output(
+            ["git", "-C", str(tauri), *args], text=True
+        ).strip()
+
+    git("init", "-q")
+    git("config", "user.name", "Test")
+    git("config", "user.email", "test@example.invalid")
+    git("config", "core.hooksPath", "/dev/null")
+    git("add", ".")
+    git("commit", "-qm", "initial lock")
+    before = git("rev-parse", "HEAD")
+    text = SCRIPT.read_text()
+    helpers = text.split("# ---------------------------------------------------------------- helpers\n")[1]
+    helpers = helpers.split("# ---------------------------------------------------------------- preflight")[0]
+    relock = text.split("# ---------------------------------------------------------------- 3. Tauri Cargo pin")[1]
+    relock = relock.split("\nelse\n", 1)[1]
+    relock = relock.split("# ---------------------------------------------------------------- 4. bundle")[0]
+    relock = relock.rsplit("\nfi", 1)[0]
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            "set -euo pipefail\n"
+            + helpers
+            + "DRY=0 YES=0 PUSH=1 SERVER_SHA=new\n"
+            + "LOCK=aw-tauri/src-tauri/Cargo.lock\n"
+            + "cargo() { echo 'aw-server-rust.git?branch=master#new' > Cargo.lock; }\n"
+            # Do not push; the relock branch must clear cleanup before this prompt.
+            + 'push_master() { confirm "push?"; }\n'
+            + relock,
+        ],
+        cwd=tmp_path,
+        input=answer,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == (0 if answer == "n\n" else 1), result.stderr
+    assert git("status", "--porcelain") == ""
+    assert (git("rev-parse", "HEAD") != before) is committed
+    assert lock.read_text() == (
+        "aw-server-rust.git?branch=master#new\n" if committed else "old lock\n"
+    )
