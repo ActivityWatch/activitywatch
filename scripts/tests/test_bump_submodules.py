@@ -107,6 +107,7 @@ def test_relock_prompt_leaves_clean_tree(
     git("config", "user.name", "Test")
     git("config", "user.email", "test@example.invalid")
     git("config", "core.hooksPath", "/dev/null")
+    git("config", "commit.gpgsign", "false")
     git("add", ".")
     git("commit", "-qm", "initial lock")
     before = git("rev-parse", "HEAD")
