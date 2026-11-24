@@ -53,5 +53,13 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: StartMenuEntry;
 
+[Registry]
+; aw-tauri registers its own login item at runtime (tauri-plugin-autostart, named after
+; productName "aw-tauri"), so the installer never created these values and would leave
+; them behind. ValueType: none creates nothing on install; uninsdeletevalue removes the
+; value on uninstall. StartupApproved holds Task Manager's enabled/disabled flag.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "aw-tauri"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"; ValueType: none; ValueName: "aw-tauri"; Flags: uninsdeletevalue
+
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
