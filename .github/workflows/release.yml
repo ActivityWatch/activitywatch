@@ -463,8 +463,8 @@ jobs:
       - name: Test updater channel isolation and release versions
         run: python3 -m pytest scripts/tests/test_generate_latest_json.py scripts/tests/test_configure_tauri_release.py scripts/tests/test_tauri_bundle_version.py -q
 
-      - name: Test host-ABI gate
-        run: python3 -m pytest scripts/tests/test_host_abi_gate.py -q
+      - name: Test host-ABI and glibc-floor gates
+        run: python3 -m pytest scripts/tests/test_host_abi_gate.py scripts/tests/test_abi_gate.py -q
 
       - name: Test Windows arch detection and PE zip assertion
         run: python3 -m pytest scripts/tests/test_get_arch.py scripts/tests/test_assert_windows_pe_arch.py -q
@@ -1069,7 +1069,9 @@ jobs:
             python39-libs \
             squashfs-tools \
             zip \
-            wget
+            wget \
+            file \
+            binutils
 
       - name: Set up Python PATH
         run: |

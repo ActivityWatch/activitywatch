@@ -54,6 +54,13 @@ scan_elfs() {
     done < <(find "$dir" -type f -exec file {} + 2>/dev/null \
         | grep -E ': ELF ' | cut -d: -f1)
     echo "  ELFs with GLIBC refs: $scanned / $total files scanned"
+    # Fail closed: a scan that inspected nothing (no ELFs found, or file(1) /
+    # readelf missing or broken; their errors are swallowed above) proves
+    # nothing about the floor and must not report PASS.
+    if [ "$scanned" -eq 0 ]; then
+        echo "ERROR: no ELF with GLIBC version references found in $label — is file(1)/readelf installed and the archive complete?" >&2
+        exit 2
+    fi
 }
 
 extract_appimage() {
