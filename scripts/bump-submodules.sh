@@ -67,7 +67,12 @@ confirm() {
     if [ "$DRY" = 1 ]; then echo "  [dry-run] would: $*"; return 1; fi
     if [ "$YES" = 1 ]; then return 0; fi
     printf '%s [Enter=yes / n=skip / q=quit] ' "$*"
-    read -r answer
+    # End of input is not an answer: an empty one means "yes", so a closed or
+    # non-terminal stdin would otherwise accept every commit and push.
+    if ! read -r answer; then
+        echo; echo "no answer on stdin; aborting (pass --yes to run unattended)" >&2
+        exit 1
+    fi
     case "$answer" in
         q|Q) echo "aborted"; exit 1 ;;
         n|N) return 1 ;;
