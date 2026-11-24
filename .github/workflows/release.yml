@@ -472,6 +472,9 @@ jobs:
       - name: Test Windows AW_VERSION export for Rust PE resources
         run: python3 -m pytest scripts/tests/test_makefile_aw_version.py -q
 
+      - name: Test submodule bump prompt
+        run: python3 -m pytest scripts/tests/test_bump_submodules.py -q
+
   build-qt:
     name: Build Qt artifacts (${{ matrix.os }}${{ (matrix.research || (github.event_name == 'workflow_dispatch' && inputs.edition == 'research') || endsWith(github.ref_name, '-research')) && ', research' || '' }})${{ needs.nightly-submodules.outputs.latest == 'true' && ' [latest submodules]' || '' }}
     needs: nightly-submodules

@@ -67,7 +67,12 @@ confirm() {
     if [ "$DRY" = 1 ]; then echo "  [dry-run] would: $*"; return 1; fi
     if [ "$YES" = 1 ]; then return 0; fi
     printf '%s [Enter=yes / n=skip / q=quit] ' "$*"
-    read -r answer
+    # End of input is not an answer: an empty one means "yes", so a closed or
+    # non-terminal stdin would otherwise accept every commit and push.
+    if ! read -r answer; then
+        echo; echo "no answer on stdin; aborting (pass --yes to run unattended)" >&2
+        exit 1
+    fi
     case "$answer" in
         q|Q) echo "aborted"; exit 1 ;;
         n|N) return 1 ;;
@@ -446,8 +451,23 @@ elif [ "$DRY" = 1 ]; then
     LOCK_ALIGNED=1
     DRY_BUMPED="$DRY_BUMPED aw-tauri"    # the lock commit moves the aw-tauri pointer too
 else
-    # One --precise moves every package that shares the git source.
-    (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA")
+    # This pair was clean at preflight. Undo only our uncommitted relock on
+    # abort (including EOF/q in confirm), so a retry is not blocked as dirty.
+    restore_relock() {
+        if [ "$(git hash-object "$LOCK" 2>/dev/null)" = "$relock_worktree" ] &&
+            [ "$(git -C aw-tauri rev-parse :src-tauri/Cargo.lock 2>/dev/null)" = "$relock_index" ]; then
+            git -C aw-tauri checkout -q HEAD -- src-tauri/Cargo.lock
+        else
+            warn "Cargo.lock changed after relocking; preserving working and staged edits"
+        fi
+    }
+    # Capture even a failed cargo update so its partial changes can be undone.
+    relock_status=0
+    (cd aw-tauri/src-tauri && cargo update -q -p aw-server --precise "$SERVER_SHA") || relock_status=$?
+    relock_worktree=$(git hash-object "$LOCK")
+    relock_index=$(git -C aw-tauri rev-parse :src-tauri/Cargo.lock)
+    trap restore_relock EXIT
+    [ "$relock_status" = 0 ] || exit "$relock_status"
     stale=$(grep "aw-server-rust.git?branch=master#" "$LOCK" | grep -vc "#$SERVER_SHA" || true)
     if [ "$stale" != 0 ]; then
         echo "some aw-server-rust crates did not relock to ${SERVER_SHA:0:7}:" >&2
@@ -457,16 +477,19 @@ else
     git -C aw-tauri diff --stat -- src-tauri/Cargo.lock | sed 's/^/    /'
     if confirm "commit in aw-tauri: \"build(deps): updated cargo locks\" (aw-server-rust -> ${SERVER_SHA:0:7})?"; then
         run aw-tauri add -- src-tauri/Cargo.lock
+        relock_index=$relock_worktree
         run aw-tauri commit -q -m "build(deps): updated cargo locks
 
 aw-server-rust -> $SERVER_SHA"
+        trap - EXIT
         push_master aw-tauri
         LOCK_ALIGNED=1
     else
         # A dirty, uncommitted lock would pass the checker here and vanish in
         # CI. Restore it so the tree matches what will actually be built.
-        git -C aw-tauri checkout -q -- src-tauri/Cargo.lock
-        warn "aw-tauri lock commit declined; lock restored to the committed (old) revision"
+        restore_relock
+        trap - EXIT
+        warn "aw-tauri lock commit declined"
     fi
 fi
 
