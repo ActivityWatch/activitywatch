@@ -113,12 +113,20 @@ LAUNCH_AGENT_LABEL = "net.activitywatch.aw-qt-research"
 
 @dataclass(frozen=True)
 class Patch:
-    """One exact, unique substring replacement in one file."""
+    """One exact substring replacement in one file.
+
+    ``counts`` lists the occurrence counts that are acceptable for ``old``.
+    It defaults to exactly one, which keeps every patch fail-closed. A site
+    that upstream duplicated across two call paths may declare ``(1, 2)``;
+    every allowed occurrence is then rewritten and any other count still
+    aborts, so a future third copy cannot slip through unpatched.
+    """
 
     path: str
     old: str
     new: str
     why: str
+    counts: tuple[int, ...] = (1,)
 
 
 # --- profile fallbacks ------------------------------------------------------
@@ -247,9 +255,16 @@ PORT_PATCHES_QT: List[Patch] = [
     ),
     Patch(
         "aw-qt/aw_qt/config.py",
-        "    default_port = 5666 if is_testing(profile) else 5600\n",
-        f"    default_port = 5666 if is_testing(profile) else {RESEARCH_PORT}\n",
-        "aw-qt _read_server_port fallback",
+        # aw-qt reads this fallback in two places: `_read_server_port` (the
+        # tray/manager probe) and, since aw-qt#144, `dashboard_auth` (which
+        # compares a config file's port against the live one). Both must be
+        # the research port or the tray opens an unauthenticated dashboard
+        # against a server on 5667. The pinned aw-qt predates `dashboard_auth`
+        # and has one copy; the upstream tip has two, hence ``counts=(1, 2)``.
+        "default_port = 5666 if is_testing(profile) else 5600",
+        f"default_port = 5666 if is_testing(profile) else {RESEARCH_PORT}",
+        "aw-qt port fallbacks (server-port read and dashboard auth)",
+        counts=(1, 2),
     ),
     Patch(
         "aw-qt/aw_qt/manager.py",
@@ -684,14 +699,21 @@ def apply_patches(
                     "patch a tree twice"
                 )
             occurrences = text.count(patch.old)
-            if occurrences != 1:
+            if occurrences not in patch.counts:
+                expected = (
+                    "exactly one match"
+                    if patch.counts == (1,)
+                    else "one of {} matches".format(
+                        ", ".join(str(count) for count in patch.counts)
+                    )
+                )
                 raise PatchError(
-                    f"{rel_path}: expected exactly one match for [{patch.why}], "
+                    f"{rel_path}: expected {expected} for [{patch.why}], "
                     f"found {occurrences}. The source drifted from what this "
                     "patcher targets - refusing to ship a research build with "
                     "the default profile/port/bundle id."
                 )
-            text = text.replace(patch.old, patch.new, 1)
+            text = text.replace(patch.old, patch.new)
             applied.append(f"{rel_path}: {patch.why}")
 
         if not check:
