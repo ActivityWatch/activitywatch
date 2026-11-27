@@ -118,6 +118,51 @@ def test_ambiguous_token_fails_closed(tmp_path: Path):
         patcher.apply_patches(root, patches, check=False)
 
 
+def test_declared_multi_site_patch_rewrites_every_copy(tmp_path: Path):
+    rel = "aw-qt/aw_qt/config.py"
+    file_path = tmp_path / rel
+    file_path.parent.mkdir(parents=True)
+    file_path.write_text(
+        "    default_port = 5666 if is_testing(profile) else 5600\n"
+        "            default_port = 5666 if is_testing(profile) else 5600\n",
+        encoding="utf-8",
+    )
+    patch = patcher.Patch(
+        rel,
+        "default_port = 5666 if is_testing(profile) else 5600",
+        "default_port = 5666 if is_testing(profile) else 5667",
+        "test duplicated site",
+        counts=(1, 2),
+    )
+
+    applied = patcher.apply_patches(tmp_path, [patch], check=False)
+
+    assert applied == [f"{rel}: {patch.why}"]
+    text = file_path.read_text(encoding="utf-8")
+    assert "else 5600" not in text
+    assert text.count("else 5667") == 2
+
+
+def test_declared_multi_site_patch_fails_closed_on_a_third_copy(tmp_path: Path):
+    rel = "aw-qt/aw_qt/config.py"
+    file_path = tmp_path / rel
+    file_path.parent.mkdir(parents=True)
+    file_path.write_text(
+        "default_port = 5666 if is_testing(profile) else 5600\n" * 3,
+        encoding="utf-8",
+    )
+    patch = patcher.Patch(
+        rel,
+        "default_port = 5666 if is_testing(profile) else 5600",
+        "default_port = 5666 if is_testing(profile) else 5667",
+        "test duplicated site",
+        counts=(1, 2),
+    )
+
+    with pytest.raises(patcher.PatchError, match="found 3"):
+        patcher.apply_patches(tmp_path, [patch], check=False)
+
+
 def test_nothing_written_when_one_site_fails(tmp_path: Path):
     root = make_fixture_root(tmp_path, "qt")
     patches = patcher.TARGETS["qt"]
