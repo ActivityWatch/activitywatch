@@ -126,7 +126,7 @@ class Patch:
     old: str
     new: str
     why: str
-    counts: Tuple[int, ...] = (1,)
+    counts: tuple[int, ...] = (1,)
 
 
 # --- profile fallbacks ------------------------------------------------------

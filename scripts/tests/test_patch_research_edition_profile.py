@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 from string import Template
+from typing import get_type_hints
 
 import pytest
 
@@ -118,29 +119,30 @@ def test_ambiguous_token_fails_closed(tmp_path: Path):
         patcher.apply_patches(root, patches, check=False)
 
 
-def test_declared_multi_site_patch_rewrites_every_copy(tmp_path: Path):
+def test_patch_type_hints_resolve():
+    assert get_type_hints(patcher.Patch)["counts"] == tuple[int, ...]
+
+
+@pytest.mark.parametrize("copies", [1, 2])
+def test_declared_multi_site_patch_rewrites_every_copy(tmp_path: Path, copies: int):
     rel = "aw-qt/aw_qt/config.py"
     file_path = tmp_path / rel
     file_path.parent.mkdir(parents=True)
     file_path.write_text(
-        "    default_port = 5666 if is_testing(profile) else 5600\n"
-        "            default_port = 5666 if is_testing(profile) else 5600\n",
+        "".join(
+            f"{' ' * indent}default_port = 5666 if is_testing(profile) else 5600\n"
+            for indent in (4, 12)[:copies]
+        ),
         encoding="utf-8",
     )
-    patch = patcher.Patch(
-        rel,
-        "default_port = 5666 if is_testing(profile) else 5600",
-        "default_port = 5666 if is_testing(profile) else 5667",
-        "test duplicated site",
-        counts=(1, 2),
-    )
+    patch = next(p for p in patcher.PORT_PATCHES_QT if p.path == rel)
 
     applied = patcher.apply_patches(tmp_path, [patch], check=False)
 
     assert applied == [f"{rel}: {patch.why}"]
     text = file_path.read_text(encoding="utf-8")
     assert "else 5600" not in text
-    assert text.count("else 5667") == 2
+    assert text.count("else 5667") == copies
 
 
 def test_declared_multi_site_patch_fails_closed_on_a_third_copy(tmp_path: Path):
@@ -151,13 +153,7 @@ def test_declared_multi_site_patch_fails_closed_on_a_third_copy(tmp_path: Path):
         "default_port = 5666 if is_testing(profile) else 5600\n" * 3,
         encoding="utf-8",
     )
-    patch = patcher.Patch(
-        rel,
-        "default_port = 5666 if is_testing(profile) else 5600",
-        "default_port = 5666 if is_testing(profile) else 5667",
-        "test duplicated site",
-        counts=(1, 2),
-    )
+    patch = next(p for p in patcher.PORT_PATCHES_QT if p.path == rel)
 
     with pytest.raises(patcher.PatchError, match="found 3"):
         patcher.apply_patches(tmp_path, [patch], check=False)
